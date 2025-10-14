@@ -41,7 +41,7 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/50 glass">
+    <Sidebar collapsible="icon" className="border-r border-border/50 glass text-sidebar-foreground">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-primary font-semibold text-lg px-4 py-6">
@@ -58,7 +58,7 @@ export function AppSidebar() {
                         `flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
                           isActive
                             ? "bg-primary text-primary-foreground shadow-glow"
-                            : "hover:bg-sidebar-accent text-sidebar-foreground"
+                            : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground text-sidebar-foreground"
                         }`
                       }
                     >

@@ -8,30 +8,79 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Base colors - Deep navy to vibrant purple palette */
+    /* Light theme defaults */
+    --background: 210 38% 97%;
+    --foreground: 224 40% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 224 40% 12%;
+
+    --popover: 210 36% 99%;
+    --popover-foreground: 224 40% 12%;
+
+    --primary: 217 91% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 60% 50%;
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 215 18% 88%;
+    --muted-foreground: 224 30% 26%;
+
+    --accent: 215 85% 55%;
+    --accent-foreground: 224 40% 12%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 20% 82%;
+    --input: 215 22% 78%;
+    --ring: 217 91% 60%;
+
+    --radius: 0.75rem;
+
+    --sidebar-background: 210 28% 96%;
+    --sidebar-foreground: 224 40% 16%;
+    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 215 25% 84%;
+    --sidebar-accent-foreground: 224 40% 16%;
+    --sidebar-border: 215 20% 82%;
+    --sidebar-ring: 217 91% 60%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(270 60% 50%));
+    --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 60% 50%) 50%, hsl(190 90% 50%) 100%);
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100% / 0.95), hsl(215 18% 88% / 0.6));
+
+    --shadow-glow: 0 0 40px hsl(217 91% 60% / 0.18);
+    --shadow-card: 0 20px 50px -20px hsl(225 25% 40% / 0.2);
+
+    --glass-background: hsl(0 0% 100% / 0.85);
+    --glass-border: hsl(var(--border) / 0.4);
+
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .dark {
+    /* Dark theme overrides */
     --background: 220 25% 8%;
     --foreground: 210 40% 98%;
 
-    /* Cards with glassmorphism */
     --card: 220 20% 12%;
     --card-foreground: 210 40% 98%;
 
     --popover: 220 20% 12%;
     --popover-foreground: 210 40% 98%;
 
-    /* Primary: Electric blue */
     --primary: 217 91% 60%;
     --primary-foreground: 0 0% 100%;
-    
-    /* Secondary: Deep purple */
+
     --secondary: 270 60% 50%;
     --secondary-foreground: 0 0% 100%;
 
-    /* Muted tones */
     --muted: 220 15% 20%;
     --muted-foreground: 215 20% 65%;
 
-    /* Accent: Vivid cyan */
     --accent: 190 90% 50%;
     --accent-foreground: 220 25% 8%;
 
@@ -44,7 +93,6 @@ All colors MUST be HSL.
 
     --radius: 0.75rem;
 
-    /* Sidebar */
     --sidebar-background: 220 22% 10%;
     --sidebar-foreground: 210 40% 98%;
     --sidebar-primary: 217 91% 60%;
@@ -54,16 +102,16 @@ All colors MUST be HSL.
     --sidebar-border: 220 15% 20%;
     --sidebar-ring: 217 91% 60%;
 
-    /* Custom gradients */
     --gradient-primary: linear-gradient(135deg, hsl(217 91% 60%), hsl(270 60% 50%));
     --gradient-hero: linear-gradient(135deg, hsl(217 91% 60%) 0%, hsl(270 60% 50%) 50%, hsl(190 90% 50%) 100%);
     --gradient-card: linear-gradient(135deg, hsl(220 20% 12% / 0.8), hsl(220 20% 15% / 0.6));
-    
-    /* Shadows with glow */
+
     --shadow-glow: 0 0 40px hsl(217 91% 60% / 0.3);
     --shadow-card: 0 10px 30px -10px hsl(220 25% 5% / 0.5);
-    
-    /* Animations */
+
+    --glass-background: hsl(var(--card) / 0.6);
+    --glass-border: hsl(var(--border) / 0.35);
+
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 }
@@ -80,10 +128,10 @@ All colors MUST be HSL.
 
   /* Glassmorphism utility */
   .glass {
-    background: hsl(var(--card) / 0.6);
+    background: var(--glass-background);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border: 1px solid hsl(var(--border) / 0.3);
+    border: 1px solid var(--glass-border);
   }
 
   /* Gradient text */
