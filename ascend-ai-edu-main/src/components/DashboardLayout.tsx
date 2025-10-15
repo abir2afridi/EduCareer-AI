@@ -257,7 +257,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = async () => {
     try {
       await signout();
-      navigate("/auth/signin", { replace: true });
+      navigate("/", { replace: true });
     } catch (error) {
       console.error("Failed to sign out", error);
     }
