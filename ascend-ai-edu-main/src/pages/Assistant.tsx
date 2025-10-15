@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,9 +49,23 @@ export default function Assistant() {
 
   return (
     <div className="h-[calc(100vh-8rem)] flex flex-col animate-fade-in">
-      <div className="mb-6">
-        <h2 className="text-3xl font-bold gradient-text">AI Assistant</h2>
-        <p className="text-muted-foreground mt-1">Get personalized educational guidance</p>
+      <div className="mb-6 grid gap-4 lg:grid-cols-[1.3fr,1fr] lg:items-center">
+        <div>
+          <h2 className="text-3xl font-bold gradient-text">AI Assistant</h2>
+          <p className="text-muted-foreground mt-1">
+            Get personalized educational guidance, realtime nudges, and actionable next steps across courses, careers, and
+            coaching.
+          </p>
+        </div>
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+          <DotLottieReact
+            src="https://lottie.host/c824ac43-cc9e-4966-9f40-c297c02b515a/88oz3gUSzR.lottie"
+            autoplay
+            loop
+            className="relative h-40 w-40 md:h-48 md:w-48"
+          />
+        </div>
       </div>
 
       <Card className="glass flex-1 flex flex-col overflow-hidden">

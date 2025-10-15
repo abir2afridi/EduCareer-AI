@@ -1,3 +1,4 @@
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -86,9 +87,34 @@ const predictions = [
 export default function Research() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h2 className="text-3xl font-bold gradient-text mb-2">Research & Policy Insights</h2>
-        <p className="text-muted-foreground">Data-driven insights for institutional excellence</p>
+      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/80 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/70 lg:grid-cols-[1.4fr,1fr]">
+        <div className="space-y-3">
+          <Badge variant="outline" className="w-fit uppercase tracking-widest">Research Observatory</Badge>
+          <h2 className="text-3xl font-bold gradient-text">Research & Policy Insights</h2>
+          <p className="text-muted-foreground">
+            Benchmark institutional performance with evidence-backed insights, predictive modeling, and policy-ready
+            narratives tailored for academic leadership teams.
+          </p>
+          <div className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Impact Libraries</p>
+              <p className="text-base font-semibold text-foreground">45+ longitudinal studies</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Policy Snapshots</p>
+              <p className="text-base font-semibold text-primary">Quarterly guidance dossiers</p>
+            </div>
+          </div>
+        </div>
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+          <DotLottieReact
+            src="https://lottie.host/54359cad-4174-4e66-bcdb-a3c4b1890958/5JOSWITrVi.lottie"
+            autoplay
+            loop
+            className="relative h-48 w-48 md:h-56 md:w-56"
+          />
+        </div>
       </div>
 
       {/* Key Metrics */}

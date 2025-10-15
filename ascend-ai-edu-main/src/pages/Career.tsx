@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
   Card,
   CardHeader,
@@ -204,25 +205,39 @@ export default function Career() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold tracking-tight">Career Guidance &amp; Recommendations</h1>
-          <p className="text-muted-foreground">AI synthesizes your academic trajectory, portfolio strength, and market signals to curate next-step career journeys.</p>
-        </div>
-        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-          <div className="relative sm:w-[280px]">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={careerQuery}
-              onChange={(event) => setCareerQuery(event.target.value)}
-              placeholder="Explore careers (e.g. AI Engineer)"
-              className="rounded-2xl border-border/60 pl-9"
-            />
+      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <h1 className="text-3xl font-bold tracking-tight">Career Guidance &amp; Recommendations</h1>
+            <p className="text-muted-foreground">
+              AI synthesizes your academic trajectory, portfolio strength, and market signals to curate next-step career journeys.
+              Stay aligned with market demand while your assistant refreshes guidance in real time.
+            </p>
           </div>
-          <Button className="rounded-2xl bg-gradient-to-r from-primary to-primary/80">
-            <Upload className="h-4 w-4" />
-            <span className="ml-2">Upload Resume</span>
-          </Button>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="relative sm:w-[280px]">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={careerQuery}
+                onChange={(event) => setCareerQuery(event.target.value)}
+                placeholder="Explore careers (e.g. AI Engineer)"
+                className="rounded-2xl border-border/60 pl-9"
+              />
+            </div>
+            <Button className="rounded-2xl bg-gradient-to-r from-primary to-primary/80">
+              <Upload className="h-4 w-4" />
+              <span className="ml-2">Upload Resume</span>
+            </Button>
+          </div>
+        </div>
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+          <DotLottieReact
+            src="https://lottie.host/f266a8d8-866c-46b8-90da-90174eabe28b/zDXHtDOKAm.lottie"
+            autoplay
+            loop
+            className="relative h-48 w-48 md:h-56 md:w-56"
+          />
         </div>
       </div>
 
@@ -402,7 +417,7 @@ export default function Career() {
             <CardContent className="flex h-[260px] flex-col items-center justify-center">
               <ResponsiveContainer width="100%" height="100%">
                 <RadialBarChart innerRadius="55%" outerRadius="100%" data={[{ name: "Ready", value: readinessAverage, fill: "hsl(var(--primary))" }]}> 
-                  <RadialBar minAngle={15} clockWise dataKey="value" cornerRadius={12} />
+                  <RadialBar dataKey="value" cornerRadius={12} isAnimationActive />
                   <Tooltip formatter={(value: number) => [`${value}%`, "Readiness"]} />
                 </RadialBarChart>
               </ResponsiveContainer>

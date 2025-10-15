@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
   Card,
   CardHeader,
@@ -220,31 +221,54 @@ export default function Insights() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold tracking-tight">AI Learning Insights</h1>
-          <p className="text-muted-foreground">
-            Intelligent analytics synthesizing performance data, engagement patterns, and AI predictions tailored to your journey.
-          </p>
+      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Badge variant="outline" className="w-fit uppercase tracking-widest">AI Learning Insights</Badge>
+            <h1 className="text-3xl font-bold tracking-tight">AI Learning Insights</h1>
+            <p className="text-muted-foreground">
+              Intelligent analytics synthesizing performance data, engagement patterns, and AI predictions tailored to your journey.
+              Monitor risk alerts, momentum, and personalized nudges in one unified stream.
+            </p>
+          </div>
+          <div className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">AI Signal</p>
+              <p className="text-base font-semibold text-primary">Focus on cyber security lab retries</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Momentum Pulse</p>
+              <p className="text-base font-semibold text-foreground">Engagement streak at 19 days</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={insightScope === "weekly" ? "default" : "outline"}
+              onClick={() => setInsightScope("weekly")}
+              className="gap-2"
+            >
+              <Activity className="h-4 w-4" /> Weekly
+            </Button>
+            <Button
+              variant={insightScope === "monthly" ? "default" : "outline"}
+              onClick={() => setInsightScope("monthly")}
+              className="gap-2"
+            >
+              <TrendingUp className="h-4 w-4" /> Monthly
+            </Button>
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" /> Export PDF
+            </Button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={insightScope === "weekly" ? "default" : "outline"}
-            onClick={() => setInsightScope("weekly")}
-            className="gap-2"
-          >
-            <Activity className="h-4 w-4" /> Weekly
-          </Button>
-          <Button
-            variant={insightScope === "monthly" ? "default" : "outline"}
-            onClick={() => setInsightScope("monthly")}
-            className="gap-2"
-          >
-            <TrendingUp className="h-4 w-4" /> Monthly
-          </Button>
-          <Button variant="outline" className="gap-2">
-            <Download className="h-4 w-4" /> Export PDF
-          </Button>
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+          <DotLottieReact
+            src="https://lottie.host/7ce40a4a-edaa-4ab6-9347-bc76b66f9dc4/wu4M2s89im.lottie"
+            autoplay
+            loop
+            className="relative h-48 w-48 md:h-56 md:w-56"
+          />
         </div>
       </div>
 

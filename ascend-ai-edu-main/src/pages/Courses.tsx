@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
   Card,
   CardHeader,
@@ -139,25 +140,48 @@ export default function Courses() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold tracking-tight">My Courses</h1>
-          <p className="text-muted-foreground">
-            Review enrolled courses, continue where you left off, and follow AI-backed suggestions tailored to your strengths.
-          </p>
+      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Badge variant="outline" className="w-fit uppercase tracking-widest">My Courses</Badge>
+            <h1 className="text-3xl font-bold tracking-tight">My Courses</h1>
+            <p className="text-muted-foreground">
+              Review enrolled courses, continue where you left off, and follow AI-backed suggestions tailored to your strengths.
+              Keep your learning sprint aligned with upcoming milestones.
+            </p>
+          </div>
+          <div className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">AI Focus</p>
+              <p className="text-base font-semibold text-primary">Resume Machine Learning Studio</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Momentum Snapshot</p>
+              <p className="text-base font-semibold text-foreground">68% average course progress</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {filterOptions.map((option) => (
+              <Button
+                key={option.value}
+                variant={filter === option.value ? "default" : "outline"}
+                onClick={() => setFilter(option.value)}
+                className="gap-2"
+              >
+                {option.value === "recommended" ? <Sparkles className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
+                {option.label}
+              </Button>
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {filterOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant={filter === option.value ? "default" : "outline"}
-              onClick={() => setFilter(option.value)}
-              className="gap-2"
-            >
-              {option.value === "recommended" ? <Sparkles className="h-4 w-4" /> : <Filter className="h-4 w-4" />}
-              {option.label}
-            </Button>
-          ))}
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+          <DotLottieReact
+            src="https://lottie.host/6b1b59dc-eb62-4d2b-b957-d4ba28474003/MuJ6eAro54.lottie"
+            autoplay
+            loop
+            className="relative h-48 w-48 md:h-56 md:w-56"
+          />
         </div>
       </div>
 

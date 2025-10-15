@@ -31,6 +31,7 @@ const menuItems = [
   { title: "Teachers", url: "/teachers", icon: GraduationCap },
   { title: "Assessments", url: "/assessments", icon: FileText },
   { title: "Career Guidance", url: "/career", icon: Briefcase },
+  { title: "Student Intelligence", url: "/students/intelligence", icon: Brain },
   { title: "Research", url: "/research", icon: Brain },
   { title: "AI Assistant", url: "/assistant", icon: MessageSquare },
   { title: "Settings", url: "/settings", icon: Settings },

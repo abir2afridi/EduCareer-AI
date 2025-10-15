@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
   Card,
   CardHeader,
@@ -336,6 +337,36 @@ export default function Students() {
 
   return (
     <div className="relative space-y-8 pb-24">
+      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
+        <div className="space-y-4">
+          <Badge variant="outline" className="w-fit uppercase tracking-widest">Student Intelligence</Badge>
+          <h2 className="text-3xl font-bold tracking-tight">Personalized Student Intelligence Hub</h2>
+          <p className="text-muted-foreground">
+            Monitor AI-guided mastery, upcoming nudges, and cohort health signals at a glance. Every data point refreshes in
+            real time so you can intervene before momentum dips.
+          </p>
+          <div className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Focus Signal</p>
+              <p className="text-base font-semibold text-primary">ML labs flagged for review</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Cohort Pulse</p>
+              <p className="text-base font-semibold text-foreground">87% mastery trending upward</p>
+            </div>
+          </div>
+        </div>
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+          <DotLottieReact
+            src="https://lottie.host/8ab1d4c1-450c-4bb8-be4b-0fd1a9621598/knuLlkbhd3.lottie"
+            autoplay
+            loop
+            className="relative h-48 w-48 md:h-56 md:w-56"
+          />
+        </div>
+      </div>
+
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1.5">
           <motion.h2
@@ -365,7 +396,7 @@ export default function Students() {
       </div>
 
       <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-[repeat(3, minmax(0, 1fr))]">
           {overviewStats.map((stat) => {
             const IconComponent = stat.icon as LucideIcon;
             return (
@@ -390,6 +421,41 @@ export default function Students() {
               </Card>
             );
           })}
+          <Card className="col-span-full overflow-hidden border-border/60 bg-gradient-to-br from-slate-50 via-white to-primary/5 p-6 backdrop-blur-md dark:from-slate-950/80 dark:via-slate-950/70 dark:to-primary/10">
+            <div className="grid gap-6 lg:grid-cols-[1fr,1fr]">
+              <div className="space-y-3">
+                <Badge variant="outline" className="uppercase tracking-widest">Manage Cohorts</Badge>
+                <h3 className="text-2xl font-semibold text-foreground">Student Intelligence Snapshot</h3>
+                <p className="text-muted-foreground">
+                  Personalized analytics, AI nudges, and next actions surface for every cohort member. Sarahs profile
+                  updates in real time when she completes milestones or needs attention.
+                </p>
+                <div className="grid gap-3 text-sm sm:grid-cols-3">
+                  <div className="rounded-2xl border border-border/60 bg-white/70 p-3 text-center dark:bg-slate-950/60">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Mastery</p>
+                    <p className="text-xl font-semibold text-primary">87%</p>
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-white/70 p-3 text-center dark:bg-slate-950/60">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">AI Guidance</p>
+                    <p className="text-sm font-semibold text-secondary">Review ML labs</p>
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-white/70 p-3 text-center dark:bg-slate-950/60">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Next Action</p>
+                    <p className="text-sm font-semibold text-accent">Mentor sync Thu</p>
+                  </div>
+                </div>
+              </div>
+              <div className="relative flex items-center justify-center">
+                <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+                <DotLottieReact
+                  src="https://lottie.host/8ab1d4c1-450c-4bb8-be4b-0fd1a9621598/knuLlkbhd3.lottie"
+                  autoplay
+                  loop
+                  className="relative h-48 w-48"
+                />
+              </div>
+            </div>
+          </Card>
         </div>
       </motion.section>
 

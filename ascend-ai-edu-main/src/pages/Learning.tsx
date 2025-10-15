@@ -1,3 +1,4 @@
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,9 +66,34 @@ const modules = [
 export default function Learning() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h2 className="text-3xl font-bold gradient-text mb-2">Personalized Learning Paths</h2>
-        <p className="text-muted-foreground">AI-curated courses tailored to your career goals</p>
+      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
+        <div className="space-y-3">
+          <Badge variant="outline" className="w-fit uppercase tracking-widest">Curate Journeys</Badge>
+          <h2 className="text-3xl font-bold gradient-text">Curated Learning Journeys</h2>
+          <p className="text-muted-foreground">
+            Let AI orchestrate adaptive learning paths that blend coursework, practice, and mentorship. Every milestone adjusts in
+            real time to keep your mastery momentum alive.
+          </p>
+          <div className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Next Milestone</p>
+              <p className="text-base font-semibold text-primary">Capstone prototype workshop</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Journey Completion</p>
+              <p className="text-base font-semibold text-foreground">73% of weekly targets met</p>
+            </div>
+          </div>
+        </div>
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+          <DotLottieReact
+            src="https://lottie.host/6d530f15-3d5e-4524-84d8-af7bfe14ad4a/EYn3Qymt85.lottie"
+            autoplay
+            loop
+            className="relative h-48 w-48 md:h-56 md:w-56"
+          />
+        </div>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">

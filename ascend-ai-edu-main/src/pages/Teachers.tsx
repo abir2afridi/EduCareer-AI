@@ -1,3 +1,4 @@
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,15 +55,42 @@ const teachers = [
 export default function Teachers() {
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-3xl font-bold gradient-text mb-2">Teacher Management</h2>
-          <p className="text-muted-foreground">Manage faculty and track performance</p>
+      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <Badge variant="outline" className="w-fit uppercase tracking-widest">Mentor Network</Badge>
+              <h2 className="text-3xl font-bold gradient-text mt-2">Teacher Management</h2>
+              <p className="text-muted-foreground">
+                Manage faculty, track instructional impact, and surface AI nudges that keep your educator network aligned with
+                learner outcomes.
+              </p>
+            </div>
+            <Button className="bg-gradient-primary hover:opacity-90">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Add Teacher
+            </Button>
+          </div>
+          <div className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">AI Signal</p>
+              <p className="text-base font-semibold text-primary">Mentor sync scheduled tonight</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Faculty Pulse</p>
+              <p className="text-base font-semibold text-foreground">92% satisfaction this term</p>
+            </div>
+          </div>
         </div>
-        <Button className="bg-gradient-primary hover:opacity-90">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Add Teacher
-        </Button>
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+          <DotLottieReact
+            src="https://lottie.host/421f068f-1128-4ec0-818b-6323e40be4bb/E93DMvnPPk.lottie"
+            autoplay
+            loop
+            className="relative h-48 w-48 md:h-56 md:w-56"
+          />
+        </div>
       </div>
 
       <Card className="glass p-6">

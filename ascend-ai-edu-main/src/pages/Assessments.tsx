@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
   Card,
   CardHeader,
@@ -266,21 +267,46 @@ export default function Assessments() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <div className="space-y-1.5">
-          <h1 className="text-3xl font-bold tracking-tight">Assessments &amp; Feedback</h1>
-          <p className="text-muted-foreground">Centralize grading analytics, AI insights, and mentor feedback to steer your next learning sprint.</p>
+      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Badge variant="outline" className="w-fit uppercase tracking-widest">Assessment Builder</Badge>
+            <h1 className="text-3xl font-bold tracking-tight">Assessments &amp; Feedback</h1>
+            <p className="text-muted-foreground">
+              Centralize grading analytics, AI insights, and mentor feedback to steer your next learning sprint. Build evaluations,
+              publish rubrics, and track mastery trajectories with real-time nudges.
+            </p>
+          </div>
+          <div className="grid gap-3 text-sm md:grid-cols-2">
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">AI Signal</p>
+              <p className="text-base font-semibold text-primary">Grade review queue ready</p>
+            </div>
+            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+              <p className="text-xs uppercase tracking-widest text-muted-foreground">Building Momentum</p>
+              <p className="text-base font-semibold text-foreground">5 assessments drafted this week</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button variant={dateScope === "month" ? "default" : "outline"} className="gap-2" onClick={() => setDateScope("month")}>
+              <CalendarRange className="h-4 w-4" /> This Month
+            </Button>
+            <Button variant={dateScope === "semester" ? "default" : "outline"} className="gap-2" onClick={() => setDateScope("semester")}>
+              <Layers className="h-4 w-4" /> Semester
+            </Button>
+            <Button variant={dateScope === "year" ? "default" : "outline"} className="gap-2" onClick={() => setDateScope("year")}>
+              <Filter className="h-4 w-4" /> Year
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Button variant={dateScope === "month" ? "default" : "outline"} className="gap-2" onClick={() => setDateScope("month")}>
-            <CalendarRange className="h-4 w-4" /> This Month
-          </Button>
-          <Button variant={dateScope === "semester" ? "default" : "outline"} className="gap-2" onClick={() => setDateScope("semester")}>
-            <Layers className="h-4 w-4" /> Semester
-          </Button>
-          <Button variant={dateScope === "year" ? "default" : "outline"} className="gap-2" onClick={() => setDateScope("year")}>
-            <Filter className="h-4 w-4" /> Year
-          </Button>
+        <div className="relative flex items-center justify-center">
+          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+          <DotLottieReact
+            src="https://lottie.host/5702f9f1-1397-433c-9503-b905958adb4c/huSMdVgECE.lottie"
+            autoplay
+            loop
+            className="relative h-48 w-48 md:h-56 md:w-56"
+          />
         </div>
       </div>
 

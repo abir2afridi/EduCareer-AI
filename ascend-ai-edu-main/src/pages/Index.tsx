@@ -1,135 +1,289 @@
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ArrowRight, Brain, Users, TrendingUp, Award, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import IubLogo from "../assets/iub-logo.png";
 
 const Index = () => {
+  const solutions = [
+    {
+      number: "01",
+      title: "Adaptive Pathways",
+      description: "Dynamic curricula that adjust to each learner’s pace, performance, and aspirations.",
+      animationSrc: "https://lottie.host/95652c02-8ab0-4777-9134-dbd035430d27/QA3B1hjEK5.lottie",
+      accentHover: "group-hover:bg-red-600",
+      numberColor: "text-black",
+    },
+    {
+      number: "02",
+      title: "Career Navigation",
+      description: "AI guidance bridges students to internships, mentors, and industry opportunities.",
+      animationSrc: "https://lottie.host/84ac1398-45b1-4c0e-a7a2-98f9f257f18d/EVCs7SkkN2.lottie",
+      accentHover: "group-hover:bg-blue-600",
+      numberColor: "text-black",
+    },
+    {
+      number: "03",
+      title: "Insight Hub",
+      description: "Unified analytics dashboards track outcomes, risk signals, and institutional KPIs.",
+      animationSrc: "https://lottie.host/6beac0e6-614c-4641-a8ca-c112eb8f33c8/SXzHYft6TJ.lottie",
+      accentHover: "group-hover:bg-emerald-500",
+      numberColor: "text-black",
+    },
+  ];
+
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 px-6">
-        <div className="absolute inset-0 bg-gradient-hero opacity-20" />
-        <div className="container mx-auto relative z-10">
-          <div className="max-w-4xl mx-auto text-center space-y-8 animate-fade-in">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/20 border border-primary/30 mb-4">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Powered by Advanced AI</span>
+    <main className="min-h-screen bg-white text-black">
+      <nav className="fixed top-0 left-0 z-50 w-full border-b border-black bg-white">
+        <div className="container mx-auto flex items-center justify-between px-4 py-4 md:px-8">
+          <a href="#top" className="flex items-center gap-3 text-xl font-bold tracking-tighter">
+            <img src={IubLogo} alt="IUB Logo" className="h-10 w-10 object-contain" />
+            EDUCAREER AI
+          </a>
+          <div className="flex items-center gap-6">
+            <div className="hidden items-center space-x-8 md:flex">
+              <a href="#work" className="text-sm uppercase tracking-widest transition-colors hover:text-red-600">
+                Solutions
+              </a>
+              <a href="#about" className="text-sm uppercase tracking-widest transition-colors hover:text-red-600">
+                About
+              </a>
+              <a href="#contact" className="text-sm uppercase tracking-widest transition-colors hover:text-red-600">
+                Contact
+              </a>
             </div>
-            
-            <h1 className="text-5xl md:text-7xl font-bold leading-tight">
-              <span className="gradient-text">EduCareer AI</span>
-              <br />
-              <span className="text-foreground/90">Smart Education Portal</span>
-            </h1>
-            
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Transform education with AI-powered personalized learning, intelligent career guidance, 
-              and comprehensive analytics for students, teachers, and administrators.
-            </p>
-            
-            <div className="flex gap-4 justify-center flex-wrap">
-              <Link to="/dashboard">
-                <Button size="lg" className="bg-gradient-primary hover:opacity-90 text-lg px-8 shadow-glow">
-                  Get Started
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-              <Link to="/assistant">
-                <Button size="lg" variant="outline" className="text-lg px-8 border-border/50">
-                  Try AI Assistant
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto">
-          <h2 className="text-4xl font-bold text-center mb-12 gradient-text">
-            Powerful Features
-          </h2>
-          
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              {
-                icon: Brain,
-                title: "AI-Powered Learning",
-                description: "Personalized learning paths that adapt to each student's pace and style",
-                color: "text-primary"
-              },
-              {
-                icon: Users,
-                title: "Student Analytics",
-                description: "Track progress, identify risks, and optimize performance with data insights",
-                color: "text-secondary"
-              },
-              {
-                icon: TrendingUp,
-                title: "Career Guidance",
-                description: "AI-driven job matching and skill gap analysis for better employability",
-                color: "text-accent"
-              },
-              {
-                icon: Award,
-                title: "Smart Assessments",
-                description: "Automated grading, OCR mark entry, and outcome-based evaluation",
-                color: "text-primary"
-              }
-            ].map((feature, index) => (
-              <Card
-                key={index}
-                className="glass p-6 hover:shadow-glow transition-all cursor-pointer group animate-slide-up"
-                style={{ animationDelay: `${index * 100}ms` }}
+            <div className="flex items-center gap-3">
+              <a href="/auth/signin" className="text-sm font-semibold uppercase tracking-widest hover:text-red-600">
+                Sign in
+              </a>
+              <a
+                href="/auth/signup"
+                className="rounded-full border border-black px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors hover:bg-black hover:text-white"
               >
-                <feature.icon className={`h-12 w-12 ${feature.color} mb-4 group-hover:scale-110 transition-transform`} />
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </Card>
-            ))}
+                Sign up
+              </a>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <section id="top" className="container mx-auto grid grid-cols-12 gap-4 px-4 pt-32 pb-20 md:px-8">
+        <div className="col-span-12 mb-8 md:col-span-7 md:mb-0">
+          <h1 className="text-8xl font-bold leading-none tracking-tighter md:text-9xl">
+            FUTURE-READY
+            <br />
+            LEARNING
+          </h1>
+          <p className="mt-6 max-w-xl text-xl">
+            Empower institutions to deliver adaptive learning, real-time guidance, and career outcomes with one
+            intelligent platform built for the next generation of education.
+          </p>
+        </div>
+        <div className="col-span-12 flex items-center justify-center md:col-span-5">
+          <div className="relative aspect-square w-full max-w-[520px]">
+            <div className="pointer-events-none absolute inset-0 -m-6 border-4 border-black" />
+            <div className="relative h-full w-full bg-red-600">
+              <div className="pointer-events-none absolute -bottom-6 -right-6 h-28 w-28 bg-black" />
+              <div className="relative flex h-full w-full items-center justify-center">
+                <DotLottieReact
+                  src="https://lottie.host/abd771cf-8e42-42e0-bf5f-8df3867c3ea0/pvplgBICDD.lottie"
+                  autoplay
+                  loop
+                  className="h-[520px] w-[520px]"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-20 px-6 bg-muted/20">
-        <div className="container mx-auto">
-          <div className="grid md:grid-cols-3 gap-8 text-center">
-            {[
-              { value: "1,200+", label: "Active Students" },
-              { value: "95%", label: "Success Rate" },
-              { value: "32", label: "AI-Powered Courses" }
-            ].map((stat, index) => (
-              <div key={index} className="animate-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className="text-5xl font-bold gradient-text mb-2">{stat.value}</div>
-                <div className="text-muted-foreground text-lg">{stat.label}</div>
+      <section id="work" className="bg-black py-20 text-white">
+        <div className="container mx-auto px-4 md:px-8">
+          <h2 className="mb-12 text-6xl font-bold tracking-tighter">SOLUTIONS</h2>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {solutions.map((project) => (
+              <div key={project.number} className="group">
+                <div className="mb-4 aspect-square overflow-hidden">
+                  {project.animationSrc ? (
+                    <div
+                      className={`relative flex h-full w-full items-center justify-center bg-neutral-100 transition-[transform,background-color] duration-300 group-hover:scale-[1.02] ${project.accentHover ?? "group-hover:bg-red-600"}`}
+                    >
+                      <div className="pointer-events-none absolute inset-0 border-4 border-black" />
+                      <div className="pointer-events-none absolute -bottom-4 -right-4 h-16 w-16 bg-black opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                      <DotLottieReact
+                        src={project.animationSrc}
+                        autoplay
+                        loop
+                        className="h-[380px] w-[380px]"
+                      />
+                      <span className={`absolute top-4 left-4 text-6xl font-bold ${project.numberColor ?? "text-black"}`}>
+                        {project.number}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-neutral-100 transition-colors duration-300 group-hover:bg-red-600">
+                      <span className="text-8xl font-bold text-black">{project.number}</span>
+                    </div>
+                  )}
+                </div>
+                <h3 className="mb-2 text-xl font-bold">{project.title}</h3>
+                <p className="text-neutral-400">{project.description}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 px-6">
-        <div className="container mx-auto">
-          <Card className="glass p-12 text-center max-w-3xl mx-auto">
-            <h2 className="text-4xl font-bold mb-4 gradient-text">
-              Ready to Transform Education?
-            </h2>
-            <p className="text-xl text-muted-foreground mb-8">
-              Join thousands of students and educators using AI to achieve better learning outcomes
+      <section id="about" className="py-20">
+        <div className="container mx-auto grid grid-cols-12 gap-8 px-4 md:px-8">
+          <div className="col-span-12 md:col-span-5">
+            <h2 className="mb-8 text-6xl font-bold tracking-tighter">ABOUT</h2>
+            <div className="relative mb-8 aspect-square w-full max-w-sm bg-neutral-100 md:mb-0">
+              <div className="pointer-events-none absolute inset-0 border-2 border-black" />
+              <div className="pointer-events-none absolute -bottom-4 -right-4 h-14 w-14 bg-black" />
+              <div className="relative flex h-full w-full items-center justify-center">
+                <DotLottieReact
+                  src="https://lottie.host/5e04d587-5945-4a93-b0ae-e2c324dc0f61/Vqpvjl94iL.lottie"
+                  autoplay
+                  loop
+                  className="h-56 w-56"
+                />
+              </div>
+            </div>
+          </div>
+          <div className="col-span-12 md:col-span-7 md:pt-24">
+            <p className="mb-6 text-xl">
+              EduCareer AI unifies academic coaching, career services, and employer engagement so learners progress from
+              orientation to employment with clarity and confidence.
             </p>
-            <Link to="/dashboard">
-              <Button size="lg" className="bg-gradient-primary hover:opacity-90 text-lg px-12 shadow-glow">
-                Start Your Journey
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            </Link>
-          </Card>
+            <p className="mb-6">
+              Our platform blends behavioral data, skills intelligence, and assistive AI to personalize support while
+              empowering staff with automation and actionable insights.
+            </p>
+            <p className="mb-6">
+              We partner with universities, bootcamps, and workforce programs to measure impact beyond graduation and to
+              build lifelong learner communities.
+            </p>
+            <div className="mt-12 grid grid-cols-2 gap-4">
+              <div>
+                <h3 className="mb-2 text-sm uppercase tracking-widest">Capabilities</h3>
+                <ul className="space-y-2">
+                  <li>AI Learning Paths</li>
+                  <li>Skills Intelligence Graph</li>
+                  <li>Career Readiness Coaching</li>
+                  <li>Automated Outreach</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="mb-2 text-sm uppercase tracking-widest">Impact Metrics</h3>
+                <ul className="space-y-2">
+                  <li>Placement Velocity</li>
+                  <li>Skills Mastery Score</li>
+                  <li>Retention Health Index</li>
+                  <li>Employer Satisfaction</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
-    </div>
+
+      <section id="contact" className="bg-red-600 py-20 text-white">
+        <div className="container mx-auto grid grid-cols-1 gap-12 px-4 md:grid-cols-2 md:px-8">
+          <div>
+            <h2 className="mb-8 text-6xl font-bold tracking-tighter">CONTACT</h2>
+            <p className="mb-8 text-xl">Ready to elevate learner outcomes? Let’s design your next education advantage.</p>
+            <div className="grid gap-6 md:grid-cols-[1.4fr,1fr]">
+              <div className="space-y-4">
+                <p className="flex items-center">
+                  <span className="w-24 text-sm uppercase tracking-widest">Email</span>
+                  <a href="mailto:hello@educareer.ai" className="hover:underline">
+                    hello@educareer.ai
+                  </a>
+                </p>
+                <p className="flex items-center">
+                  <span className="w-24 text-sm uppercase tracking-widest">Phone</span>
+                  <a href="tel:+18885551234" className="hover:underline">
+                    +1 (888) 555-1234
+                  </a>
+                </p>
+                <p className="flex items-center">
+                  <span className="w-24 text-sm uppercase tracking-widest">Location</span>
+                  <span>Global · Remote-first</span>
+                </p>
+              </div>
+              <div className="relative overflow-hidden">
+                <div className="pointer-events-none absolute inset-0 border-2 border-black" />
+                <div className="pointer-events-none absolute -bottom-3 -right-3 h-12 w-12 bg-black" />
+                <div className="relative flex h-full min-h-[220px] items-center justify-center bg-white/10">
+                  <DotLottieReact
+                    src="https://lottie.host/ea645d51-f06a-4e12-a089-61475985c663/qynJSABDMD.lottie"
+                    autoplay
+                    loop
+                    className="h-56 w-56"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <form className="space-y-6">
+            <div>
+              <label htmlFor="name" className="mb-2 block text-sm uppercase tracking-widest">
+                Name
+              </label>
+              <input
+                id="name"
+                type="text"
+                placeholder="Your name"
+                className="w-full border-b-2 border-white bg-transparent py-2 px-0 placeholder-white/50 focus:border-black focus:outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="email" className="mb-2 block text-sm uppercase tracking-widest">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                placeholder="Your email"
+                className="w-full border-b-2 border-white bg-transparent py-2 px-0 placeholder-white/50 focus:border-black focus:outline-none"
+              />
+            </div>
+            <div>
+              <label htmlFor="message" className="mb-2 block text-sm uppercase tracking-widest">
+                Message
+              </label>
+              <textarea
+                id="message"
+                rows={4}
+                placeholder="Your message"
+                className="w-full border-b-2 border-white bg-transparent py-2 px-0 placeholder-white/50 focus:border-black focus:outline-none"
+              />
+            </div>
+            <button
+              type="submit"
+              className="mt-8 bg-black px-8 py-3 text-sm uppercase tracking-widest text-white transition-colors hover:bg-white hover:text-black"
+            >
+              Send Message
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <footer className="bg-black py-8 text-white">
+        <div className="container mx-auto flex flex-col items-center justify-between px-4 md:flex-row md:px-8">
+          <p className="mb-4 text-sm md:mb-0">© 2025 TheDevAbir-CodeCrafted Studio. All rights reserved.</p>
+          <div className="flex space-x-8">
+            <a href="#" className="text-sm uppercase tracking-widest transition-colors hover:text-red-600">
+              Instagram
+            </a>
+            <a href="#" className="text-sm uppercase tracking-widest transition-colors hover:text-red-600">
+              Behance
+            </a>
+            <a href="#" className="text-sm uppercase tracking-widest transition-colors hover:text-red-600">
+              LinkedIn
+            </a>
+          </div>
+        </div>
+      </footer>
+    </main>
   );
 };
 

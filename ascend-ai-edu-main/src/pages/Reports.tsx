@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
   Card,
   CardHeader,
@@ -174,33 +175,58 @@ export default function Reports() {
   return (
     <div className="space-y-8">
       <motion.header initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight">📊 Learning Reports &amp; Progress Analytics</h1>
-            <p className="text-muted-foreground">Track your academic growth, performance trends, and subject mastery.</p>
+        <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
+          <div className="space-y-4">
+            <div className="space-y-1">
+              <Badge variant="outline" className="w-fit uppercase tracking-widest">Learning Reports</Badge>
+              <h1 className="text-3xl font-bold tracking-tight">📊 Learning Reports &amp; Progress Analytics</h1>
+              <p className="text-muted-foreground">
+                Track academic growth, trend trajectories, and subject mastery. AI surfaces the right datasets and insights so
+                you can act quickly on coaching opportunities.
+              </p>
+            </div>
+            <div className="grid gap-3 text-sm md:grid-cols-2">
+              <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">Latest Insight</p>
+                <p className="text-base font-semibold text-foreground">Consistency up 14% MoM</p>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">AI Signal</p>
+                <p className="text-base font-semibold text-primary">Review neural network labs</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+              <Select value={range} onValueChange={(value: TrendRange) => setRange(value)}>
+                <SelectTrigger className="rounded-2xl border-border/60">
+                  <SelectValue placeholder="Time range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Weekly</SelectItem>
+                  <SelectItem value="monthly">Monthly</SelectItem>
+                  <SelectItem value="semester">Semester</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={courseFilter} onValueChange={(value: CourseFilter) => setCourseFilter(value)}>
+                <SelectTrigger className="rounded-2xl border-border/60">
+                  <SelectValue placeholder="All courses" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Courses</SelectItem>
+                  <SelectItem value="math">Math</SelectItem>
+                  <SelectItem value="ai-fundamentals">AI Fundamentals</SelectItem>
+                </SelectContent>
+              </Select>
+              <Input placeholder="Search report..." className="rounded-2xl border-border/60" />
+            </div>
           </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Select value={range} onValueChange={(value: TrendRange) => setRange(value)}>
-              <SelectTrigger className="rounded-2xl border-border/60">
-                <SelectValue placeholder="Time range" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="weekly">Weekly</SelectItem>
-                <SelectItem value="monthly">Monthly</SelectItem>
-                <SelectItem value="semester">Semester</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={courseFilter} onValueChange={(value: CourseFilter) => setCourseFilter(value)}>
-              <SelectTrigger className="rounded-2xl border-border/60">
-                <SelectValue placeholder="All courses" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Courses</SelectItem>
-                <SelectItem value="math">Math</SelectItem>
-                <SelectItem value="ai-fundamentals">AI Fundamentals</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input placeholder="Search report..." className="rounded-2xl border-border/60" />
+          <div className="relative flex items-center justify-center">
+            <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
+            <DotLottieReact
+              src="https://lottie.host/0e4a4889-3bc8-4f69-a73e-9d6dcbcda575/iWaSnkduvc.lottie"
+              autoplay
+              loop
+              className="relative h-48 w-48 md:h-56 md:w-56"
+            />
           </div>
         </div>
       </motion.header>
