@@ -1,4 +1,5 @@
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import Spline from "@splinetool/react-spline";
 import IubLogo from "../assets/iub-logo.png";
 
 const Index = () => {
@@ -79,15 +80,20 @@ const Index = () => {
         <div className="col-span-12 flex items-center justify-center md:col-span-5">
           <div className="relative aspect-square w-full max-w-[520px]">
             <div className="pointer-events-none absolute inset-0 -m-6 border-4 border-black" />
-            <div className="relative h-full w-full bg-red-600">
+            <div className="relative h-full w-full bg-white">
               <div className="pointer-events-none absolute -bottom-6 -right-6 h-28 w-28 bg-black" />
               <div className="relative flex h-full w-full items-center justify-center">
-                <DotLottieReact
-                  src="https://lottie.host/abd771cf-8e42-42e0-bf5f-8df3867c3ea0/pvplgBICDD.lottie"
-                  autoplay
-                  loop
-                  className="h-[520px] w-[520px]"
+                <Spline
+                  scene="https://prod.spline.design/kvj2kJi-tTEQxQcz/scene.splinecode"
+                  className="h-full w-full"
+                  style={{ minHeight: "320px" }}
                 />
+                <div className="pointer-events-none absolute bottom-6 right-6 flex flex-col items-end gap-2 text-white">
+                  <div className="h-10 w-10 border-2 border-white/60 bg-white/10" />
+                  <span className="rounded-sm border border-white/40 bg-black/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.35em]">
+                    Built with AHS
+                  </span>
+                </div>
               </div>
             </div>
           </div>
