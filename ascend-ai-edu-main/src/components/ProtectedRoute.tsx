@@ -13,6 +13,9 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     typeof window !== "undefined" && window.sessionStorage.getItem("profile-bypass") === "true";
   const { toast } = useToast();
   const { profile, isLoading: isProfileLoading, error: profileError } = useStudentProfile(user?.uid ?? null);
+  const isOnProfileRoute = location.pathname.startsWith("/student/complete-profile");
+  const bypassProfileCheck = routeState?.bypassProfileCheck === true || sessionBypass;
+  const profileCompleted = profile?.profileCompleted === true;
 
   useEffect(() => {
     if (profileError) {
@@ -23,6 +26,12 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
       });
     }
   }, [profileError, toast]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!profileCompleted) return;
+    window.sessionStorage.removeItem("profile-bypass");
+  }, [profileCompleted]);
 
   if (isAuthLoading) {
     return (
@@ -36,17 +45,6 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     return <Navigate to="/auth/signin" replace />;
   }
 
-  const isOnProfileRoute = location.pathname.startsWith("/student/complete-profile");
-  const bypassProfileCheck = routeState?.bypassProfileCheck === true;
-  const profileCompleted = profile?.profileCompleted === true;
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (profileCompleted) {
-      window.sessionStorage.removeItem("profile-bypass");
-    }
-  }, [profileCompleted]);
-
   if (isProfileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -55,11 +53,11 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
     );
   }
 
-  if (!profileCompleted && !isOnProfileRoute && !bypassProfileCheck && !sessionBypass) {
+  if (!profileCompleted && !isOnProfileRoute && !bypassProfileCheck) {
     return <Navigate to="/student/complete-profile" replace state={{ from: location }} />;
   }
 
-  if (profileCompleted && isOnProfileRoute) {
+  if (profileCompleted && isOnProfileRoute && !bypassProfileCheck) {
     return <Navigate to="/dashboard" replace />;
   }
 

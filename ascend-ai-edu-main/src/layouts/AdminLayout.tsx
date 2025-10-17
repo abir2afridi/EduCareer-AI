@@ -21,6 +21,7 @@ import {
   Sparkles,
   Users,
   X,
+  ClipboardCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -173,6 +174,13 @@ export function AdminLayout() {
         icon: Inbox,
         description: "System signals",
         gradient: "from-slate-100 via-zinc-50 to-white dark:from-slate-900/40 dark:via-zinc-950/40 dark:to-transparent",
+      },
+      {
+        title: "Profile Change Requests",
+        url: "/admin/profile-requests",
+        icon: ClipboardCheck,
+        description: "Review profile updates",
+        gradient: "from-emerald-100 via-teal-50 to-white dark:from-emerald-900/40 dark:via-teal-950/40 dark:to-transparent",
       },
       {
         title: "System Settings",

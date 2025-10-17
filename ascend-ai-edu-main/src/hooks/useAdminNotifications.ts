@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { collection, onSnapshot, orderBy, query, updateDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebaseClient";
 
-type AdminNotificationType = "newStudent" | "updateStudent" | "deleteStudent";
+type AdminNotificationType = "newStudent" | "updateStudent" | "deleteStudent" | "profileChangeRequest";
 
 type AdminNotification = {
   id: string;

@@ -14,14 +14,29 @@ import { db } from "@/lib/firebaseClient";
 
 const studentsCollection = collection(db, "students");
 const notificationsCollection = collection(db, "adminNotifications");
+const profileChangeRequestsCollection = collection(db, "profileChangeRequests");
 
-export type AdminNotificationType = "newStudent" | "updateStudent" | "deleteStudent";
+export type AdminNotificationType = "newStudent" | "updateStudent" | "deleteStudent" | "profileChangeRequest";
 
 export type AdminNotificationPayload = {
   type: AdminNotificationType;
   uid: string;
   message?: string;
   studentName?: string;
+  metadata?: Record<string, unknown>;
+};
+
+export type ProfileChangeRequestPayload = {
+  uid: string;
+  requestedData: Record<string, unknown>;
+  status?: "pending" | "approved" | "rejected";
+};
+
+export type StudentNotificationPayload = {
+  uid: string;
+  title: string;
+  message: string;
+  type?: string;
   metadata?: Record<string, unknown>;
 };
 
@@ -58,4 +73,44 @@ export const addAdminNotification = async (payload: AdminNotificationPayload) =>
   }
 
   await addDoc(notificationsCollection, data);
+};
+
+export const submitProfileChangeRequest = async (payload: ProfileChangeRequestPayload): Promise<boolean> => {
+  console.log("submitProfileChangeRequest:start", payload.uid);
+
+  const timestamp = serverTimestamp();
+  const requestData: Record<string, unknown> = {
+    uid: payload.uid,
+    requestedData: payload.requestedData,
+    status: payload.status ?? "pending",
+    timestamp,
+  };
+
+  try {
+    console.log("submitProfileChangeRequest:before addDoc", payload.uid);
+    await addDoc(profileChangeRequestsCollection, requestData);
+    console.log("submitProfileChangeRequest:after addDoc", payload.uid);
+    return true;
+  } catch (error) {
+    console.error("submitProfileChangeRequest:error", error);
+    throw error;
+  }
+};
+
+export const updateProfileChangeRequestStatus = (requestId: string, status: "pending" | "approved" | "rejected") =>
+  updateDoc(doc(profileChangeRequestsCollection, requestId), { status, resolvedAt: serverTimestamp() });
+
+export const addStudentNotification = async (payload: StudentNotificationPayload) => {
+  const timestamp = serverTimestamp();
+  const notificationData: Record<string, unknown> = {
+    uid: payload.uid,
+    title: payload.title,
+    message: payload.message,
+    type: payload.type ?? "info",
+    metadata: payload.metadata ?? {},
+    read: false,
+    timestamp,
+  };
+
+  await addDoc(collection(db, "studentNotifications", payload.uid, "messages"), notificationData);
 };

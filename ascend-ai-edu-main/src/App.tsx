@@ -21,6 +21,7 @@ import Assistant from "./pages/Assistant";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
+import Profile from "./pages/Profile";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import CompleteProfile from "./pages/student/CompleteProfile";
@@ -35,6 +36,7 @@ import PerformanceAnalyticsPage from "./pages/admin/PerformanceAnalytics";
 import ResearchPolicyPage from "./pages/admin/ResearchPolicy";
 import ReportsExportsPage from "./pages/admin/ReportsExports";
 import NotificationsPage from "./pages/admin/Notifications";
+import ProfileChangeRequestsPage from "./pages/admin/ProfileChangeRequests";
 import SystemSettingsPage from "./pages/admin/SystemSettings";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
@@ -182,6 +184,16 @@ const App = () => (
             }
           />
           <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Profile />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/settings"
             element={
               <ProtectedRoute>
@@ -232,6 +244,7 @@ const App = () => (
             <Route path="research" element={<ResearchPolicyPage />} />
             <Route path="reports" element={<ReportsExportsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="profile-requests" element={<ProfileChangeRequestsPage />} />
             <Route path="settings" element={<SystemSettingsPage />} />
           </Route>
           <Route path="/auth/signin" element={<SignIn />} />

@@ -1,0 +1,13 @@
+[
+  {
+    "origin": [
+      "http://localhost:8087",
+      "http://localhost:8086",
+      "https://your-deployed-site.web.app",
+      "https://your-deployed-site.firebaseapp.com"
+    ],
+    "method": ["GET", "POST", "PUT", "HEAD", "DELETE"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": ["Content-Type"]
+  }
+]

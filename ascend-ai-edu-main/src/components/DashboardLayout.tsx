@@ -29,6 +29,7 @@ import {
   BarChart3,
   BarChart4,
   CalendarDays,
+  IdCard,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -233,6 +234,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     ];
 
     const navSecondary: NavItem[] = [
+      {
+        title: "Profile",
+        url: "/profile",
+        icon: IdCard,
+        description: "Personal information",
+        gradient: "from-emerald-100 via-green-50 to-white dark:from-emerald-900/40 dark:via-green-950/40 dark:to-transparent",
+      },
       {
         title: "Research",
         url: "/research",
