@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock, GraduationCap, ArrowRight, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, GraduationCap, ArrowRight, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/components/auth-provider";
+import { useStudentProfile } from "@/hooks/useStudentProfile";
 
 type FormErrors = Record<string, string>;
 
@@ -44,7 +45,8 @@ const SignIn = () => {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { signin, user, isAuthLoading, signInWithGoogle } = useAuth();
+  const { signin, user, isAuthLoading, signInWithGoogle, signout } = useAuth();
+  const { profile, isLoading: isProfileLoading } = useStudentProfile(user?.uid ?? null);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -58,12 +60,6 @@ const SignIn = () => {
       }
     };
   }, []);
-
-  useEffect(() => {
-    if (!isAuthLoading && user) {
-      navigate("/dashboard", { replace: true });
-    }
-  }, [isAuthLoading, user, navigate]);
 
   const validateForm = () => {
     const newErrors: FormErrors = {};
@@ -89,7 +85,7 @@ const SignIn = () => {
     setIsLoading(true);
     try {
       await signin(formData.email, formData.password);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Failed to sign in. Please try again.";
       setErrors({ submit: message });
@@ -112,6 +108,7 @@ const SignIn = () => {
     setIsLoading(true);
     try {
       await signInWithGoogle();
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to authenticate with Google at this time.";
       setErrors({ submit: message });
@@ -119,6 +116,70 @@ const SignIn = () => {
       setIsLoading(false);
     }
   };
+
+  if (!isAuthLoading && user) {
+    const targetPath = profile?.profileCompleted ? "/dashboard" : "/student/complete-profile";
+
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 flex items-center justify-center p-4">
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          {[...Array(15)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-blue-400/40 dark:bg-blue-400/30 rounded-full"
+              animate={{
+                y: [0, -100],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                duration: Math.random() * 3 + 2,
+                repeat: Infinity,
+                delay: Math.random() * 2,
+              }}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+            />
+          ))}
+        </div>
+
+        <div className="relative z-10 w-full max-w-xl">
+          <Card className="bg-white/85 dark:bg-slate-900/60 backdrop-blur-xl border border-border shadow-2xl">
+            <CardHeader className="space-y-1 text-center">
+              <CardTitle className="text-2xl font-bold text-foreground">You're already signed in</CardTitle>
+              <CardDescription className="text-muted-foreground">
+                {isProfileLoading
+                  ? "Checking your profile status..."
+                  : profile?.profileCompleted
+                    ? "Continue to your dashboard to explore your personalized experience."
+                    : "Complete your student profile to unlock your personalized dashboard."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {isProfileLoading ? (
+                <div className="flex justify-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                </div>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => navigate(targetPath, { replace: true })}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-primary-foreground"
+                  >
+                    {profile?.profileCompleted ? "Go to dashboard" : "Complete your profile"}
+                  </Button>
+                  <Button variant="outline" onClick={() => signout()} className="border-border/80">
+                    Sign out
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 flex items-center justify-center p-4">

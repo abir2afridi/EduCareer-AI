@@ -1,0 +1,41 @@
+export const genders = ["Male", "Female", "Non-binary", "Prefer not to say"] as const;
+
+export const departments = [
+  "Computer Science and Engineering (CSE)",
+  "Computer Science",
+  "Business Analytics",
+  "AI & Robotics",
+  "Design & UI",
+  "Data Science",
+  "Finance",
+  "Marketing",
+  "Electrical and Electronic Engineering (EEE)",
+] as const;
+
+export const skillsOptions = [
+  "JavaScript",
+  "TypeScript",
+  "React",
+  "Next.js",
+  "Node.js",
+  "Python",
+  "Machine Learning",
+  "Data Analysis",
+  "UI/UX Design",
+  "Graphic Design",
+  "Project Management",
+  "Public Speaking",
+  "Leadership",
+  "Problem Solving",
+  "Critical Thinking",
+  "Team Collaboration",
+  "Research",
+  "Entrepreneurship",
+  "Digital Marketing",
+  "Content Writing",
+  "Cloud Computing",
+  "DevOps",
+  "Cybersecurity",
+  "Mobile Development",
+  "AR/VR",
+] as const;

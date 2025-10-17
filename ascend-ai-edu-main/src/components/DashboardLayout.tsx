@@ -1,8 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import type { LucideIcon } from "lucide-react";
-import type { Transition } from "framer-motion";
 import {
   Bell,
   Brain,
@@ -15,9 +13,11 @@ import {
   FileText,
   GraduationCap,
   Home,
+  Info,
   LogOut,
   Menu,
   MessageSquare,
+  Mail,
   Search,
   Settings,
   ShoppingBag,
@@ -36,6 +36,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -44,6 +45,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "./auth-provider";
+import IubLogo from "../assets/iub-logo.png";
 
 const SIDEBAR_STORAGE_KEY = "educareer-sidebar-collapsed";
 
@@ -55,6 +57,14 @@ type NavItem = {
   gradient: string;
   badge?: string;
   premium?: boolean;
+};
+
+type UserMetadata = {
+  name?: string;
+  plan?: string;
+  tier?: string;
+  org?: string;
+  avatar_url?: string;
 };
 
 interface DashboardLayoutProps {
@@ -69,10 +79,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
-  const prefersReducedMotion = useReducedMotion();
+  const [now, setNow] = useState(() => new Date());
 
-  const displayName = user?.user_metadata?.name || user?.email || "Account";
+  const userMetadata = (user as { user_metadata?: UserMetadata } | null)?.user_metadata;
+
+  const displayName = userMetadata?.name || user?.displayName || user?.email || "Account";
   const email = user?.email;
+  const secondaryEmail = email && email !== displayName ? email : undefined;
   const initials = useMemo(() => {
     if (!displayName) return "AC";
     return displayName
@@ -83,8 +96,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       .toUpperCase();
   }, [displayName]);
 
-  const isPremium = Boolean(user?.user_metadata?.plan === "premium" || user?.user_metadata?.tier);
-  const premiumTier = (user?.user_metadata?.tier as string | undefined)?.toLowerCase() ?? (isPremium ? "premium" : "member");
+  const isPremium = Boolean((userMetadata?.plan ?? "") === "premium" || userMetadata?.tier);
+  const premiumTier = userMetadata?.tier?.toLowerCase() ?? (isPremium ? "premium" : "member");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -95,6 +108,14 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
     } catch (error) {
       console.warn("Failed to parse sidebar state", error);
     }
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
@@ -195,6 +216,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         description: "In-depth analytics",
         gradient: "from-emerald-100 via-lime-50 to-white dark:from-emerald-900/40 dark:via-lime-950/40 dark:to-transparent",
       },
+      {
+        title: "Contact",
+        url: "/contact",
+        icon: Mail,
+        description: "Team directory",
+        gradient: "from-blue-100 via-slate-50 to-white dark:from-blue-900/40 dark:via-slate-950/40 dark:to-transparent",
+      },
+      {
+        title: "About",
+        url: "/about",
+        icon: Info,
+        description: "Vision & team",
+        gradient: "from-indigo-100 via-blue-50 to-white dark:from-indigo-900/40 dark:via-blue-950/40 dark:to-transparent",
+      },
     ];
 
     const navSecondary: NavItem[] = [
@@ -257,7 +292,15 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = async () => {
     try {
       await signout();
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem("profile-bypass");
+      }
       navigate("/", { replace: true });
+      if (typeof window !== "undefined") {
+        window.setTimeout(() => {
+          window.location.replace("/");
+        }, 250);
+      }
     } catch (error) {
       console.error("Failed to sign out", error);
     }
@@ -272,7 +315,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         key={item.title}
         to={item.url}
         onClick={onNavigate}
-        className={`group relative flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-3xl transition-all ${
+        className={`group relative flex items-center ${collapsed ? "justify-center" : "gap-3"} rounded-3xl transition-colors duration-200 ease-out ${
           isActive
             ? `bg-gradient-to-r ${item.gradient} shadow-lg ring-1 ring-primary/25 text-foreground`
             : "border border-transparent text-muted-foreground hover:border-border/60 hover:bg-white/70 dark:hover:bg-white/5"
@@ -303,51 +346,20 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const cartItemCount = 3;
   const desktopPadding = isCollapsed ? "md:pl-24" : "md:pl-80";
 
-  const sidebarTransition: Transition = prefersReducedMotion
-    ? { duration: 0.12 }
-    : { duration: 0.22, ease: "easeInOut" };
-
-  const overlayTransition: Transition = prefersReducedMotion ? { duration: 0.12 } : { duration: 0.18 };
-
-  const contentTransition: Transition = prefersReducedMotion
-    ? { duration: 0.16, ease: "easeOut" }
-    : { duration: 0.24, ease: "easeOut" };
-
-  const headerTransition: Transition = prefersReducedMotion ? { duration: 0.12 } : { duration: 0.2, ease: "easeOut" };
-
   return (
     <div className="relative min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/40 dark:from-slate-950 dark:via-slate-900 dark:to-blue-950/40">
-      <AnimatePresence>
-        {isMobileOpen && (
-          <motion.div
-            key="overlay"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={overlayTransition}
-            className="fixed inset-0 z-40 bg-black/50 md:hidden"
-            onClick={closeMobileNav}
-          />
-        )}
-      </AnimatePresence>
+      {isMobileOpen && <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={closeMobileNav} />}
 
-      <AnimatePresence initial={false}>
-        <motion.aside
-          key="sidebar"
-          initial={false}
-          animate={{ width: isCollapsed ? 88 : 320 }}
-          transition={sidebarTransition}
-          className={`fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-border/60 backdrop-blur-lg shadow-[0_18px_56px_-28px_rgba(15,23,42,0.35)] md:flex ${
-            isPremium
-              ? "bg-gradient-to-b from-white/95 via-purple-50/90 to-blue-50/85 dark:from-slate-950/95 dark:via-purple-950/90 dark:to-blue-950/85"
-              : "bg-white/95 dark:bg-slate-950/95"
-          }`}
-        >
+      <aside
+        className={`fixed inset-y-0 left-0 z-50 hidden flex-col border-r border-border/60 shadow-[0_18px_56px_-28px_rgba(15,23,42,0.35)] md:flex ${
+          isPremium
+            ? "bg-gradient-to-b from-white/95 via-purple-50/90 to-blue-50/85 dark:from-slate-950/95 dark:via-purple-950/90 dark:to-blue-950/85"
+            : "bg-white/95 dark:bg-slate-950/95"
+        } ${isCollapsed ? "w-24" : "w-80"}`}
+      >
           <div className="flex items-center justify-between px-5 py-6">
             <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 via-primary/10 to-primary/20 text-primary">
-                <Sparkles className="h-5 w-5" />
-              </div>
+              <img src={IubLogo} alt="EduCareer Logo" className="h-11 w-11 rounded-2xl bg-white object-contain p-1" />
               {!isCollapsed && (
                 <div className="flex flex-col">
                   <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">EduCareer</span>
@@ -366,29 +378,30 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           {!isCollapsed && (
-            <div className={`mx-5 mb-6 rounded-3xl border border-white/70 bg-gradient-to-br ${getPremiumGradient()} p-5 shadow-inner dark:border-white/10`}>
-              <div className="flex items-start gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/80 text-primary shadow-sm dark:bg-white/10">
+            <div className={`mx-5 mb-5 rounded-md border border-white/60 bg-gradient-to-br ${getPremiumGradient()} p-2.5 shadow-inner dark:border-white/10`}>
+              <div className="flex items-start gap-1.5">
+                <div className="flex h-7 w-7 items-center justify-center rounded-md bg-white/80 text-primary shadow-sm dark:bg-white/10">
                   {getPremiumIcon()}
                 </div>
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">{displayName}</span>
-                    <Badge variant="secondary" className="text-[11px] capitalize">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] font-semibold text-foreground">{displayName}</span>
+                    <Badge variant="secondary" className="px-1 py-0 text-[9px] capitalize">
                       {premiumTier}
                     </Badge>
                   </div>
-                  <p className="text-xs text-muted-foreground">
-                    Empower {user?.user_metadata?.org || "your learners"} with adaptive guidance and smart automation.
+                  {secondaryEmail && <span className="text-[10px] text-muted-foreground">{secondaryEmail}</span>}
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
+                    Empower {userMetadata?.org || "your learners"} with adaptive guidance and smart automation.
                   </p>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="rounded-2xl border border-white/60 bg-white/70 p-3 text-center font-semibold text-primary shadow-sm dark:border-white/10 dark:bg-white/5">
-                      1.2k
-                      <span className="block text-[11px] font-normal text-muted-foreground">Active Learners</span>
+                  <div className="grid grid-cols-2 gap-1.5 text-[10px]">
+                    <div className="rounded-md border border-white/60 bg-white/70 px-2 py-1.5 text-center font-semibold text-primary shadow-sm dark:border-white/10 dark:bg-white/5">
+                      <span className="text-[13px] leading-none">1.2k</span>
+                      <span className="mt-1 block text-[9px] font-normal text-muted-foreground">Active Learners</span>
                     </div>
-                    <div className="rounded-2xl border border-white/60 bg-white/70 p-3 text-center font-semibold text-primary shadow-sm dark:border-white/10 dark:bg-white/5">
-                      32
-                      <span className="block text-[11px] font-normal text-muted-foreground">Programs</span>
+                    <div className="rounded-md border border-white/60 bg-white/70 px-2 py-1.5 text-center font-semibold text-primary shadow-sm dark:border-white/10 dark:bg-white/5">
+                      <span className="text-[13px] leading-none">32</span>
+                      <span className="mt-1 block text-[9px] font-normal text-muted-foreground">Programs</span>
                     </div>
                   </div>
                 </div>
@@ -413,28 +426,27 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           </div>
 
           <div className="px-5 pb-6">
-            <div className={`rounded-3xl border border-border/60 bg-white/85 p-4 shadow-sm dark:bg-slate-900/70 ${isCollapsed ? "hidden" : "block"}`}>
-              <div className="flex items-center gap-3">
-                <Avatar className="h-11 w-11">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={displayName} />
+            <div className={`rounded-2xl border border-border/60 bg-white/85 p-3 shadow-sm dark:bg-slate-900/70 ${isCollapsed ? "hidden" : "block"}`}>
+              <div className="flex items-center gap-2.5">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={userMetadata?.avatar_url} alt={displayName} />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-foreground">{displayName}</span>
-                  {email && <span className="text-xs text-muted-foreground">{email}</span>}
+                  <span className="text-xs font-semibold text-foreground">{displayName}</span>
+                  {secondaryEmail && <span className="text-[11px] text-muted-foreground">{secondaryEmail}</span>}
                 </div>
               </div>
-              <Button className="mt-4 w-full rounded-2xl" variant="secondary" onClick={handleLogout}>
+              <Button className="mt-3 w-full rounded-xl py-2 text-xs font-medium" variant="secondary" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
               </Button>
             </div>
           </div>
-        </motion.aside>
-      </AnimatePresence>
+      </aside>
 
-      <div className={`flex min-h-screen flex-col transition-[padding] duration-200 ${desktopPadding}`}>
-        <header className="sticky top-0 z-40 border-b border-border/60 bg-white/90 backdrop-blur-md dark:bg-slate-950/75">
+      <div className={`flex min-h-screen flex-col ${desktopPadding}`}>
+        <header className="sticky top-0 z-40 border-b border-border/60 bg-white/95 dark:bg-slate-950/85">
           <div className="flex h-20 items-center justify-between gap-4 px-4 sm:px-6">
             <div className="flex min-w-0 items-center gap-3">
               <Button
@@ -445,13 +457,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               >
                 <Menu className="h-5 w-5" />
               </Button>
-              <motion.div
-                key={pageMeta.title}
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={headerTransition}
-                className="flex flex-col"
-              >
+              <div className="flex flex-col">
                 <div className="flex items-center gap-2">
                   <h1 className="text-lg font-semibold text-foreground sm:text-xl">{pageMeta.title}</h1>
                   <Badge variant="secondary" className="hidden items-center gap-1 px-2 py-0 text-xs sm:inline-flex">
@@ -460,10 +466,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
                   </Badge>
                 </div>
                 <p className="text-sm text-muted-foreground">{pageMeta.description}</p>
-              </motion.div>
+              </div>
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3">
+              <div className="hidden min-w-[120px] flex-col text-right sm:flex">
+                <span className="text-sm font-semibold text-foreground">
+                  {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {now.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+                </span>
+              </div>
               <form onSubmit={handleSearch} className="hidden md:block">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -502,48 +516,62 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button className="flex h-11 items-center gap-2 rounded-2xl border border-border/70 bg-white/85 px-3 text-left dark:bg-slate-900/75">
+                  <Button className="flex h-10 items-center gap-2 rounded-xl border border-border/70 bg-white/85 px-3 text-left dark:bg-slate-900/75">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src={user?.user_metadata?.avatar_url} alt={displayName} />
+                      <AvatarImage src={userMetadata?.avatar_url} alt={displayName} />
                       <AvatarFallback>{initials}</AvatarFallback>
                     </Avatar>
                     <div className="hidden sm:flex flex-col text-left">
-                      <span className="text-sm font-semibold leading-tight text-foreground">{displayName}</span>
-                      {email && <span className="text-xs leading-tight text-muted-foreground">{email}</span>}
+                      <span className="text-sm font-medium text-foreground leading-tight">{displayName}</span>
+                      {secondaryEmail && (
+                        <span className="text-xs text-muted-foreground leading-tight truncate max-w-[140px]">{secondaryEmail}</span>
+                      )}
                     </div>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-72 rounded-3xl border border-border/60 bg-white/95 p-0 shadow-2xl backdrop-blur-xl dark:bg-slate-900/95">
-                  <DropdownMenuLabel className="px-4 py-4">
+                <DropdownMenuContent align="end" className="w-60 rounded-2xl border border-border/60 bg-white/95 p-0 shadow-2xl backdrop-blur-xl dark:bg-slate-900/95">
+                  <DropdownMenuLabel className="px-3 py-3">
                     <div className="flex items-center gap-3">
-                      <Avatar className="h-11 w-11">
-                        <AvatarImage src={user?.user_metadata?.avatar_url} alt={displayName} />
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={userMetadata?.avatar_url} alt={displayName} />
                         <AvatarFallback>{initials}</AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-foreground">{displayName}</span>
-                        {email && <span className="text-xs text-muted-foreground">{email}</span>}
-                        <span className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-primary">
-                          {getPremiumIcon()}
-                          {isPremium ? "Premium access" : "Upgrade for premium"}
-                        </span>
+                      <div className="space-y-1">
+                        <p className="text-sm font-semibold leading-tight text-foreground">{displayName}</p>
+                        {secondaryEmail && (
+                          <p className="text-xs text-muted-foreground truncate max-w-[160px]">{secondaryEmail}</p>
+                        )}
                       </div>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="gap-2 text-sm">
-                    <Settings className="h-4 w-4" />
-                    Workspace settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="gap-2 text-sm">
-                    <Brain className="h-4 w-4" />
-                    AI assistant
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="gap-2 text-sm text-destructive focus:text-destructive">
-                    <LogOut className="h-4 w-4" />
-                    Log out
-                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-border/80" />
+                  <div className="px-3 py-3">
+                    <div className="space-y-3 text-sm text-muted-foreground">
+                      <div>
+                        <p className="font-medium text-foreground">Spotlights</p>
+                        <p className="text-xs">New cohort analytics shipped this week.</p>
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Usage</p>
+                        <p className="text-xs">12 new learners onboarded today.</p>
+                      </div>
+                    </div>
+                  </div>
+                  <DropdownMenuSeparator className="bg-border/80" />
+                  <DropdownMenuGroup className="px-1 py-1 text-sm">
+                    <DropdownMenuItem className="gap-3">
+                      <Settings className="h-4 w-4" />
+                      Account settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-3">
+                      <Sparkles className="h-4 w-4" />
+                      Upgrade workspace
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-3">
+                      <LogOut className="h-4 w-4" />
+                      Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -552,33 +580,18 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <main className="flex-1">
           <div className="relative px-4 pb-10 pt-6 sm:px-6 lg:px-8">
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={contentTransition}
-              className="rounded-[28px] border border-border/60 bg-white/90 p-6 shadow-[0_16px_48px_-28px_rgba(15,23,42,0.45)] backdrop-blur-md dark:bg-slate-950/75"
-            >
+            <div className="rounded-[28px] border border-border/60 bg-white/95 p-6 shadow-[0_16px_48px_-28px_rgba(15,23,42,0.45)] dark:bg-slate-950/80">
               {children}
-            </motion.div>
+            </div>
           </div>
         </main>
       </div>
 
-      <AnimatePresence>
-        {isMobileOpen && (
-          <motion.div
-            key="mobile-nav"
-            initial={{ x: -320, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: -320, opacity: 0 }}
-            transition={sidebarTransition}
-            className="fixed left-0 top-0 z-50 flex h-full w-[280px] flex-col border-r border-border/60 bg-white/95 px-4 py-5 shadow-2xl backdrop-blur-md dark:bg-slate-950/95 md:hidden"
-          >
+      {isMobileOpen && (
+        <div className="fixed left-0 top-0 z-50 flex h-full w-[280px] flex-col border-r border-border/60 bg-white px-4 py-5 shadow-2xl dark:bg-slate-950 md:hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-                  <Sparkles className="h-5 w-5" />
-                </div>
+                <img src={IubLogo} alt="EduCareer Logo" className="h-10 w-10 rounded-2xl bg-white object-contain p-1" />
                 <div className="flex flex-col">
                   <span className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">EduCareer</span>
                   <span className="text-sm font-semibold text-foreground">Navigator Suite</span>
@@ -604,25 +617,24 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </div>
             </div>
 
-            <div className="rounded-3xl border border-border/60 bg-white/85 p-4 shadow-sm dark:bg-slate-900/70">
-              <div className="flex items-center gap-3">
-                <Avatar className="h-10 w-10">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} alt={displayName} />
+            <div className="rounded-2xl border border-border/60 bg-white/85 p-3 shadow-sm dark:bg-slate-900/70">
+              <div className="flex items-center gap-2.5">
+                <Avatar className="h-9 w-9">
+                  <AvatarImage src={userMetadata?.avatar_url} alt={displayName} />
                   <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
-                  <span className="text-sm font-semibold text-foreground">{displayName}</span>
-                  {email && <span className="text-xs text-muted-foreground">{email}</span>}
+                  <span className="text-xs font-semibold text-foreground">{displayName}</span>
+                  {secondaryEmail && <span className="text-[11px] text-muted-foreground">{secondaryEmail}</span>}
                 </div>
               </div>
-              <Button className="mt-3 w-full rounded-2xl" variant="secondary" onClick={handleLogout}>
+              <Button className="mt-3 w-full rounded-xl py-2 text-xs font-medium" variant="secondary" onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Sign out
               </Button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }

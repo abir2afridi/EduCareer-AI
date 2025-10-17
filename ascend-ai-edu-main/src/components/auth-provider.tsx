@@ -2,6 +2,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import type { User } from "firebase/auth";
 import {
   GoogleAuthProvider,
+  getAdditionalUserInfo,
   onAuthStateChanged,
   signInWithPopup,
   signOut as firebaseSignOut,
@@ -76,7 +77,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthLoading(true);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      provider.setCustomParameters({ prompt: "select_account" });
+      const credential = await signInWithPopup(auth, provider);
+      const additionalInfo = getAdditionalUserInfo(credential);
+
+      if (additionalInfo?.isNewUser) {
+        await firebaseSignOut(auth);
+        throw new Error("This Google account is not registered. Please sign up first.");
+      }
     } finally {
       setIsAuthLoading(false);
     }

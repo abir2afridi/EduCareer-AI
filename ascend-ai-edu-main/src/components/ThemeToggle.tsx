@@ -19,11 +19,18 @@ const ThemeToggle = () => {
 
   useEffect(() => {
     const root = document.documentElement;
+    root.classList.add("disable-transitions");
+
     if (isDark) {
       root.classList.add("dark");
     } else {
       root.classList.remove("dark");
     }
+
+    window.setTimeout(() => {
+      root.classList.remove("disable-transitions");
+    }, 0);
+
     if (typeof window !== "undefined") {
       localStorage.setItem("theme", isDark ? "dark" : "light");
     }
