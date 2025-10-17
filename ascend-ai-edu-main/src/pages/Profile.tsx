@@ -24,12 +24,13 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/components/auth-provider";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
 import { useStudentNotifications } from "@/hooks/useStudentNotifications";
-import { submitProfileChangeRequest, addAdminNotification } from "@/lib/firebaseHelpers";
+import { submitProfileChangeRequest, addAdminNotification, addStudentNotification } from "@/lib/firebaseHelpers";
 import { departments, genders } from "@/constants/profileOptions";
 import { publicUniversities, privateUniversities } from "@/constants/universities";
-import { storage } from "@/lib/firebaseClient";
+import { db, storage } from "@/lib/firebaseClient";
 import { cn } from "@/lib/utils";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
+import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
 
 const toDate = (value: unknown): Date | null => {
   if (!value) return null;
@@ -80,6 +81,7 @@ const createDefaultFormState = () => ({
 type FormState = ReturnType<typeof createDefaultFormState>;
 
 const allUniversities = [...publicUniversities, ...privateUniversities];
+const COOLDOWN_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default function Profile() {
   const { user } = useAuth();
@@ -107,6 +109,9 @@ export default function Profile() {
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
   const [isUniversityOpen, setIsUniversityOpen] = useState(false);
   const [universityFilter, setUniversityFilter] = useState<"all" | "public" | "private">("all");
+  const [cooldownUntil, setCooldownUntil] = useState<Date | null>(null);
+  const [cooldownRemainingMs, setCooldownRemainingMs] = useState(0);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
   const safeProfile = profile ?? null;
   const notificationsList = useMemo(
@@ -117,6 +122,51 @@ export default function Profile() {
     () => getInitials(profile?.name, profile?.email ?? user?.email ?? null),
     [profile?.name, profile?.email, user?.email],
   );
+
+  const cooldownActive = cooldownRemainingMs > 0;
+
+  const cooldownLabel = useMemo(() => {
+    if (!cooldownActive) return "";
+    const totalSeconds = Math.max(0, Math.floor(cooldownRemainingMs / 1000));
+    const days = Math.floor(totalSeconds / 86400);
+    const hours = Math.floor((totalSeconds % 86400) / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    if (days > 0) {
+      return `${days}d ${hours}h`;
+    }
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    if (minutes > 0) {
+      return `${minutes}m ${seconds}s`;
+    }
+    return `${seconds}s`;
+  }, [cooldownActive, cooldownRemainingMs]);
+
+  const submitButtonLabel = useMemo(() => {
+    if (isSubmitting) {
+      return (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Submitting...
+        </>
+      );
+    }
+    if (hasPendingRequest) {
+      return "Request pending review";
+    }
+    if (cooldownActive) {
+      return `Submit request • ${cooldownLabel}`;
+    }
+    return "Submit request";
+  }, [cooldownActive, cooldownLabel, hasPendingRequest, isSubmitting]);
+
+  const submitDisabledReason = hasPendingRequest
+    ? "You already have a request awaiting review."
+    : cooldownActive
+      ? `Next submission available in ${cooldownLabel}.`
+      : "";
 
   const skillsList = useMemo(
     () =>
@@ -187,6 +237,67 @@ export default function Profile() {
     };
   }, [profilePicturePreview]);
 
+  useEffect(() => {
+    if (!user?.uid) {
+      setCooldownUntil(null);
+      setCooldownRemainingMs(0);
+      return;
+    }
+
+    const requestsRef = collection(db, "profileChangeRequests");
+    const requestsQuery = query(requestsRef, where("studentUid", "==", user.uid), orderBy("timestamp", "desc"), limit(20));
+
+    const unsubscribe = onSnapshot(
+      requestsQuery,
+      (snapshot) => {
+        let latestApproved: Date | null = null;
+        let hasPending = false;
+        snapshot.docs.forEach((requestDoc) => {
+          const data = requestDoc.data();
+          if (!latestApproved && data.status === "approved") {
+            const value = data.timestamp?.toDate?.();
+            if (value instanceof Date && !Number.isNaN(value.getTime())) {
+              latestApproved = value;
+            }
+          }
+          if (!hasPending && data.status === "pending") {
+            hasPending = true;
+          }
+        });
+
+        if (latestApproved) {
+          setCooldownUntil(new Date(latestApproved.getTime() + COOLDOWN_DURATION_MS));
+        } else {
+          setCooldownUntil(null);
+        }
+
+        setHasPendingRequest(hasPending);
+      },
+      (subscriptionError) => {
+        console.error("profileChangeRequests subscription failed", subscriptionError);
+        setHasPendingRequest(false);
+      },
+    );
+
+    return () => unsubscribe();
+  }, [user?.uid]);
+
+  useEffect(() => {
+    if (!cooldownUntil) {
+      setCooldownRemainingMs(0);
+      return;
+    }
+
+    const updateRemaining = () => {
+      const diff = cooldownUntil.getTime() - Date.now();
+      setCooldownRemainingMs(diff > 0 ? diff : 0);
+    };
+
+    updateRemaining();
+    const intervalId = window.setInterval(updateRemaining, 1000);
+    return () => window.clearInterval(intervalId);
+  }, [cooldownUntil]);
+
   const handleFieldChange = (field: keyof FormState, value: string) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
     if (formErrors[field]) {
@@ -217,6 +328,24 @@ export default function Profile() {
       toast({ title: "Unavailable", description: "A valid profile is required before submitting changes.", variant: "destructive" });
       return;
     }
+
+    if (cooldownActive) {
+      toast({
+        title: "Cooldown active",
+        description: `You can submit another request in ${cooldownLabel || "a short while"}.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (hasPendingRequest) {
+      toast({
+        title: "Request in review",
+        description: "You already have a pending request. Please wait for admin feedback.",
+      });
+      return;
+    }
+
     if (!validateForm()) return;
 
     setIsSubmitting(true);
@@ -276,6 +405,20 @@ export default function Profile() {
         throw new Error("Profile change request was not saved.");
       }
 
+      console.log("handleSubmitRequest:before addStudentNotification");
+      try {
+        await addStudentNotification({
+          uid: user.uid,
+          title: "Profile request pending",
+          message: "Your profile change request is awaiting admin review.",
+          type: "profile-change-status",
+          metadata: { status: "pending" },
+        });
+      } catch (notificationError) {
+        console.error("Failed to add pending notification", notificationError);
+      }
+      console.log("handleSubmitRequest:after addStudentNotification");
+
       console.log("handleSubmitRequest:before addAdminNotification");
       await addAdminNotification({
         type: "profileChangeRequest",
@@ -287,11 +430,10 @@ export default function Profile() {
       console.log("handleSubmitRequest:after addAdminNotification");
 
       toast({
-        title: "✅ Successfully submitted!",
-        description: "Your profile change request has been sent to the admin team.",
+        title: "Your request has been submitted successfully",
+        description: "We will notify you once an admin reviews your request.",
       });
 
-      setIsSubmitting(false);
       handleDialogOpenChange(false);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to submit change request.";
@@ -302,8 +444,6 @@ export default function Profile() {
         typeof (error as { code?: unknown }).code === "string" &&
         (error as { code: string }).code === "permission-denied";
 
-      setIsSubmitting(false);
-
       if (isPermissionDenied) {
         toast({ title: "Permission denied", description: "You do not have access to submit this request.", variant: "destructive" });
       } else {
@@ -312,6 +452,8 @@ export default function Profile() {
 
       console.error(error);
       console.error("Profile change request submission failed", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

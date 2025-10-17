@@ -239,21 +239,21 @@ export function AdminLayout() {
           collapsed ? "h-12 w-12 justify-center rounded-3xl" : "gap-3 rounded-3xl px-4 py-3",
           isActive
             ? `bg-gradient-to-r ${item.gradient} shadow-lg ring-1 ring-primary/20 text-foreground`
-            : "border border-transparent text-muted-foreground hover:border-border/60 hover:bg-white/70 dark:hover:bg-white/5",
+            : "border border-transparent hover:border-border/60 hover:bg-white/70 text-slate-900 dark:text-slate-100 dark:hover:bg-white/5",
         )}
       >
         <span
           className={cn(
             "flex h-9 w-9 items-center justify-center rounded-2xl",
-            isActive ? "bg-white/80 text-primary dark:bg-white/10" : "bg-white/50 text-muted-foreground dark:bg-white/5",
+            isActive ? "bg-white/80 text-primary dark:bg-white/10" : "bg-white/60 text-slate-600 dark:bg-white/10 dark:text-slate-200",
           )}
         >
           <item.icon className="h-5 w-5" />
         </span>
         {!collapsed && (
-          <div className="flex flex-1 flex-col overflow-hidden">
-            <span className="text-sm font-semibold text-foreground truncate">{item.title}</span>
-            <span className="text-xs text-muted-foreground truncate">{item.description}</span>
+          <div className="flex flex-1 flex-col overflow-hidden text-slate-900 dark:text-slate-100">
+            <span className="text-sm font-semibold truncate">{item.title}</span>
+            <span className="text-xs text-slate-600 dark:text-slate-300 truncate">{item.description}</span>
           </div>
         )}
         {!collapsed && item.badge && (
