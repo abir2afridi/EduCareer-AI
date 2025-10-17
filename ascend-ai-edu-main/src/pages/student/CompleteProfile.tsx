@@ -348,23 +348,34 @@ export default function CompleteProfile() {
     return Object.keys(nextErrors).length === 0;
   };
 
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (!user?.uid) {
-      toast({ title: "Authentication required", description: "Please sign in again.", variant: "destructive" });
-      return;
-    }
+  const isPermissionDeniedError = (error: unknown): boolean => {
+    if (!error || typeof error !== "object") return false;
+    if (!("code" in error)) return false;
+    const code = (error as { code?: unknown }).code;
+    if (typeof code !== "string") return false;
+    return code === "permission-denied" || code === "storage/unauthorized";
+  };
 
-    if (!validate()) return;
-
-    setIsSubmitting(true);
-    console.log("Submitting profile with form state", formState);
+  const submitProfile = async (): Promise<boolean> => {
     try {
       let profilePictureUrl = profile?.profilePictureUrl ?? null;
       if (profilePictureFile) {
-        const storageRef = ref(storage, `students/${user.uid}/profile-${Date.now()}-${profilePictureFile.name}`);
-        const snapshot = await uploadBytes(storageRef, profilePictureFile);
-        profilePictureUrl = await getDownloadURL(snapshot.ref);
+        try {
+          console.log("Profile submission: starting upload", profilePictureFile.name);
+          const storageRef = ref(storage, `students/${user!.uid}/profile-${Date.now()}-${profilePictureFile.name}`);
+          const snapshot = await uploadBytes(storageRef, profilePictureFile);
+          profilePictureUrl = await getDownloadURL(snapshot.ref);
+          console.log("Profile submission: upload complete", profilePictureUrl);
+        } catch (uploadError) {
+          console.error("Profile photo upload failed", uploadError);
+          if (isPermissionDeniedError(uploadError)) {
+            toast({ title: "Permission denied. Contact admin.", description: "Storage permissions are required to upload your photo.", variant: "destructive" });
+          } else {
+            const message = uploadError instanceof Error ? uploadError.message : "Unable to upload profile photo.";
+            toast({ title: "Upload failed", description: message, variant: "destructive" });
+          }
+          return false;
+        }
       }
 
       const skillsArray = formState.skills
@@ -395,30 +406,61 @@ export default function CompleteProfile() {
         payload.createdAt = serverTimestamp();
       }
 
-      console.log("Saving profile payload", payload);
+      try {
+        console.log("Profile submission: saving document", payload);
+        await setDoc(doc(db, "students", user!.uid), payload, { merge: true });
+      } catch (firestoreError) {
+        console.error("Failed to save profile document", firestoreError);
+        if (isPermissionDeniedError(firestoreError)) {
+          toast({ title: "Permission denied. Contact admin.", description: "You do not have access to save this profile.", variant: "destructive" });
+        } else {
+          const message = firestoreError instanceof Error ? firestoreError.message : "Unable to save your profile.";
+          toast({ title: "Save failed", description: message, variant: "destructive" });
+        }
+        return false;
+      }
 
-      await setDoc(doc(db, "students", user.uid), payload, { merge: true });
+      try {
+        console.log("Profile submission: notifying admin");
+        await addAdminNotification({
+          type: "newStudent",
+          uid: user!.uid,
+          message: "New student profile submitted",
+          studentName: formState.name.trim() || profile?.name || user!.displayName || "Unknown student",
+          metadata: { profileCompleted: true },
+        });
+      } catch (notificationError) {
+        console.error("Failed to send admin notification", notificationError);
+      }
 
       if (typeof window !== "undefined") {
         window.sessionStorage.setItem("profile-bypass", "true");
       }
-      console.log("Profile saved successfully for", user.uid);
-      await addAdminNotification({
-        type: "newStudent",
-        uid: user.uid,
-        message: "New student profile submitted",
-        studentName: formState.name.trim() || profile?.name || user.displayName || "Unknown student",
-        metadata: { profileCompleted: true },
-      });
-      toast({ title: "Profile completed", description: "Your profile is now up to date." });
-      window.setTimeout(() => {
-        navigate("/dashboard", { replace: true, state: { bypassProfileCheck: true } });
-      }, 600);
-    } catch (submitError) {
-      console.error("Failed to save profile", submitError);
-      const message =
-        submitError instanceof Error ? submitError.message : "Unable to save your profile. Please try again.";
-      toast({ title: "Save failed", description: message, variant: "destructive" });
+
+      toast({ title: "Profile submitted successfully", description: "Your profile is now up to date." });
+      navigate("/dashboard", { replace: true, state: { bypassProfileCheck: true } });
+      return true;
+    } catch (unexpectedError) {
+      console.error("Unexpected profile submission error", unexpectedError);
+      const message = unexpectedError instanceof Error ? unexpectedError.message : "Unable to submit your profile.";
+      toast({ title: "Submission failed", description: message, variant: "destructive" });
+      return false;
+    }
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!user?.uid) {
+      toast({ title: "Authentication required", description: "Please sign in again.", variant: "destructive" });
+      return;
+    }
+
+    if (!validate()) return;
+
+    setIsSubmitting(true);
+    console.log("Submitting profile with form state", formState);
+    try {
+      await submitProfile();
     } finally {
       setIsSubmitting(false);
     }
