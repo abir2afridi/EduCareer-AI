@@ -81,13 +81,14 @@ export const submitProfileChangeRequest = async (payload: ProfileChangeRequestPa
   const timestamp = serverTimestamp();
   const requestData: Record<string, unknown> = {
     uid: payload.uid,
+    studentUid: payload.uid,
     requestedData: payload.requestedData,
     status: payload.status ?? "pending",
     timestamp,
   };
 
   try {
-    console.log("submitProfileChangeRequest:before addDoc", payload.uid);
+    console.log("submitProfileChangeRequest:before addDoc", payload.uid, requestData);
     await addDoc(profileChangeRequestsCollection, requestData);
     console.log("submitProfileChangeRequest:after addDoc", payload.uid);
     return true;
