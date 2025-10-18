@@ -24,6 +24,7 @@ import {
   updateDoc,
   type DocumentData,
 } from "firebase/firestore";
+import { FirebaseError } from "firebase/app";
 import { db } from "@/lib/firebaseClient";
 
 type QuizQuestion = {
@@ -260,17 +261,26 @@ export default function QuizPage() {
     setIsSaving(true);
 
     try {
-      const historyDocRef = doc(db, "quizAttempts", user.uid);
+      const studentUid = user.uid;
+      const historyDocRef = doc(db, "quizAttempts", studentUid);
       await setDoc(
         historyDocRef,
         {
-          uid: user.uid,
+          uid: studentUid,
           lastUpdatedAt: serverTimestamp(),
         },
         { merge: true },
       );
 
       const attemptsColRef = collection(historyDocRef, "attempts");
+      console.log(
+        "[Quiz] Persisting attempt",
+        JSON.stringify({
+          studentUid,
+          path: `quizAttempts/${studentUid}/attempts`,
+          questionTotal: questions.length,
+        }),
+      );
       const attemptDoc = await addDoc(attemptsColRef, {
         topic: topic.trim(),
         score: totalCorrect,
@@ -283,7 +293,7 @@ export default function QuizPage() {
           correctAnswer: question.correctAnswer,
           selectedAnswer: answers[index] ?? null,
         })),
-        studentUid: user.uid,
+        studentUid,
         email: user.email || null,
         displayName: user.displayName || null,
       });
@@ -313,13 +323,27 @@ export default function QuizPage() {
         description: "Your attempt has been recorded and IQ points added.",
       });
 
-      const studentRef = doc(db, "students", user.uid);
+      const studentRef = doc(db, "students", studentUid);
       await updateDoc(studentRef, {
         iqPoints: increment(iq),
         iqPointsUpdatedAt: serverTimestamp(),
       });
     } catch (error) {
-      console.error("Failed to save quiz results", error);
+      const authUid = user?.uid ?? null;
+      if (error instanceof FirebaseError) {
+        console.error("[Quiz] Firestore write failed", {
+          authUid,
+          studentUid: user?.uid ?? null,
+          code: error.code,
+          message: error.message,
+        });
+      } else {
+        console.error("[Quiz] Unexpected error while saving quiz results", {
+          authUid,
+          studentUid: user?.uid ?? null,
+          error,
+        });
+      }
       toast({
         title: "Save failed",
         description: "Could not record your quiz results. They will not appear in history.",
