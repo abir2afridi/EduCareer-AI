@@ -273,15 +273,7 @@ export default function QuizPage() {
       );
 
       const attemptsColRef = collection(historyDocRef, "attempts");
-      console.log(
-        "[Quiz] Persisting attempt",
-        JSON.stringify({
-          studentUid,
-          path: `quizAttempts/${studentUid}/attempts`,
-          questionTotal: questions.length,
-        }),
-      );
-      const attemptDoc = await addDoc(attemptsColRef, {
+      const payload = {
         topic: topic.trim(),
         score: totalCorrect,
         total: questions.length,
@@ -296,7 +288,30 @@ export default function QuizPage() {
         studentUid,
         email: user.email || null,
         displayName: user.displayName || null,
-      });
+      };
+
+      const userUid = user?.uid;
+      const payloadStudentUid = payload.studentUid;
+      if (!userUid) {
+        console.error("❌ User not authenticated! UID missing.");
+      } else if (!payloadStudentUid) {
+        console.error("❌ Quiz payload missing studentUid field!");
+      } else if (userUid !== payloadStudentUid) {
+        console.error(`❌ UID mismatch! auth.uid=${userUid}, payload.studentUid=${payloadStudentUid}`);
+      } else {
+        console.log("✅ UID match confirmed. Ready to submit quiz.");
+      }
+
+      console.log(
+        "[Quiz] Persisting attempt",
+        JSON.stringify({
+          studentUid,
+          path: `quizAttempts/${studentUid}/attempts`,
+          questionTotal: questions.length,
+        }),
+      );
+
+      const attemptDoc = await addDoc(attemptsColRef, payload);
 
       setHistory((prev) => [
         {
