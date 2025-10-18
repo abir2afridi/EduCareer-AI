@@ -35,8 +35,8 @@ interface AttemptQuestion {
 interface AdminQuizAttempt {
   id: string;
   studentUid: string;
-  studentEmail: string | null;
-  studentDisplayName: string | null;
+  email: string | null;
+  displayName: string | null;
   topic: string;
   score: number;
   total: number;
@@ -59,8 +59,8 @@ const buildAttempt = (docSnapshot: QuerySnapshot<DocumentData>["docs"][number]):
   return {
     id: docSnapshot.id,
     studentUid: typeof data.studentUid === "string" ? data.studentUid : "",
-    studentEmail: typeof data.studentEmail === "string" ? data.studentEmail : null,
-    studentDisplayName: typeof data.studentDisplayName === "string" ? data.studentDisplayName : null,
+    email: typeof data.email === "string" ? data.email : null,
+    displayName: typeof data.displayName === "string" ? data.displayName : null,
     topic: typeof data.topic === "string" ? data.topic : "Unknown",
     score: typeof data.score === "number" ? data.score : 0,
     total: typeof data.total === "number" ? data.total : 0,
@@ -98,7 +98,7 @@ export default function StudentQuizResultsPage() {
   const studentOptions = useMemo(() => {
     const labelMap = new Map<string, string>();
     attempts.forEach((attempt) => {
-      const label = attempt.studentDisplayName || attempt.studentEmail || attempt.studentUid;
+      const label = attempt.displayName || attempt.email || attempt.studentUid;
       labelMap.set(attempt.studentUid, label ?? attempt.studentUid);
     });
     return Array.from(labelMap.entries()).map(([value, label]) => ({ value, label }));
@@ -117,7 +117,7 @@ export default function StudentQuizResultsPage() {
       if (studentFilter !== "all" && attempt.studentUid !== studentFilter) return false;
       if (topicFilter !== "all" && attempt.topic !== topicFilter) return false;
       if (search.trim()) {
-        const haystack = `${attempt.topic} ${attempt.studentDisplayName ?? ""} ${attempt.studentEmail ?? ""}`.toLowerCase();
+        const haystack = `${attempt.topic} ${attempt.displayName ?? ""} ${attempt.email ?? ""}`.toLowerCase();
         if (!haystack.includes(search.trim().toLowerCase())) return false;
       }
       return true;
@@ -207,17 +207,17 @@ export default function StudentQuizResultsPage() {
                         <CardDescription className="flex flex-col text-sm text-muted-foreground">
                           <span>{formatDateTime(attempt.submittedAt)}</span>
                           <span>
-                            {attempt.studentDisplayName ?? "Unknown"}
-                            {attempt.studentEmail ? ` • ${attempt.studentEmail}` : ""}
+                            {attempt.displayName ?? "Unknown"}
+                            {attempt.email ? ` • ${attempt.email}` : ""}
                           </span>
                         </CardDescription>
                       </div>
                       <div className="flex flex-col items-end gap-2 sm:flex-row sm:items-center">
                         <Badge variant="secondary" className="gap-1 text-sm">
-                          <Award className="h-4 w-4 text-emerald-500" /> IQ {attempt.IQPoints}
+                          <Award className="h-4 w-4 text-emerald-500" /> IQ Points: {attempt.IQPoints}
                         </Badge>
                         <Badge variant="outline" className="text-sm">
-                          Score {attempt.score}/{attempt.total}
+                          Score: {attempt.score}/{attempt.total}
                         </Badge>
                         <Dialog open={selectedAttempt?.id === attempt.id} onOpenChange={(open) => setSelectedAttempt(open ? attempt : null)}>
                           <DialogTrigger asChild>
@@ -234,8 +234,8 @@ export default function StudentQuizResultsPage() {
                                 </Badge>
                               </DialogTitle>
                               <DialogDescription>
-                                {attempt.studentDisplayName ?? "Unknown"}
-                                {attempt.studentEmail ? ` • ${attempt.studentEmail}` : ""} — {formatDateTime(attempt.submittedAt)}
+                                {attempt.displayName ?? "Unknown"}
+                                {attempt.email ? ` • ${attempt.email}` : ""} — {formatDateTime(attempt.submittedAt)}
                               </DialogDescription>
                             </DialogHeader>
                             <ScrollArea className="max-h-[60vh] pr-4">

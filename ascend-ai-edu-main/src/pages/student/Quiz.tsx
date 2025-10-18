@@ -45,8 +45,8 @@ type QuizAttempt = {
     correctAnswer: string;
     selectedAnswer: string | null;
   }[];
-  studentEmail?: string | null;
-  studentDisplayName?: string | null;
+  email?: string | null;
+  displayName?: string | null;
 };
 
 const QUESTION_COUNTS = [20, 30, 40];
@@ -161,8 +161,8 @@ export default function QuizPage() {
                       : String(question.selectedAnswer),
                 }))
               : [],
-            studentEmail: typeof data.studentEmail === "string" ? data.studentEmail : null,
-            studentDisplayName: typeof data.studentDisplayName === "string" ? data.studentDisplayName : null,
+            email: typeof data.email === "string" ? data.email : null,
+            displayName: typeof data.displayName === "string" ? data.displayName : null,
           };
         });
         setHistory(nextHistory);
@@ -270,8 +270,8 @@ export default function QuizPage() {
         { merge: true },
       );
 
-      const attemptRef = collection(historyDocRef, "attempts");
-      const attemptDoc = await addDoc(attemptRef, {
+      const attemptsColRef = collection(historyDocRef, "attempts");
+      const attemptDoc = await addDoc(attemptsColRef, {
         topic: topic.trim(),
         score: totalCorrect,
         total: questions.length,
@@ -284,8 +284,8 @@ export default function QuizPage() {
           selectedAnswer: answers[index] ?? null,
         })),
         studentUid: user.uid,
-        studentEmail: user.email || null,
-        studentDisplayName: user.displayName || null,
+        email: user.email || null,
+        displayName: user.displayName || null,
       });
 
       setHistory((prev) => [
@@ -302,11 +302,16 @@ export default function QuizPage() {
             correctAnswer: question.correctAnswer,
             selectedAnswer: answers[index] ?? null,
           })),
-          studentEmail: user.email || null,
-          studentDisplayName: user.displayName || null,
+          email: user.email || null,
+          displayName: user.displayName || null,
         },
         ...prev,
       ]);
+
+      toast({
+        title: "Quiz submitted successfully",
+        description: "Your attempt has been recorded and IQ points added.",
+      });
 
       const studentRef = doc(db, "students", user.uid);
       await updateDoc(studentRef, {
