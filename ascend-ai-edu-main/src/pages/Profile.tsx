@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2, Mail, Phone, MapPin, GraduationCap, CalendarDays, Shield, Bell, AlertCircle, ChevronsUpDown, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -112,6 +112,7 @@ export default function Profile() {
   const [cooldownUntil, setCooldownUntil] = useState<Date | null>(null);
   const [cooldownRemainingMs, setCooldownRemainingMs] = useState(0);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
+  const closeTimerRef = useRef<number | null>(null);
 
   const safeProfile = profile ?? null;
   const notificationsList = useMemo(
@@ -162,11 +163,12 @@ export default function Profile() {
     return "Submit request";
   }, [cooldownActive, cooldownLabel, hasPendingRequest, isSubmitting]);
 
-  const submitDisabledReason = hasPendingRequest
-    ? "You already have a request awaiting review."
-    : cooldownActive
-      ? `Next submission available in ${cooldownLabel}.`
-      : "";
+  const submitDisabledReason = useMemo(() => {
+    if (isSubmitting) return "";
+    if (hasPendingRequest) return "You already have a request awaiting review.";
+    if (cooldownActive) return `Next submission available in ${cooldownLabel}.`;
+    return "";
+  }, [cooldownActive, cooldownLabel, hasPendingRequest, isSubmitting]);
 
   const skillsList = useMemo(
     () =>
@@ -233,6 +235,10 @@ export default function Profile() {
     return () => {
       if (profilePicturePreview) {
         URL.revokeObjectURL(profilePicturePreview);
+      }
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current);
+        closeTimerRef.current = null;
       }
     };
   }, [profilePicturePreview]);
@@ -434,7 +440,14 @@ export default function Profile() {
         description: "We will notify you once an admin reviews your request.",
       });
 
-      handleDialogOpenChange(false);
+      setHasPendingRequest(true);
+      if (closeTimerRef.current) {
+        window.clearTimeout(closeTimerRef.current);
+      }
+      closeTimerRef.current = window.setTimeout(() => {
+        handleDialogOpenChange(false);
+        closeTimerRef.current = null;
+      }, 1200);
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to submit change request.";
       const isPermissionDenied =
@@ -888,17 +901,17 @@ export default function Profile() {
                 <Button variant="secondary" onClick={() => handleDialogOpenChange(false)} disabled={isSubmitting}>
                   Cancel
                 </Button>
-                <Button onClick={handleSubmitRequest} disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
-                    </>
-                  ) : (
-                    "Submit request"
-                  )}
+                <Button
+                  onClick={handleSubmitRequest}
+                  disabled={isSubmitting || hasPendingRequest || cooldownActive}
+                  className={cn((hasPendingRequest || cooldownActive) && !isSubmitting ? "opacity-80" : undefined)}
+                >
+                  {submitButtonLabel}
                 </Button>
               </DialogFooter>
+              {submitDisabledReason ? (
+                <p className="px-6 pb-4 text-xs font-medium text-muted-foreground">{submitDisabledReason}</p>
+              ) : null}
             </DialogContent>
           </Dialog>
         </CardHeader>
