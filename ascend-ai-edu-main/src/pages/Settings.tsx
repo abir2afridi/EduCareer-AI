@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { User, Bell, Lock, Palette, Database, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -238,6 +239,21 @@ export default function Settings() {
                 </div>
                 <Switch defaultChecked />
               </div>
+            </div>
+          </Card>
+
+          <Card className="glass p-6">
+            <h3 className="text-xl font-semibold mb-6 text-center">AI Personalization Preview</h3>
+            <div className="flex flex-col items-center gap-6">
+              <DotLottieReact
+                src="https://lottie.host/b9f251c8-9f9e-46f3-9d33-1256953d8f52/vEvLUQtvpL.lottie"
+                loop
+                autoplay
+                style={{ width: "320px", height: "320px" }}
+              />
+              <p className="max-w-xl text-center text-sm text-muted-foreground">
+                This animation illustrates how EduCareer AI adapts to your preferences in real time to tailor guidance and learning experiences.
+              </p>
             </div>
           </Card>
         </TabsContent>
