@@ -24,13 +24,19 @@ import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/components/auth-provider";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
 import { useStudentNotifications } from "@/hooks/useStudentNotifications";
-import { submitProfileChangeRequest, addAdminNotification, addStudentNotification } from "@/lib/firebaseHelpers";
+import {
+  submitProfileChangeRequest,
+  addAdminNotification,
+  addStudentNotification,
+  markProfileChangePending,
+  PROFILE_CHANGE_COOLDOWN_MS,
+} from "@/lib/firebaseHelpers";
 import { departments, genders } from "@/constants/profileOptions";
 import { publicUniversities, privateUniversities } from "@/constants/universities";
 import { db, storage } from "@/lib/firebaseClient";
 import { cn } from "@/lib/utils";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { collection, limit, onSnapshot, orderBy, query, where } from "firebase/firestore";
+import { collection, limit, onSnapshot, query, where } from "firebase/firestore";
 
 const toDate = (value: unknown): Date | null => {
   if (!value) return null;
@@ -81,7 +87,6 @@ const createDefaultFormState = () => ({
 type FormState = ReturnType<typeof createDefaultFormState>;
 
 const allUniversities = [...publicUniversities, ...privateUniversities];
-const COOLDOWN_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 export default function Profile() {
   const { user } = useAuth();
@@ -134,10 +139,17 @@ export default function Profile() {
     const minutes = Math.floor((totalSeconds % 3600) / 60);
     const seconds = totalSeconds % 60;
     if (days > 0) {
-      return `${days}d ${hours}h`;
+      const parts: string[] = [`${days}d`];
+      if (hours > 0) parts.push(`${hours}h`);
+      if (minutes > 0) parts.push(`${minutes}m`);
+      parts.push(`${seconds}s`);
+      return parts.join(" ");
     }
     if (hours > 0) {
-      return `${hours}h ${minutes}m`;
+      const parts: string[] = [`${hours}h`];
+      if (minutes > 0) parts.push(`${minutes}m`);
+      parts.push(`${seconds}s`);
+      return parts.join(" ");
     }
     if (minutes > 0) {
       return `${minutes}m ${seconds}s`;
@@ -155,6 +167,9 @@ export default function Profile() {
       );
     }
     if (hasPendingRequest) {
+      if (cooldownActive && cooldownLabel) {
+        return `Request pending • ${cooldownLabel}`;
+      }
       return "Request pending review";
     }
     if (cooldownActive) {
@@ -165,7 +180,12 @@ export default function Profile() {
 
   const submitDisabledReason = useMemo(() => {
     if (isSubmitting) return "";
-    if (hasPendingRequest) return "You already have a request awaiting review.";
+    if (hasPendingRequest) {
+      if (cooldownActive && cooldownLabel) {
+        return `Request pending review. Next submission available in ${cooldownLabel}.`;
+      }
+      return "You already have a request awaiting review.";
+    }
     if (cooldownActive) return `Next submission available in ${cooldownLabel}.`;
     return "";
   }, [cooldownActive, cooldownLabel, hasPendingRequest, isSubmitting]);
@@ -231,6 +251,16 @@ export default function Profile() {
     });
   }, [safeProfile, user?.email]);
 
+  const applyCooldown = (target: Date | null) => {
+    setCooldownUntil(target);
+    if (target) {
+      const diff = target.getTime() - Date.now();
+      setCooldownRemainingMs(diff > 0 ? diff : 0);
+    } else {
+      setCooldownRemainingMs(0);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (profilePicturePreview) {
@@ -245,48 +275,75 @@ export default function Profile() {
 
   useEffect(() => {
     if (!user?.uid) {
-      setCooldownUntil(null);
-      setCooldownRemainingMs(0);
+      applyCooldown(null);
       return;
     }
 
     const requestsRef = collection(db, "profileChangeRequests");
-    const requestsQuery = query(requestsRef, where("studentUid", "==", user.uid), orderBy("timestamp", "desc"), limit(20));
+    const requestsQuery = query(requestsRef, where("studentUid", "==", user.uid), limit(50));
 
     const unsubscribe = onSnapshot(
       requestsQuery,
       (snapshot) => {
-        let latestApproved: Date | null = null;
-        let hasPending = false;
+        let latestSubmission: Date | null = null;
+        let pendingWithinCooldown = false;
+        const now = Date.now();
+
         snapshot.docs.forEach((requestDoc) => {
           const data = requestDoc.data();
-          if (!latestApproved && data.status === "approved") {
-            const value = data.timestamp?.toDate?.();
-            if (value instanceof Date && !Number.isNaN(value.getTime())) {
-              latestApproved = value;
+          const status = typeof data.status === "string" ? data.status : "pending";
+          const submission = toDate(data.lastSubmissionTimestamp) ?? toDate(data.timestamp);
+
+          if (status === "pending") {
+            if (!submission) {
+              pendingWithinCooldown = true;
+            } else if (submission.getTime() + PROFILE_CHANGE_COOLDOWN_MS > now) {
+              pendingWithinCooldown = true;
             }
           }
-          if (!hasPending && data.status === "pending") {
-            hasPending = true;
+
+          if (submission && (!latestSubmission || submission.getTime() > latestSubmission.getTime())) {
+            latestSubmission = submission;
           }
         });
 
-        if (latestApproved) {
-          setCooldownUntil(new Date(latestApproved.getTime() + COOLDOWN_DURATION_MS));
-        } else {
-          setCooldownUntil(null);
-        }
+        setHasPendingRequest(pendingWithinCooldown);
 
-        setHasPendingRequest(hasPending);
+        if (latestSubmission) {
+          applyCooldown(new Date(latestSubmission.getTime() + PROFILE_CHANGE_COOLDOWN_MS));
+        } else {
+          applyCooldown(null);
+        }
       },
       (subscriptionError) => {
         console.error("profileChangeRequests subscription failed", subscriptionError);
         setHasPendingRequest(false);
+        applyCooldown(null);
       },
     );
 
     return () => unsubscribe();
   }, [user?.uid]);
+
+  useEffect(() => {
+    const submissionAt =
+      toDate(safeProfile?.profileChangeLastSubmissionAt) ?? toDate(safeProfile?.profileChangeLastApprovedAt);
+
+    if (safeProfile?.profileChangePending === true) {
+      if (submissionAt) {
+        const remaining = submissionAt.getTime() + PROFILE_CHANGE_COOLDOWN_MS - Date.now();
+        setHasPendingRequest(remaining > 0);
+      } else {
+        setHasPendingRequest(true);
+      }
+    } else if (safeProfile?.profileChangePending === false) {
+      setHasPendingRequest(false);
+    }
+
+    if (submissionAt) {
+      applyCooldown(new Date(submissionAt.getTime() + PROFILE_CHANGE_COOLDOWN_MS));
+    }
+  }, [safeProfile?.profileChangePending, safeProfile?.profileChangeLastSubmissionAt, safeProfile?.profileChangeLastApprovedAt]);
 
   useEffect(() => {
     if (!cooldownUntil) {
@@ -441,6 +498,7 @@ export default function Profile() {
       });
 
       setHasPendingRequest(true);
+      applyCooldown(new Date(Date.now() + PROFILE_CHANGE_COOLDOWN_MS));
       if (closeTimerRef.current) {
         window.clearTimeout(closeTimerRef.current);
       }
@@ -448,6 +506,12 @@ export default function Profile() {
         handleDialogOpenChange(false);
         closeTimerRef.current = null;
       }, 1200);
+
+      try {
+        await markProfileChangePending(user.uid);
+      } catch (pendingError) {
+        console.error("Failed to mark profile change pending", pendingError);
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to submit change request.";
       const isPermissionDenied =

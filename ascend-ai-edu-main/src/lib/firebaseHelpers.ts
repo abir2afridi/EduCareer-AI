@@ -16,6 +16,8 @@ const studentsCollection = collection(db, "students");
 const notificationsCollection = collection(db, "adminNotifications");
 const profileChangeRequestsCollection = collection(db, "profileChangeRequests");
 
+export const PROFILE_CHANGE_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
 export type AdminNotificationType = "newStudent" | "updateStudent" | "deleteStudent" | "profileChangeRequest";
 
 export type AdminNotificationPayload = {
@@ -85,6 +87,7 @@ export const submitProfileChangeRequest = async (payload: ProfileChangeRequestPa
     requestedData: payload.requestedData,
     status: payload.status ?? "pending",
     timestamp,
+    lastSubmissionTimestamp: timestamp,
   };
 
   try {
@@ -114,4 +117,25 @@ export const addStudentNotification = async (payload: StudentNotificationPayload
   };
 
   await addDoc(collection(db, "studentNotifications", payload.uid, "messages"), notificationData);
+};
+
+export const markProfileChangePending = async (uid: string) => {
+  await updateDoc(doc(studentsCollection, uid), {
+    profileChangePending: true,
+    profileChangeLastSubmissionAt: serverTimestamp(),
+  });
+};
+
+export const markProfileChangeResolved = async (uid: string, status: "approved" | "rejected") => {
+  const updatePayload: Record<string, unknown> = {
+    profileChangePending: false,
+  };
+
+  if (status === "approved") {
+    updatePayload.profileChangeLastApprovedAt = serverTimestamp();
+  } else {
+    updatePayload.profileChangeLastRejectedAt = serverTimestamp();
+  }
+
+  await updateDoc(doc(studentsCollection, uid), updatePayload);
 };

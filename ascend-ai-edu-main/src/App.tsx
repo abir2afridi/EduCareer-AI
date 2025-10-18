@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
+import Quiz from "./pages/student/Quiz";
 import Courses from "./pages/Courses";
 import Insights from "./pages/Insights";
 import Tasks from "./pages/Tasks";
@@ -27,6 +28,7 @@ import SignUp from "./pages/SignUp";
 import CompleteProfile from "./pages/student/CompleteProfile";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
+import StudentQuizResultsPage from "./pages/admin/StudentQuizResults";
 import StudentManagementPage from "./pages/admin/StudentManagement";
 import TeacherManagementPage from "./pages/admin/TeacherManagement";
 import CourseManagementPage from "./pages/admin/CourseManagement";
@@ -59,6 +61,16 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/quiz"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Quiz />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -245,6 +257,7 @@ const App = () => (
             <Route path="reports" element={<ReportsExportsPage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile-requests" element={<ProfileChangeRequestsPage />} />
+            <Route path="quiz-results" element={<StudentQuizResultsPage />} />
             <Route path="settings" element={<SystemSettingsPage />} />
           </Route>
           <Route path="/auth/signin" element={<SignIn />} />

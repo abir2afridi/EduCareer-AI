@@ -153,6 +153,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         gradient: "from-blue-100 via-indigo-50 to-white dark:from-blue-900/40 dark:via-indigo-950/40 dark:to-transparent",
       },
       {
+        title: "AI Quiz",
+        url: "/quiz",
+        icon: Sparkles,
+        description: "Generate adaptive quizzes",
+        gradient: "from-purple-100 via-pink-50 to-white dark:from-purple-900/40 dark:via-pink-950/40 dark:to-transparent",
+      },
+      {
         title: "AI Learning Insights",
         url: "/insights",
         icon: BarChart3,

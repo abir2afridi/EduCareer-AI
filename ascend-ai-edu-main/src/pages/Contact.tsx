@@ -1,4 +1,5 @@
 import { Mail, Phone, MapPin, Globe, Linkedin, Github, Twitter, Facebook } from "lucide-react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -144,6 +145,14 @@ export default function ContactPage() {
             </div>
 
             <div className="space-y-4">
+              <div className="flex items-center justify-center rounded-2xl border border-border/40 bg-muted/30 p-3">
+                <DotLottieReact
+                  src="https://lottie.host/1c425408-06f9-4b2b-b3f7-3071f631d5f3/xecxbkHzkr.lottie"
+                  loop
+                  autoplay
+                  style={{ width: "100%", maxWidth: 320 }}
+                />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium">Founded</p>

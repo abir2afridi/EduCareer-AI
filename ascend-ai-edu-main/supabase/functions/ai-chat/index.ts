@@ -11,7 +11,7 @@ serve(async (req) => {
   }
 
   try {
-    const { message, conversationHistory } = await req.json();
+    const { message, conversationHistory, image } = await req.json();
     
     if (!message) {
       throw new Error("Message is required");
@@ -23,21 +23,35 @@ serve(async (req) => {
     }
 
     // Build messages array with system prompt and conversation history
-    const messages = [
-      {
-        role: "system",
-        content: `You are an expert AI education assistant for EduCareer AI Portal. You help students, teachers, and administrators with:
+    const systemMessage = {
+      role: "system",
+      content: `You are an expert AI education assistant for EduCareer AI Portal. You help students, teachers, and administrators with:
 - Course recommendations based on career goals
 - Study tips and learning strategies
 - Career guidance and job market insights
 - Academic performance analysis
 - Skill development advice
 - Educational resource recommendations
+- Image analysis for educational content (diagrams, notes, problems, etc.)
 
-Be helpful, concise, and actionable. Tailor your advice to educational contexts.`
-      },
+When analyzing images, provide detailed explanations and educational insights. Be helpful, concise, and actionable.`
+    };
+
+    // Build user message with optional image
+    const userMessage: any = image 
+      ? {
+          role: "user",
+          content: [
+            { type: "text", text: message },
+            { type: "image_url", image_url: { url: image } }
+          ]
+        }
+      : { role: "user", content: message };
+
+    const messages = [
+      systemMessage,
       ...conversationHistory,
-      { role: "user", content: message }
+      userMessage
     ];
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {

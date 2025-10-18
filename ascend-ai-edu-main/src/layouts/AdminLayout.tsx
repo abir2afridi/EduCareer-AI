@@ -138,6 +138,13 @@ export function AdminLayout() {
         gradient: "from-amber-100 via-orange-50 to-white dark:from-amber-900/40 dark:via-orange-950/40 dark:to-transparent",
       },
       {
+        title: "Student Quiz Results",
+        url: "/admin/quiz-results",
+        icon: Sparkles,
+        description: "Review AI quiz attempts",
+        gradient: "from-purple-100 via-pink-50 to-white dark:from-purple-900/40 dark:via-pink-950/40 dark:to-transparent",
+      },
+      {
         title: "Career & Employability",
         url: "/admin/career",
         icon: Briefcase,

@@ -1,19 +1,8 @@
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  Users,
-  Database,
-  Activity,
-  Target,
-  BarChart3,
-  Clock,
-  Shield,
-  TrendingUp,
-  CheckCircle,
-  Zap,
-  Brain,
-} from "lucide-react";
+import { Users, Database, Activity, Target, BarChart3, Clock, Shield, TrendingUp, CheckCircle, Zap, Brain } from "lucide-react";
 
 const teamMembers = [
   { name: "Abir Hasan Siam", role: "Head of Learner Analytics", icon: Brain },
@@ -45,8 +34,18 @@ const coreValues = [
 export default function AboutPage() {
   return (
     <div className="space-y-8 p-4 md:p-6">
-      <div className="space-y-4 text-center">
-        <h1 className="text-4xl font-bold text-foreground">About EduCareer AI</h1>
+      <div className="space-y-6 text-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="max-w-[360px] overflow-hidden rounded-3xl border border-border/40 bg-muted/30 p-4 shadow-sm">
+            <DotLottieReact
+              src="https://lottie.host/50165e74-16b6-4bf9-afc7-63c4b1439cb2/O6WmCfMIAP.lottie"
+              loop
+              autoplay
+              style={{ width: "100%" }}
+            />
+          </div>
+          <h1 className="text-4xl font-bold text-foreground">About EduCareer AI</h1>
+        </div>
         <div className="flex items-center justify-center gap-2">
           <div className="h-3 w-3 animate-pulse rounded-full bg-primary" />
           <span className="text-sm text-muted-foreground">Platform Status: Live & Assisting Learners</span>

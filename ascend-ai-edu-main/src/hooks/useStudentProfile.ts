@@ -20,6 +20,10 @@ export type StudentProfile = {
   profileCompleted?: boolean;
   lastProfileUpdateAt?: unknown;
   createdAt?: unknown;
+  profileChangePending?: boolean;
+  profileChangeLastApprovedAt?: unknown;
+  profileChangeLastRejectedAt?: unknown;
+  profileChangeLastSubmissionAt?: unknown;
 };
 
 type UseStudentProfileResult = {
