@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import type { LucideIcon } from "lucide-react";
 import {
@@ -8,6 +8,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Crown,
   Diamond,
   FileText,
@@ -34,16 +35,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AnimatePresence, motion } from "framer-motion";
 import ThemeToggle from "./ThemeToggle";
 import { useAuth } from "./auth-provider";
 import IubLogo from "../assets/iub-logo.png";
@@ -70,6 +63,198 @@ type UserMetadata = {
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
+}
+
+type ProfileDropdownProps = {
+  displayName: string;
+  secondaryEmail?: string;
+  avatarUrl?: string;
+  initials: string;
+  onLogout: () => void | Promise<void>;
+};
+
+type ProfileAction = {
+  label: string;
+  description: string;
+  icon: LucideIcon;
+  onSelect: () => void | Promise<void>;
+};
+
+const profileMenuVariants = {
+  open: {
+    opacity: 1,
+    scaleY: 1,
+    transition: {
+      duration: 0.18,
+      ease: [0.16, 1, 0.3, 1],
+      when: "beforeChildren",
+      staggerChildren: 0.05,
+    },
+  },
+  closed: {
+    opacity: 0,
+    scaleY: 0.92,
+    transition: {
+      duration: 0.14,
+      ease: [0.16, 1, 0.3, 1],
+      when: "afterChildren",
+      staggerDirection: -1,
+      staggerChildren: 0.04,
+    },
+  },
+};
+
+const profileItemVariants = {
+  open: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.16, ease: [0.16, 1, 0.3, 1] },
+  },
+  closed: {
+    opacity: 0,
+    y: -10,
+    transition: { duration: 0.12, ease: [0.16, 1, 0.3, 1] },
+  },
+};
+
+const profileIconVariants = {
+  open: { scale: 1, opacity: 1, y: 0 },
+  closed: { scale: 0.6, opacity: 0, y: -6 },
+};
+
+const profileChevronVariants = {
+  open: { rotate: 180 },
+  closed: { rotate: 0 },
+};
+
+function ProfileDropdown({ displayName, secondaryEmail, avatarUrl, initials, onLogout }: ProfileDropdownProps) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (!containerRef.current) return;
+      if (!containerRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  const actions = useMemo<ProfileAction[]>(
+    () => [
+      {
+        label: "Account settings",
+        description: "Manage profile & preferences",
+        icon: Settings,
+        onSelect: () => navigate("/settings"),
+      },
+      {
+        label: "Upgrade workspace",
+        description: "Unlock premium analytics",
+        icon: Sparkles,
+        onSelect: () => navigate("/analytics"),
+      },
+      {
+        label: "Sign out",
+        description: "Log out of EduCareer AI",
+        icon: LogOut,
+        onSelect: onLogout,
+      },
+    ],
+    [navigate, onLogout],
+  );
+
+  const handleSelect = useCallback(
+    (action: ProfileAction) => {
+      setOpen(false);
+      Promise.resolve(action.onSelect()).catch((error) => console.error("Profile action failed", error));
+    },
+    [],
+  );
+
+  return (
+    <motion.div ref={containerRef} animate={open ? "open" : "closed"} className="relative">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex h-10 items-center gap-2 rounded-xl border border-border/70 bg-white/85 px-3 text-left text-foreground transition-colors hover:border-border/80 hover:bg-white dark:bg-slate-900/75"
+      >
+        <Avatar className="h-8 w-8">
+          <AvatarImage src={avatarUrl} alt={displayName} />
+          <AvatarFallback>{initials}</AvatarFallback>
+        </Avatar>
+        <div className="hidden sm:flex flex-col text-left">
+          <span className="text-sm font-medium leading-tight">{displayName}</span>
+          {secondaryEmail && <span className="text-xs text-muted-foreground leading-tight truncate max-w-[140px]">{secondaryEmail}</span>}
+        </div>
+        <motion.span variants={profileChevronVariants} className="ml-1 flex items-center text-muted-foreground">
+          <ChevronDown className="h-4 w-4" />
+        </motion.span>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.ul
+            key="profile-menu"
+            initial="closed"
+            animate="open"
+            exit="closed"
+            variants={profileMenuVariants}
+            style={{ originY: 0 }}
+            className="absolute right-0 top-[110%] w-64 max-w-[calc(100vw-2rem)] rounded-2xl border border-border/60 bg-white/95 p-3 shadow-2xl backdrop-blur-xl dark:bg-slate-900/95"
+          >
+            <motion.li variants={profileItemVariants} className="flex items-center gap-3 rounded-xl bg-muted/10 p-3">
+              <Avatar className="h-10 w-10">
+                <AvatarImage src={avatarUrl} alt={displayName} />
+                <AvatarFallback>{initials}</AvatarFallback>
+              </Avatar>
+              <div className="space-y-1">
+                <p className="text-sm font-semibold leading-tight text-foreground">{displayName}</p>
+                {secondaryEmail && (
+                  <p className="text-xs text-muted-foreground truncate max-w-[180px]">{secondaryEmail}</p>
+                )}
+              </div>
+            </motion.li>
+
+            <motion.div variants={profileItemVariants} className="my-2 h-px bg-border/70" />
+
+            {actions.map((action) => (
+              <motion.li
+                key={action.label}
+                variants={profileItemVariants}
+                onClick={() => handleSelect(action)}
+                className="flex cursor-pointer items-center gap-3 rounded-xl px-2.5 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted/20 hover:text-foreground"
+              >
+                <motion.span variants={profileIconVariants} className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <action.icon className="h-4 w-4" />
+                </motion.span>
+                <div className="flex flex-col">
+                  <span className="font-medium text-foreground">{action.label}</span>
+                  <span className="text-xs text-muted-foreground">{action.description}</span>
+                </div>
+              </motion.li>
+            ))}
+          </motion.ul>
+        )}
+      </AnimatePresence>
+    </motion.div>
+  );
 }
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
@@ -529,66 +714,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </Button>
               <ThemeToggle />
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="flex h-10 items-center gap-2 rounded-xl border border-border/70 bg-white/85 px-3 text-left dark:bg-slate-900/75">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={userMetadata?.avatar_url} alt={displayName} />
-                      <AvatarFallback>{initials}</AvatarFallback>
-                    </Avatar>
-                    <div className="hidden sm:flex flex-col text-left">
-                      <span className="text-sm font-medium text-foreground leading-tight">{displayName}</span>
-                      {secondaryEmail && (
-                        <span className="text-xs text-muted-foreground leading-tight truncate max-w-[140px]">{secondaryEmail}</span>
-                      )}
-                    </div>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-60 rounded-2xl border border-border/60 bg-white/95 p-0 shadow-2xl backdrop-blur-xl dark:bg-slate-900/95">
-                  <DropdownMenuLabel className="px-3 py-3">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={userMetadata?.avatar_url} alt={displayName} />
-                        <AvatarFallback>{initials}</AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold leading-tight text-foreground">{displayName}</p>
-                        {secondaryEmail && (
-                          <p className="text-xs text-muted-foreground truncate max-w-[160px]">{secondaryEmail}</p>
-                        )}
-                      </div>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-border/80" />
-                  <div className="px-3 py-3">
-                    <div className="space-y-3 text-sm text-muted-foreground">
-                      <div>
-                        <p className="font-medium text-foreground">Spotlights</p>
-                        <p className="text-xs">New cohort analytics shipped this week.</p>
-                      </div>
-                      <div>
-                        <p className="font-medium text-foreground">Usage</p>
-                        <p className="text-xs">12 new learners onboarded today.</p>
-                      </div>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator className="bg-border/80" />
-                  <DropdownMenuGroup className="px-1 py-1 text-sm">
-                    <DropdownMenuItem className="gap-3">
-                      <Settings className="h-4 w-4" />
-                      Account settings
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-3">
-                      <Sparkles className="h-4 w-4" />
-                      Upgrade workspace
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="gap-3">
-                      <LogOut className="h-4 w-4" />
-                      Log out
-                    </DropdownMenuItem>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <ProfileDropdown
+                displayName={displayName}
+                secondaryEmail={secondaryEmail}
+                avatarUrl={userMetadata?.avatar_url}
+                initials={initials}
+                onLogout={handleLogout}
+              />
             </div>
           </div>
         </header>

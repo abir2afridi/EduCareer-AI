@@ -5,8 +5,11 @@ import {
   onSnapshot,
   orderBy,
   query,
+  where,
   type DocumentData,
+  type QueryConstraint,
   type QuerySnapshot,
+  type Unsubscribe,
 } from "firebase/firestore";
 import { FirebaseError } from "firebase/app";
 import { db } from "@/lib/firebaseClient";
@@ -89,35 +92,60 @@ export default function StudentQuizResultsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const attemptsQuery = query(collectionGroup(db, "attempts"), orderBy("submittedAt", "desc"));
-    const unsubscribe = onSnapshot(
-      attemptsQuery,
-      (snapshot) => {
-        const nextAttempts = snapshot.docs.map(buildAttempt);
-        setAttempts(nextAttempts);
-        setError(null);
-        setIsLoading(false);
-      },
-      (snapshotError) => {
-        let message = "Unable to load quiz attempts.";
-        if (snapshotError instanceof FirebaseError) {
-          console.error("[Admin Quiz Results] Firestore listener error", {
-            code: snapshotError.code,
-            message: snapshotError.message,
-          });
-          if (snapshotError.code === "permission-denied") {
-            message = "Permission denied. Ensure this account has the admin claim.";
-          }
-        } else {
-          console.error("[Admin Quiz Results] Unexpected listener error", snapshotError);
-        }
-        setError(message);
-        setIsLoading(false);
-      },
-    );
+    let unsubscribe: Unsubscribe | undefined;
 
-    return () => unsubscribe();
-  }, []);
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const constraints: QueryConstraint[] = [];
+      if (studentFilter !== "all") {
+        constraints.push(where("studentUid", "==", studentFilter));
+      }
+      constraints.push(orderBy("submittedAt", "desc"));
+
+      const attemptsQuery = query(collectionGroup(db, "attempts"), ...constraints);
+      unsubscribe = onSnapshot(
+        attemptsQuery,
+        (snapshot) => {
+          const nextAttempts = snapshot.docs.map(buildAttempt);
+          setAttempts(nextAttempts);
+          setError(null);
+          setIsLoading(false);
+        },
+        (snapshotError) => {
+          let message = "Unable to load quiz attempts.";
+          if (snapshotError instanceof FirebaseError) {
+            console.error("[Admin Quiz Results] Firestore listener error", {
+              code: snapshotError.code,
+              message: snapshotError.message,
+              studentFilter,
+            });
+            if (snapshotError.code === "permission-denied") {
+              message = "Permission denied. Ensure this account has the admin claim.";
+            }
+            if (snapshotError.code === "failed-precondition") {
+              message = "Missing required Firestore index. Create the collection group index for studentUid/submittedAt.";
+            }
+          } else {
+            console.error("[Admin Quiz Results] Unexpected listener error", snapshotError);
+          }
+          setError(message);
+          setIsLoading(false);
+        },
+      );
+    } catch (error) {
+      console.error("[Admin Quiz Results] Failed to initialize listener", error);
+      setError("Failed to start quiz results listener. Check console for details.");
+      setIsLoading(false);
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [studentFilter]);
 
   const studentOptions = useMemo(() => {
     const labelMap = new Map<string, string>();

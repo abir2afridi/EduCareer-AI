@@ -1,7 +1,8 @@
 const admin = require("firebase-admin");
 
 try {
-  const serviceAccount = require("./serviceAccountKey.json");
+  const serviceAccount = require("./educareer-ai-firebase-adminsdk-fbsvc-b9bf106481.json");
+
 
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
