@@ -1,0 +1,140 @@
+/* Animated Background Styles extracted from Matrix Effect.html */
+
+/* Root variables are defined in the HTML; this file relies on them */
+
+/* Section-scoped container */
+.matrix-section {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* PROFESSIONAL CORPORATE BACKGROUND */
+.corporate-background {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+  background: radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.12), transparent 50%),
+    radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.1), transparent 55%);
+}
+
+.matrix-section .corporate-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.92;
+}
+
+/* Executive Overlay Pattern */
+.executive-overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background:
+    linear-gradient(45deg, rgba(255,255,255,0.96) 0%, rgba(248,250,252,0.99) 100%),
+    radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.16) 0%, transparent 54%),
+    radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.14) 0%, transparent 54%),
+    radial-gradient(circle at 40% 60%, rgba(16, 185, 129, 0.12) 0%, transparent 54%);
+}
+
+[data-theme="dark"] .executive-overlay {
+  background:
+    linear-gradient(45deg, rgba(15, 23, 42, 0.92) 0%, rgba(30, 41, 59, 0.96) 100%),
+    radial-gradient(circle at 20% 20%, rgba(96, 165, 250, 0.18) 0%, transparent 54%),
+    radial-gradient(circle at 80% 80%, rgba(167, 139, 250, 0.14) 0%, transparent 54%),
+    radial-gradient(circle at 40% 60%, rgba(52, 211, 153, 0.12) 0%, transparent 54%);
+}
+
+/* Corporate Grid System */
+.corporate-grid {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.15) 1px, transparent 1px),
+    linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 20px 20px, 20px 20px;
+  animation: gridFloat 30s linear infinite;
+}
+
+@keyframes gridFloat {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(80px, 80px); }
+}
+
+/* Professional Geometric Elements */
+.geometric-elements { position: absolute; width: 100%; height: 100%; }
+.geo-element { position: absolute; opacity: 0.12; animation: geoFloat 25s ease-in-out infinite; }
+.geo-circle-1 { width: 300px; height: 300px; border: 2px solid var(--accent-primary); border-radius: 50%; top: 10%; left: 5%; animation-delay: 0s; }
+.geo-square-1 { width: 200px; height: 200px; border: 2px solid var(--accent-secondary); transform: rotate(45deg); top: 60%; right: 10%; animation-delay: 8s; }
+.geo-triangle-1 { width: 0; height: 0; border-left: 100px solid transparent; border-right: 100px solid transparent; border-bottom: 173px solid var(--success); top: 30%; right: 30%; animation-delay: 15s; }
+.geo-hexagon-1 { width: 150px; height: 86px; background: var(--warning); position: relative; bottom: 20%; left: 70%; animation-delay: 5s; }
+.geo-hexagon-1:before,
+.geo-hexagon-1:after { content: ""; position: absolute; width: 0; border-left: 75px solid transparent; border-right: 75px solid transparent; }
+.geo-hexagon-1:before { bottom: 100%; border-bottom: 43px solid var(--warning); }
+.geo-hexagon-1:after { top: 100%; border-top: 43px solid var(--warning); }
+
+@keyframes geoFloat {
+  0%, 100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.06; }
+  25% { transform: translateY(-20px) rotate(90deg) scale(1.1); opacity: 0.1; }
+  50% { transform: translateY(-40px) rotate(180deg) scale(0.9); opacity: 0.04; }
+  75% { transform: translateY(-20px) rotate(270deg) scale(1.05); opacity: 0.08; }
+}
+
+/* Executive Data Streams */
+.data-streams { position: absolute; width: 100%; height: 100%; }
+.data-stream {
+  position: absolute;
+  height: 2px;
+  background: linear-gradient(90deg, transparent 0%, rgba(59, 130, 246, 0.45) 18%, rgba(59, 130, 246, 0.78) 48%, rgba(59, 130, 246, 0.45) 82%, transparent 100%);
+  animation: streamFlow 12s linear infinite;
+}
+.stream-1 { width: 400px; top: 15%; left: -400px; animation-delay: 0s; }
+.stream-2 { width: 350px; top: 35%; right: -350px; animation-delay: 3s; animation-direction: reverse; }
+.stream-3 { width: 500px; top: 55%; left: -500px; animation-delay: 6s; }
+.stream-4 { width: 300px; top: 75%; right: -300px; animation-delay: 9s; animation-direction: reverse; }
+
+@keyframes streamFlow {
+  0% { transform: translateX(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateX(calc(100vw + 400px)); opacity: 0; }
+}
+
+/* Corporate Dots Matrix */
+.dots-matrix { position: absolute; width: 100%; height: 100%; background-image: radial-gradient(circle, rgba(59, 130, 246, 0.1) 2px, transparent 2px); background-size: 60px 60px; animation: dotsShift 40s linear infinite; }
+@keyframes dotsShift { 0% { transform: translate(0, 0); } 100% { transform: translate(60px, 60px); } }
+
+/* Professional Wave Patterns */
+.wave-patterns { position: absolute; width: 100%; height: 100%; }
+.wave-pattern { position: absolute; width: 200%; height: 200%; border-radius: 50%; border: 1px solid rgba(59, 130, 246, 0.1); animation: waveExpand 20s ease-in-out infinite; }
+.wave-1 { top: 20%; left: 10%; animation-delay: 0s; }
+.wave-2 { bottom: 30%; right: 20%; animation-delay: 7s; }
+.wave-3 { top: 50%; left: 50%; transform: translate(-50%, -50%); animation-delay: 14s; }
+
+@keyframes waveExpand {
+  0%, 100% { transform: scale(0.5); opacity: 0; }
+  50% { transform: scale(1); opacity: 0.3; }
+}
+
+/* Optional watermark hooks (HTML includes these elements) */
+.brand-watermark { position: absolute; inset: 0; pointer-events: none; }
+.watermark-element { position: absolute; font-weight: 800; letter-spacing: 0.3em; opacity: 0.04; color: var(--text-primary); }
+.watermark-1 { top: 12%; left: 8%; font-size: 56px; }
+.watermark-2 { bottom: 10%; right: 12%; font-size: 72px; }
+
+/* Responsive: hide heavy decorations on small screens */
+@media (max-width: 768px) {
+  .geo-element { display: none; }
+  .data-streams { display: none; }
+  .watermark-element { display: none; }
+}

@@ -1,7 +1,9 @@
+import type { CSSProperties } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import Spline from "@splinetool/react-spline";
 import IubLogo from "../assets/iub-logo.png";
 import { ShiftingDropdown } from "@/components/home/ShiftingDropdown";
+import "../../matrix-background.css";
 
 const Index = () => {
   const solutions = [
@@ -31,6 +33,20 @@ const Index = () => {
     },
   ];
 
+  const renderShineText = (text: string, offset: number) =>
+    text.split("").map((char, index) => {
+      const style = { "--shine-delay": `${(offset + index) * 0.5}s` } as CSSProperties;
+      return (
+        <span key={`${text}-${index}`} className="shine-letter" style={style}>
+          {char === " " ? "\u00A0" : char}
+        </span>
+      );
+    });
+
+  const heroLineOne = "FUTURE-";
+  const heroLineTwo = "READY";
+  const heroLineThree = "LEARNING";
+
   return (
     <main className="min-h-screen bg-white text-black">
       <nav className="fixed top-0 left-0 z-50 w-full border-b border-black bg-white">
@@ -42,14 +58,14 @@ const Index = () => {
           <div className="flex items-center gap-6">
             <ShiftingDropdown />
             <div className="flex items-center gap-3">
-              <a href="/auth/signin" className="text-sm font-semibold uppercase tracking-widest hover:text-red-600">
-                Sign in
+              <a href="/auth/signin" className="signInButton focus:outline-none" aria-label="Sign in">
+                <span className="signInButtonText">Sign in</span>
               </a>
-              <a
-                href="/auth/signup"
-                className="rounded-full border border-black px-4 py-2 text-sm font-semibold uppercase tracking-widest transition-colors hover:bg-black hover:text-white"
-              >
-                Sign up
+              <a href="/auth/signup" className="button-signup focus:outline-none" aria-label="Sign up">
+                <span className="icon_cont">
+                  <span className="icon">🡪</span>
+                </span>
+                <span className="text_button">Sign up</span>
               </a>
             </div>
           </div>
@@ -57,13 +73,38 @@ const Index = () => {
       </nav>
 
       <div className="relative">
-        <section id="top" className="sticky top-0 flex min-h-screen items-center bg-white">
-          <div className="container mx-auto grid grid-cols-12 gap-4 px-4 pb-16 pt-36 md:px-8">
+        <section id="top" className="relative flex min-h-screen items-center bg-white md:sticky md:top-0">
+          <div className="absolute inset-0">
+            <div className="matrix-section">
+              <div className="corporate-background" />
+              <div className="executive-overlay" />
+              <div className="corporate-grid" />
+              <div className="geometric-elements">
+                <div className="geo-element geo-circle-1" />
+                <div className="geo-element geo-square-1" />
+                <div className="geo-element geo-triangle-1" />
+                <div className="geo-element geo-hexagon-1" />
+              </div>
+              <div className="data-streams">
+                <div className="data-stream stream-1" />
+                <div className="data-stream stream-2" />
+                <div className="data-stream stream-3" />
+                <div className="data-stream stream-4" />
+              </div>
+              <div className="dots-matrix" />
+              <div className="wave-patterns">
+                <div className="wave-pattern wave-1" />
+                <div className="wave-pattern wave-2" />
+                <div className="wave-pattern wave-3" />
+              </div>
+            </div>
+          </div>
+          <div className="relative z-[1] container mx-auto grid grid-cols-12 gap-4 px-4 pb-16 pt-36 md:px-8">
             <div className="col-span-12 mb-12 md:col-span-7 md:mb-0">
               <h1 className="text-8xl font-bold leading-none tracking-tighter md:text-9xl">
-                FUTURE-READY
-                <br />
-                LEARNING
+                <span className="block">{renderShineText(heroLineOne, 0)}</span>
+                <span className="block">{renderShineText(heroLineTwo, heroLineOne.length)}</span>
+                <span className="block">{renderShineText(heroLineThree, heroLineOne.length + heroLineTwo.length)}</span>
               </h1>
               <p className="mt-6 max-w-xl text-xl">
                 Empower institutions to deliver adaptive learning, real-time guidance, and career outcomes with one
@@ -94,7 +135,7 @@ const Index = () => {
           </div>
         </section>
 
-        <section id="work" className="sticky top-0 flex min-h-screen items-center bg-black text-white">
+        <section id="work" className="relative flex min-h-screen items-center bg-black text-white md:sticky md:top-0">
           <div className="container mx-auto px-4 py-24 md:px-8">
             <h2 className="mb-12 text-6xl font-bold tracking-tighter">SOLUTIONS</h2>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -131,8 +172,19 @@ const Index = () => {
           </div>
         </section>
 
-        <section id="about" className="sticky top-0 flex min-h-screen items-center bg-white">
-          <div className="container mx-auto grid grid-cols-12 gap-8 px-4 py-24 md:px-8">
+        <section id="about" className="relative flex min-h-screen items-center bg-white md:sticky md:top-0">
+          <div className="absolute inset-0">
+            <div className="matrix-section">
+              <div className="executive-overlay" />
+              <div className="corporate-grid" />
+              <div className="geometric-elements">
+                <div className="geo-element geo-circle-1" />
+                <div className="geo-element geo-square-1" />
+              </div>
+              <div className="dots-matrix" />
+            </div>
+          </div>
+          <div className="relative z-[1] container mx-auto grid grid-cols-12 gap-8 px-4 py-24 md:px-8">
             <div className="col-span-12 md:col-span-5">
               <h2 className="mb-8 text-6xl font-bold tracking-tighter">ABOUT</h2>
               <div className="relative mb-8 aspect-square w-full max-w-sm bg-neutral-100 md:mb-0">
@@ -185,7 +237,7 @@ const Index = () => {
           </div>
         </section>
 
-        <section id="contact" className="sticky top-0 flex min-h-screen items-center bg-red-600 text-white">
+        <section id="contact" className="relative flex min-h-screen items-center bg-red-600 text-white md:sticky md:top-0">
           <div className="container mx-auto grid grid-cols-1 gap-12 px-4 py-24 md:grid-cols-2 md:px-8">
             <div>
               <h2 className="mb-8 text-6xl font-bold tracking-tighter">CONTACT</h2>
@@ -268,17 +320,17 @@ const Index = () => {
         </section>
       </div>
 
-      <footer className="bg-black py-8 text-white">
-        <div className="container mx-auto flex flex-col items-center justify-between px-4 md:flex-row md:px-8">
-          <p className="mb-4 text-sm md:mb-0">© 2025 TheDevAbir-CodeCrafted Studio. All rights reserved.</p>
-          <div className="flex space-x-8">
-            <a href="#" className="text-sm uppercase tracking-widest transition-colors hover:text-red-600">
+      <footer className="bg-black py-4 text-white">
+        <div className="container mx-auto flex flex-col items-center justify-between px-4 text-xs md:flex-row md:px-6">
+          <p className="mb-3 md:mb-0">© 2025 TheDevAbir-CodeCrafted Studio. All rights reserved.</p>
+          <div className="flex space-x-6">
+            <a href="#" className="uppercase tracking-[0.32em] transition-colors hover:text-red-600">
               Instagram
             </a>
-            <a href="#" className="text-sm uppercase tracking-widest transition-colors hover:text-red-600">
+            <a href="#" className="uppercase tracking-[0.32em] transition-colors hover:text-red-600">
               Behance
             </a>
-            <a href="#" className="text-sm uppercase tracking-widest transition-colors hover:text-red-600">
+            <a href="#" className="uppercase tracking-[0.32em] transition-colors hover:text-red-600">
               LinkedIn
             </a>
           </div>
