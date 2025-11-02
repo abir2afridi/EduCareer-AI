@@ -38,10 +38,40 @@ export default function DashboardSidebar({ sections, displayName, secondaryEmail
   const { isExpanded, isHovered, setHovered, toggleSidebar, isMobileOpen, toggleMobileSidebar, closeMobile } = useSidebar();
   const [openSubmenu, setOpenSubmenu] = useState<{ section: number; index: number } | null>(null);
 
-  const sidebarWidth = useMemo(
-    () => ((isExpanded || isHovered) ? EXPANDED_WIDTH : COLLAPSED_WIDTH),
-    [isExpanded, isHovered],
-  );
+  useEffect(() => {
+    const next = findActiveSubmenu(sections, location.pathname);
+    setOpenSubmenu(next);
+  }, [sections, location.pathname]);
+
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return window.matchMedia("(min-width: 1280px)").matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const mediaQuery = window.matchMedia("(min-width: 1280px)");
+    const handleChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+
+    setIsDesktop(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handleChange);
+      return () => mediaQuery.removeEventListener("change", handleChange);
+    }
+
+    mediaQuery.addListener(handleChange);
+    return () => mediaQuery.removeListener(handleChange);
+  }, []);
+
+  const collapsed = isDesktop ? !isExpanded && !isHovered : !isMobileOpen;
+  const showLabels = !collapsed;
+
+  const sidebarWidth = useMemo(() => (collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH), [collapsed]);
 
   useEffect(() => {
     document.documentElement.style.setProperty("--dashboard-sidebar-width", sidebarWidth);
@@ -49,13 +79,6 @@ export default function DashboardSidebar({ sections, displayName, secondaryEmail
       document.documentElement.style.removeProperty("--dashboard-sidebar-width");
     };
   }, [sidebarWidth]);
-
-  useEffect(() => {
-    const next = findActiveSubmenu(sections, location.pathname);
-    setOpenSubmenu(next);
-  }, [sections, location.pathname]);
-
-  const collapsed = !isExpanded && !isHovered && !isMobileOpen;
 
   const handleSubmenuToggle = (sectionIndex: number, itemIndex: number) => {
     setOpenSubmenu((current) => {
@@ -71,7 +94,7 @@ export default function DashboardSidebar({ sections, displayName, secondaryEmail
       className={cn(
         "fixed inset-y-0 left-0 z-50 flex h-full flex-col border-r border-border/60 bg-white/95 transition-all duration-300 ease-in-out backdrop-blur-sm dark:bg-slate-950/95",
         collapsed ? "w-[80px]" : "w-[240px]",
-        isMobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
+        isDesktop ? "translate-x-0" : "translate-x-0",
       )}
       onMouseEnter={() => !isExpanded && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -109,19 +132,19 @@ export default function DashboardSidebar({ sections, displayName, secondaryEmail
         {sections.map((section, sectionIndex) => (
           <Fragment key={section.title}>
             <div className="space-y-1.5">
-              {(isExpanded || isHovered || isMobileOpen) && (
+              {showLabels && (
                 <p className="px-1 text-[11px] font-semibold uppercase tracking-[0.26em] text-muted-foreground">
                   {section.title}
                 </p>
               )}
-              <nav className={cn("flex flex-col gap-1", collapsed && "items-center gap-2")}
+              <nav className={cn("flex flex-col gap-1", showLabels ? "" : "items-center gap-2")}
               >
                 {section.items.map((item, itemIndex) => {
                   const hasSubmenu = item.subItems && item.subItems.length > 0;
                   const activeSub = hasSubmenu && item.subItems!.some((sub) => sub.path === location.pathname);
                   const isActive = item.path ? item.path === location.pathname : activeSub;
                   const isOpen =
-                    openSubmenu && openSubmenu.section === sectionIndex && openSubmenu.index === itemIndex && !collapsed;
+                    openSubmenu && openSubmenu.section === sectionIndex && openSubmenu.index === itemIndex && showLabels;
 
                   return (
                     <div key={item.label} className="w-full">
@@ -131,7 +154,7 @@ export default function DashboardSidebar({ sections, displayName, secondaryEmail
                           onClick={hasSubmenu ? () => handleSubmenuToggle(sectionIndex, itemIndex) : undefined}
                           className={cn(
                             "group flex w-full items-center rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors",
-                            collapsed ? "justify-center" : "gap-3",
+                            showLabels ? "gap-3" : "justify-center",
                             isActive
                               ? "bg-primary/10 text-primary"
                               : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-900",
@@ -145,10 +168,10 @@ export default function DashboardSidebar({ sections, displayName, secondaryEmail
                           >
                             <item.icon className="h-5 w-5" />
                           </span>
-                          {!collapsed && (
+                          {showLabels && (
                             <span className="flex-1 text-left text-xs font-medium leading-tight whitespace-normal break-words">{item.label}</span>
                           )}
-                          {!collapsed && hasSubmenu && (
+                          {showLabels && hasSubmenu && (
                             <ChevronDown
                               className={cn(
                                 "h-4 w-4 transition-transform",
@@ -165,7 +188,7 @@ export default function DashboardSidebar({ sections, displayName, secondaryEmail
                           }}
                           className={cn(
                             "group flex w-full items-center rounded-xl px-2.5 py-1.5 text-xs font-medium transition-colors",
-                            collapsed ? "justify-center" : "gap-3",
+                            showLabels ? "gap-3" : "justify-center",
                             isActive
                               ? "bg-primary/10 text-primary"
                               : "text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-900",
@@ -179,13 +202,13 @@ export default function DashboardSidebar({ sections, displayName, secondaryEmail
                           >
                             <item.icon className="h-5 w-5" />
                           </span>
-                          {!collapsed && (
+                          {showLabels && (
                             <span className="flex-1 text-left text-xs font-medium leading-tight whitespace-normal break-words">{item.label}</span>
                           )}
                         </Link>
                       )}
 
-                      {hasSubmenu && !collapsed && (
+                      {hasSubmenu && showLabels && (
                         <div
                           className={cn(
                             "overflow-hidden transition-all duration-200",

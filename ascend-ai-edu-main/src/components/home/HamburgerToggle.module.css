@@ -1,0 +1,71 @@
+.wrapper {
+  display: inline-flex;
+}
+
+.hamburger {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 200ms ease;
+}
+
+.hamburger input {
+  display: none;
+}
+
+.hamburger svg {
+  height: 3em;
+  width: 3em;
+  transition: transform 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.line {
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+  transition:
+    stroke-dasharray 600ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke-dashoffset 600ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lineTopBottom {
+  stroke-dasharray: 12 63;
+}
+
+.hamburger input:checked + svg {
+  transform: rotate(-45deg);
+}
+
+.hamburger input:checked + svg .lineTopBottom {
+  stroke-dasharray: 20 300;
+  stroke-dashoffset: -32.42;
+}
+
+.ghost {
+  border: 1px solid currentColor;
+  background-color: transparent;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+}
+
+.ghost:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.sizeIcon svg {
+  height: 2.75rem;
+  width: 2.75rem;
+}
+
+.roundedLg {
+  border-radius: 0.75rem;
+}
+
+.shadowThemeXs {
+  box-shadow: var(--shadow-theme-xs, 0 1px 2px rgba(15, 23, 42, 0.08));
+}

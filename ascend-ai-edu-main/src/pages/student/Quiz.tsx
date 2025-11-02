@@ -627,9 +627,6 @@ export default function QuizPage() {
               <p className="mt-2 max-w-xl text-sm text-muted-foreground">
                 Describe a topic and choose the number of questions. Our AI will craft unique multiple-choice questions to help you revise faster.
               </p>
-              <Button onClick={() => generateButtonRef.current?.focus()} className="mt-6">
-                Start now
-              </Button>
             </motion.div>
           )}
         </AnimatePresence>

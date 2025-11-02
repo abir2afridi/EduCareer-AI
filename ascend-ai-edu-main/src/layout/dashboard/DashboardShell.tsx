@@ -7,12 +7,14 @@ import { SidebarProvider, useSidebar } from "./SidebarContext";
 import DashboardSidebar, { type SidebarSection } from "./DashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import ThemeToggle from "@/components/ThemeToggle";
 import { useAuth } from "@/components/auth-provider";
 import NotificationDropdown from "@/components/dashboard/NotificationDropdown";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Backdrop from "./DashboardSidebarBackdrop";
+import { HamburgerToggle } from "@/components/home/HamburgerToggle";
 
 import {
   ArrowRightIcon,
@@ -83,6 +85,30 @@ const itemVariants = {
 function ProfileMenu({ displayName, secondaryEmail, avatarUrl, initials, onLogout }: ProfileMenuProps) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const [isDesktop, setIsDesktop] = useState(() => {
+    if (typeof window === "undefined") {
+      return false;
+    }
+    return window.matchMedia("(min-width: 1024px)").matches;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const mediaQuery = window.matchMedia("(min-width: 1024px)");
+    const handler = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+
+    setIsDesktop(mediaQuery.matches);
+
+    if (typeof mediaQuery.addEventListener === "function") {
+      mediaQuery.addEventListener("change", handler);
+      return () => mediaQuery.removeEventListener("change", handler);
+    }
+
+    mediaQuery.addListener(handler);
+    return () => mediaQuery.removeListener(handler);
+  }, []);
 
   const actions = useMemo(
     () => [
@@ -197,6 +223,11 @@ function ProfileMenu({ displayName, secondaryEmail, avatarUrl, initials, onLogou
               />
 
               <motion.ul className="space-y-1">
+                {!isDesktop && (
+                  <motion.li variants={itemVariants}>
+                    <ThemeToggle variant="menu" />
+                  </motion.li>
+                )}
                 {actions.map((action) => (
                   <motion.li
                     key={action.label}
@@ -270,37 +301,35 @@ function DashboardHeader({
     <header className="sticky top-0 z-40 border-b border-border/60 bg-white/95 backdrop-blur-xl dark:bg-slate-950/90">
       <div className="mx-auto flex h-20 w-full max-w-screen-2xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-11 w-11 rounded-lg border border-border/60 bg-white text-muted-foreground shadow-theme-xs transition hover:text-foreground lg:hidden"
-            onClick={toggleMobileSidebar}
-            aria-label="Toggle sidebar"
-          >
-            {isMobileOpen ? <SidebarCloseIcon className="h-5 w-5" /> : <SidebarOpenIcon className="h-5 w-5" />}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="hidden h-11 w-11 rounded-lg border border-border/60 bg-white text-muted-foreground shadow-theme-xs transition hover:text-foreground lg:inline-flex"
-            onClick={toggleSidebar}
-            aria-label={isExpanded ? "Collapse sidebar" : "Expand sidebar"}
-          >
-            {isExpanded ? <SidebarCloseIcon className="h-5 w-5" /> : <SidebarOpenIcon className="h-5 w-5" />}
-          </Button>
+          <div className="lg:hidden">
+            <HamburgerToggle
+              open={isMobileOpen}
+              onToggle={toggleMobileSidebar}
+              className="text-muted-foreground"
+              variantClassName="flex h-11 w-11 items-center justify-center rounded-xl bg-transparent transition hover:text-foreground"
+            />
+          </div>
+          <div className="hidden lg:block">
+            <HamburgerToggle
+              open={isExpanded}
+              onToggle={toggleSidebar}
+              className="text-muted-foreground"
+              variantClassName="hidden h-11 w-11 items-center justify-center rounded-xl bg-transparent transition hover:text-foreground lg:flex"
+            />
+          </div>
           <div className="flex flex-col">
             <div className="flex items-center gap-2">
               <h1 className="truncate text-lg font-semibold text-foreground sm:text-xl">{title}</h1>
-              <span className="inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600 dark:border-amber-500/30 dark:bg-amber-600/15 dark:text-amber-300">
+              <span className="hidden items-center gap-1 rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-600 dark:border-amber-500/30 dark:bg-amber-600/15 dark:text-amber-300 lg:inline-flex">
                 <Sparkles className="h-3 w-3" />
                 Smart Insights
               </span>
             </div>
-            <p className="truncate text-sm text-muted-foreground">{description}</p>
+            <p className="hidden truncate text-sm text-muted-foreground lg:block">{description}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className={cn("flex items-center gap-2 sm:gap-3", isMobileOpen ? "hidden lg:flex" : "")}>
           <div className="hidden min-w-[140px] flex-col text-right md:flex">
             <span className="text-sm font-semibold text-foreground">
               {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
@@ -309,7 +338,7 @@ function DashboardHeader({
               {now.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
             </span>
           </div>
-          <form onSubmit={onSearchSubmit} className="hidden md:block">
+          <form onSubmit={onSearchSubmit} className="hidden lg:block">
             <div className="relative">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -325,8 +354,18 @@ function DashboardHeader({
             </div>
           </form>
 
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-11 w-11 rounded-lg border border-border/60 bg-white text-muted-foreground shadow-theme-xs transition hover:text-foreground lg:hidden"
+            aria-label="Open search"
+          >
+            <Search className="h-5 w-5" />
+          </Button>
+
           <NotificationDropdown />
-          <ThemeToggle />
+          <ThemeToggle className="hidden lg:inline-flex" />
           <ProfileMenu
             displayName={displayName}
             secondaryEmail={secondaryEmail}
@@ -385,7 +424,14 @@ function ShellContent({ children }: PropsWithChildren) {
     () => [
       { label: "Dashboard", path: "/dashboard", icon: GridIcon },
       { label: "Students", path: "/students", icon: GroupIcon },
-      { label: "AI Quiz", path: "/quiz", icon: BrainCircuit },
+      {
+        label: "AI Workspace",
+        icon: Sparkles,
+        subItems: [
+          { label: "AI Quiz", path: "/quiz" },
+          { label: "AI Assistant", path: "/assistant" },
+        ],
+      },
       { label: "AI Learning Insights", path: "/insights", icon: BarChart3 },
       { label: "Upcoming Tasks", path: "/tasks", icon: CalenderIcon },
       { label: "My Courses", path: "/courses", icon: PageIcon },
@@ -419,11 +465,8 @@ function ShellContent({ children }: PropsWithChildren) {
       },
       {
         label: "Chat",
+        path: "/dashboard/chat",
         icon: ChatIcon,
-        subItems: [
-          { label: "Messages", path: "/dashboard/chat" },
-          { label: "AI Assistant", path: "/assistant" },
-        ],
       },
       { label: "Tasks", path: "/tasks", icon: TaskIcon },
       { label: "Settings", path: "/settings", icon: Settings },
@@ -479,7 +522,7 @@ function ShellContent({ children }: PropsWithChildren) {
       />
       <Backdrop />
 
-      <div className="flex min-h-screen flex-col lg:pl-[var(--dashboard-sidebar-width,18rem)]">
+      <div className="flex min-h-screen flex-col pl-[var(--dashboard-sidebar-width,18rem)]">
         <DashboardHeader
           title={currentPage.title}
           description={currentPage.description}

@@ -1,11 +1,15 @@
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import Spline from "@splinetool/react-spline";
 import IubLogo from "../assets/iub-logo.png";
 import { ShiftingDropdown } from "@/components/home/ShiftingDropdown";
 import "../../matrix-background.css";
+import { LogIn, UserPlus } from "lucide-react";
+import { HamburgerToggle } from "@/components/home/HamburgerToggle";
 
 const Index = () => {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   const solutions = [
     {
       number: "01",
@@ -55,7 +59,7 @@ const Index = () => {
             <img src={IubLogo} alt="IUB Logo" className="h-10 w-10 object-contain" />
             EDUCAREER AI
           </a>
-          <div className="flex items-center gap-6">
+          <div className="hidden items-center gap-6 md:flex">
             <ShiftingDropdown />
             <div className="flex items-center gap-3">
               <a href="/auth/signin" className="signInButton focus:outline-none" aria-label="Sign in">
@@ -67,6 +71,33 @@ const Index = () => {
                 </span>
                 <span className="text_button">Sign up</span>
               </a>
+            </div>
+          </div>
+          <div className="md:hidden">
+            <HamburgerToggle open={mobileMenuOpen} onToggle={() => setMobileMenuOpen((prev) => !prev)} />
+          </div>
+        </div>
+        <div
+          className={`md:hidden border-t border-black bg-white transition-all duration-200 ${mobileMenuOpen ? "max-h-[320px] opacity-100" : "max-h-0 opacity-0"}`}
+        >
+          <div className="space-y-4 px-4 py-4 text-sm">
+            <a href="/auth/signin" className="flex items-center gap-2 font-semibold">
+              <LogIn className="h-4 w-4" /> Sign in
+            </a>
+            <a href="/auth/signup" className="flex items-center gap-2 font-semibold">
+              <UserPlus className="h-4 w-4" /> Sign up
+            </a>
+            <div className="rounded-lg border border-black/10 bg-black/5 p-3 text-xs leading-5">
+              <p className="font-semibold uppercase tracking-[0.2em]">Why choose EduCareer AI?</p>
+              <ul className="mt-2 list-disc space-y-1 pl-4">
+                <li>Personalized AI guidance for every learner</li>
+                <li>Career-ready insights and mentorship</li>
+                <li>Seamless integration with your campus tools</li>
+              </ul>
+            </div>
+            <div className="flex items-center gap-3 text-xs">
+              <span className="rounded-full bg-black px-3 py-1 text-white">24/7 Support</span>
+              <span className="rounded-full border border-black px-3 py-1">Live demo available</span>
             </div>
           </div>
         </div>
