@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -61,6 +63,29 @@ All colors MUST be HSL.
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    @apply size-1.5;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply rounded-full;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-gray-200 dark:bg-gray-700;
+  }
+}
+
   .dark {
     /* Dark theme overrides */
     --background: 220 25% 8%;
@@ -123,7 +148,7 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-family: 'Inter', 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   }
 
   /* Glassmorphism utility */
@@ -155,6 +180,70 @@ All colors MUST be HSL.
 }
 
 @layer components {
+  .menu-item {
+    @apply relative flex w-full items-center gap-3 rounded-lg px-2 py-2 text-sm font-medium text-slate-600 transition-colors duration-200 hover:text-primary dark:text-slate-200;
+  }
+
+  .menu-item-active {
+    @apply text-primary dark:text-primary;
+  }
+
+  .menu-item-inactive {
+    @apply text-slate-500 dark:text-slate-400;
+  }
+
+  .menu-item-icon-size {
+    @apply flex h-8 w-8 items-center justify-center rounded-md border border-transparent text-slate-400 transition-colors duration-200 group-hover:text-primary dark:text-slate-400;
+  }
+
+  .menu-item-icon-active {
+    @apply text-primary dark:text-primary;
+  }
+
+  .menu-item-icon-inactive {
+    @apply text-slate-400 group-hover:text-primary dark:text-slate-500 dark:group-hover:text-primary;
+  }
+
+  .menu-item-text {
+    @apply truncate text-sm font-medium text-slate-700 dark:text-slate-100;
+  }
+
+  .menu-item-subtext {
+    @apply truncate text-xs font-medium text-slate-400 dark:text-slate-500;
+  }
+
+  .menu-item-arrow {
+    @apply text-slate-400 transition-transform duration-200 ease-out group-hover:text-primary;
+  }
+
+  .menu-item-arrow-active {
+    @apply rotate-180 text-primary;
+  }
+
+  .menu-dropdown-item {
+    @apply relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors duration-200 ease-out;
+  }
+
+  .menu-dropdown-item-active {
+    @apply text-foreground shadow-theme-sm ring-1 ring-primary/15 dark:text-white;
+  }
+
+  .menu-dropdown-item-inactive {
+    @apply hover:bg-white/70 hover:text-foreground dark:hover:bg-white/10;
+  }
+
+  .menu-dropdown-badge {
+    @apply rounded-full px-2.5 py-0.5 text-xs font-medium uppercase text-primary;
+  }
+
+  .menu-dropdown-badge-active {
+    @apply bg-primary/10 text-primary;
+  }
+
+  .menu-dropdown-badge-inactive {
+    @apply bg-white/60 text-muted-foreground dark:bg-white/10;
+  }
+
   .shine-text {
     background-image: linear-gradient(
       90deg,

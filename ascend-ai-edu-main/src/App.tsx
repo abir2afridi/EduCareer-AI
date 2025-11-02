@@ -19,6 +19,9 @@ import Career from "./pages/Career";
 import Reports from "./pages/Reports";
 import Research from "./pages/Research";
 import Assistant from "./pages/Assistant";
+import Chat from "./pages/FriendsAndMessages";
+import EmailInbox from "./pages/EmailInbox";
+import EmailDetails from "./pages/EmailDetails";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
@@ -44,6 +47,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { AdminProtectedRoute } from "./components/admin/AdminProtectedRoute";
+import Notifications from "./pages/Notifications";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +65,16 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Dashboard />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/chat"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Chat />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -196,6 +210,26 @@ const App = () => (
             }
           />
           <Route
+            path="/email"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <EmailInbox />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/email/details"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <EmailDetails />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/profile"
             element={
               <ProtectedRoute>
@@ -267,6 +301,16 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <CompleteProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Notifications />
+                </DashboardLayout>
               </ProtectedRoute>
             }
           />

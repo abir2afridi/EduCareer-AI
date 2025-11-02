@@ -1,0 +1,3552 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Inbox | TailAdmin - Tailwind CSS Admin Dashboard Template</title>
+  <link rel="icon" href="favicon.ico"><link href="style.css" rel="stylesheet"></head>
+  <body
+    x-data="{ page: 'inbox', 'loaded': true, 'darkMode': false, 'stickyMenu': false, 'sidebarToggle': false, 'scrollTop': false }"
+    x-init="
+         darkMode = JSON.parse(localStorage.getItem('darkMode'));
+         $watch('darkMode', value => localStorage.setItem('darkMode', JSON.stringify(value)))"
+    :class="{'dark bg-gray-900': darkMode === true}"
+  >
+    <!-- ===== Preloader Start ===== -->
+    <div
+  x-show="loaded"
+  x-init="window.addEventListener('DOMContentLoaded', () => {setTimeout(() => loaded = false, 500)})"
+  class="fixed left-0 top-0 z-999999 flex h-screen w-screen items-center justify-center bg-white dark:bg-black"
+>
+  <div
+    class="h-16 w-16 animate-spin rounded-full border-4 border-solid border-brand-500 border-t-transparent"
+  ></div>
+</div>
+
+    <!-- ===== Preloader End ===== -->
+
+    <!-- ===== Page Wrapper Start ===== -->
+    <div class="flex h-screen overflow-hidden">
+      <!-- ===== Sidebar Start ===== -->
+      <aside
+  :class="sidebarToggle ? 'translate-x-0 xl:w-[90px]' : '-translate-x-full'"
+  class="sidebar fixed top-0 left-0 z-9999 flex h-screen w-[290px] flex-col overflow-y-auto border-r border-gray-200 bg-white px-5 transition-all duration-300 xl:static xl:translate-x-0 dark:border-gray-800 dark:bg-black"
+  @click.outside="sidebarToggle = false"
+>
+  <!-- SIDEBAR HEADER -->
+  <div
+    :class="sidebarToggle ? 'justify-center' : 'justify-between'"
+    class="sidebar-header flex items-center gap-2 pt-8 pb-7"
+  >
+    <a href="index.html">
+      <span class="logo" :class="sidebarToggle ? 'hidden' : ''">
+        <img class="dark:hidden" src="src/images/logo/logo.svg" alt="Logo" />
+        <img
+          class="hidden dark:block"
+          src="src/images/logo/logo-dark.svg"
+          alt="Logo"
+        />
+      </span>
+
+      <img
+        class="logo-icon"
+        :class="sidebarToggle ? 'xl:block' : 'hidden'"
+        src="src/images/logo/logo-icon.svg"
+        alt="Logo"
+      />
+    </a>
+  </div>
+  <!-- SIDEBAR HEADER -->
+
+  <div
+    class="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear"
+  >
+    <!-- Sidebar Menu -->
+    <nav x-data="{selected: $persist('Dashboard')}">
+      <!-- Menu Group -->
+      <div>
+        <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
+          <span
+            class="menu-group-title"
+            :class="sidebarToggle ? 'xl:hidden' : ''"
+          >
+            MENU
+          </span>
+
+          <svg
+            :class="sidebarToggle ? 'xl:block hidden' : 'hidden'"
+            class="menu-group-icon mx-auto fill-current"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M5.99915 10.2451C6.96564 10.2451 7.74915 11.0286 7.74915 11.9951V12.0051C7.74915 12.9716 6.96564 13.7551 5.99915 13.7551C5.03265 13.7551 4.24915 12.9716 4.24915 12.0051V11.9951C4.24915 11.0286 5.03265 10.2451 5.99915 10.2451ZM17.9991 10.2451C18.9656 10.2451 19.7491 11.0286 19.7491 11.9951V12.0051C19.7491 12.9716 18.9656 13.7551 17.9991 13.7551C17.0326 13.7551 16.2491 12.9716 16.2491 12.0051V11.9951C16.2491 11.0286 17.0326 10.2451 17.9991 10.2451ZM13.7491 11.9951C13.7491 11.0286 12.9656 10.2451 11.9991 10.2451C11.0326 10.2451 10.2491 11.0286 10.2491 11.9951V12.0051C10.2491 12.9716 11.0326 13.7551 11.9991 13.7551C12.9656 13.7551 13.7491 12.9716 13.7491 12.0051V11.9951Z"
+              fill="currentColor"
+            />
+          </svg>
+        </h3>
+
+        <ul class="mb-6 flex flex-col gap-1">
+          <!-- Menu Item Dashboard -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'Dashboard' ? '':'Dashboard')"
+              class="menu-item group"
+              :class=" (selected === 'Dashboard') || (page === 'ecommerce' || page === 'analytics' || page === 'marketing' || page === 'crm' || page === 'stocks' || page === 'saas' || page === 'logistics') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Dashboard') || (page === 'ecommerce' || page === 'analytics' || page === 'marketing' || page === 'crm' || page === 'stocks') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M5.5 3.25C4.25736 3.25 3.25 4.25736 3.25 5.5V8.99998C3.25 10.2426 4.25736 11.25 5.5 11.25H9C10.2426 11.25 11.25 10.2426 11.25 8.99998V5.5C11.25 4.25736 10.2426 3.25 9 3.25H5.5ZM4.75 5.5C4.75 5.08579 5.08579 4.75 5.5 4.75H9C9.41421 4.75 9.75 5.08579 9.75 5.5V8.99998C9.75 9.41419 9.41421 9.74998 9 9.74998H5.5C5.08579 9.74998 4.75 9.41419 4.75 8.99998V5.5ZM5.5 12.75C4.25736 12.75 3.25 13.7574 3.25 15V18.5C3.25 19.7426 4.25736 20.75 5.5 20.75H9C10.2426 20.75 11.25 19.7427 11.25 18.5V15C11.25 13.7574 10.2426 12.75 9 12.75H5.5ZM4.75 15C4.75 14.5858 5.08579 14.25 5.5 14.25H9C9.41421 14.25 9.75 14.5858 9.75 15V18.5C9.75 18.9142 9.41421 19.25 9 19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5V15ZM12.75 5.5C12.75 4.25736 13.7574 3.25 15 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V8.99998C20.75 10.2426 19.7426 11.25 18.5 11.25H15C13.7574 11.25 12.75 10.2426 12.75 8.99998V5.5ZM15 4.75C14.5858 4.75 14.25 5.08579 14.25 5.5V8.99998C14.25 9.41419 14.5858 9.74998 15 9.74998H18.5C18.9142 9.74998 19.25 9.41419 19.25 8.99998V5.5C19.25 5.08579 18.9142 4.75 18.5 4.75H15ZM15 12.75C13.7574 12.75 12.75 13.7574 12.75 15V18.5C12.75 19.7426 13.7574 20.75 15 20.75H18.5C19.7426 20.75 20.75 19.7427 20.75 18.5V15C20.75 13.7574 19.7426 12.75 18.5 12.75H15ZM14.25 15C14.25 14.5858 14.5858 14.25 15 14.25H18.5C18.9142 14.25 19.25 14.5858 19.25 15V18.5C19.25 18.9142 18.9142 19.25 18.5 19.25H15C14.5858 19.25 14.25 18.9142 14.25 18.5V15Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Dashboard
+              </span>
+
+              <svg
+                class="menu-item-arrow"
+                :class="[(selected === 'Dashboard') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'Dashboard') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'xl:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="index.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'ecommerce' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    eCommerce
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="analytics.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'analytics' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Analytics
+                  </a>
+                </li>
+                <li>
+                  <a
+                    class="menu-dropdown-item group"
+                    href="marketing.html"
+                    :class="page === 'marketing' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Marketing
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="crm.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'crm' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    CRM
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="stocks.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'stocks' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Stocks
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="saas.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'saas' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    SaaS
+                    <span class="absolute right-3 flex items-center gap-1">
+                      <span
+                        class="menu-dropdown-badge"
+                        :class="page === 'saas' ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'"
+                      >
+                        New
+                      </span>
+                    </span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="logistics.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'logistics' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Logistics
+                    <span class="absolute right-3 flex items-center gap-1">
+                      <span
+                        class="menu-dropdown-badge"
+                        :class="page === 'logistics' ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'"
+                      >
+                        New
+                      </span>
+                    </span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Dashboard -->
+
+          <!-- Menu Item AI -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'AI' ? '':'AI')"
+              class="menu-item group"
+              :class=" (selected === 'AI') || (page === 'textGenerator'  || page === 'imageGenerator' || page === 'codeGenerator' || page === 'videoGenerator') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'AI') || (page === 'AI' || page === 'textGenerator') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M18.75 2.42969V7.70424M9.42261 13.673C10.0259 14.4307 10.9562 14.9164 12 14.9164C13.0438 14.9164 13.9742 14.4307 14.5775 13.673M20 12V18.5C20 19.3284 19.3284 20 18.5 20H5.5C4.67157 20 4 19.3284 4 18.5V12C4 7.58172 7.58172 4 12 4C16.4183 4 20 7.58172 20 12Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M18.75 2.42969V2.43969M9.50391 9.875L9.50391 9.885M14.4961 9.875V9.885"
+                  stroke="currentColor"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                AI Assistant
+              </span>
+
+              <span
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+                class="absolute right-10 flex items-center gap-1"
+              >
+                <span
+                  class="menu-dropdown-badge"
+                  :class="page === 'textGenerator' ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'"
+                >
+                  New
+                </span>
+              </span>
+
+              <svg
+                class="menu-item-arrow"
+                :class="[(selected === 'AI') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'AI') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'xl:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="text-generator.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'textGenerator' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Text Generator
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="image-generator.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'imageGenerator' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Image Generator
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="code-generator.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'codeGenerator' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Code Generator
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="video-generator.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'videoGenerator' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Video Generator
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item AI -->
+
+          <!-- Menu Item Ecommerce -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'E-commerce' ? '':'E-commerce')"
+              class="menu-item group"
+              :class=" (selected === 'E-commerce') || (page === 'products' || page === 'addProduct' || page === 'billing' || page === 'invoices' || page === 'singleInvoice' || page === 'createInvoice' || page === 'transactions' || page === 'singleTransaction') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'E-commerce') || (page === 'products' || page === 'addProduct' || page === 'billing' || page === 'invoices' || page === 'singleInvoice' || page === 'createInvoice' || page === 'transactions' || page === 'singleTransaction') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M2.31641 4H3.49696C4.24468 4 4.87822 4.55068 4.98234 5.29112L5.13429 6.37161M5.13429 6.37161L6.23641 14.2089C6.34053 14.9493 6.97407 15.5 7.72179 15.5L17.0833 15.5C17.6803 15.5 18.2205 15.146 18.4587 14.5986L21.126 8.47023C21.5572 7.4795 20.8312 6.37161 19.7507 6.37161H5.13429Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+                <path
+                  d="M7.7832 19.5H7.7932M16.3203 19.5H16.3303"
+                  stroke="currentColor"
+                  stroke-width="3.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                E-commerce
+              </span>
+
+              <span
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+                class="absolute right-10 flex items-center gap-1"
+              >
+                <span
+                  class="menu-dropdown-badge"
+                  :class="page === 'products' ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'"
+                >
+                  New
+                </span>
+              </span>
+
+              <svg
+                class="menu-item-arrow"
+                :class="[(selected === 'E-commerce') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'E-commerce') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'xl:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="products-list.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'products' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Products
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="add-product.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'addProduct' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Add Product
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="billing.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'billing' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Billing
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="invoices.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'invoices' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Invoices
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="single-invoice.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'singleInvoice' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Single Invoice
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="create-invoice.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'createInvoice' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Create Invoice
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="transactions.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'transactions' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Transactions
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="single-transaction.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'singleTransaction' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Single Transaction
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item AI -->
+
+          <!-- Menu Item Calendar -->
+          <li>
+            <a
+              href="calendar.html"
+              @click="selected = (selected === 'Calendar' ? '':'Calendar')"
+              class="menu-item group"
+              :class=" (selected === 'Calendar') && (page === 'calendar') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Calendar') && (page === 'calendar') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M8 2C8.41421 2 8.75 2.33579 8.75 2.75V3.75H15.25V2.75C15.25 2.33579 15.5858 2 16 2C16.4142 2 16.75 2.33579 16.75 2.75V3.75H18.5C19.7426 3.75 20.75 4.75736 20.75 6V9V19C20.75 20.2426 19.7426 21.25 18.5 21.25H5.5C4.25736 21.25 3.25 20.2426 3.25 19V9V6C3.25 4.75736 4.25736 3.75 5.5 3.75H7.25V2.75C7.25 2.33579 7.58579 2 8 2ZM8 5.25H5.5C5.08579 5.25 4.75 5.58579 4.75 6V8.25H19.25V6C19.25 5.58579 18.9142 5.25 18.5 5.25H16H8ZM19.25 9.75H4.75V19C4.75 19.4142 5.08579 19.75 5.5 19.75H18.5C18.9142 19.75 19.25 19.4142 19.25 19V9.75Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Calendar
+              </span>
+            </a>
+          </li>
+          <!-- Menu Item Calendar -->
+
+          <!-- Menu Item Profile -->
+          <li>
+            <a
+              href="profile.html"
+              @click="selected = (selected === 'Profile' ? '':'Profile')"
+              class="menu-item group"
+              :class=" (selected === 'Profile') && (page === 'profile') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Profile') && (page === 'profile') ?  'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M12 3.5C7.30558 3.5 3.5 7.30558 3.5 12C3.5 14.1526 4.3002 16.1184 5.61936 17.616C6.17279 15.3096 8.24852 13.5955 10.7246 13.5955H13.2746C15.7509 13.5955 17.8268 15.31 18.38 17.6167C19.6996 16.119 20.5 14.153 20.5 12C20.5 7.30558 16.6944 3.5 12 3.5ZM17.0246 18.8566V18.8455C17.0246 16.7744 15.3457 15.0955 13.2746 15.0955H10.7246C8.65354 15.0955 6.97461 16.7744 6.97461 18.8455V18.856C8.38223 19.8895 10.1198 20.5 12 20.5C13.8798 20.5 15.6171 19.8898 17.0246 18.8566ZM2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM11.9991 7.25C10.8847 7.25 9.98126 8.15342 9.98126 9.26784C9.98126 10.3823 10.8847 11.2857 11.9991 11.2857C13.1135 11.2857 14.0169 10.3823 14.0169 9.26784C14.0169 8.15342 13.1135 7.25 11.9991 7.25ZM8.48126 9.26784C8.48126 7.32499 10.0563 5.75 11.9991 5.75C13.9419 5.75 15.5169 7.32499 15.5169 9.26784C15.5169 11.2107 13.9419 12.7857 11.9991 12.7857C10.0563 12.7857 8.48126 11.2107 8.48126 9.26784Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                User Profile
+              </span>
+            </a>
+          </li>
+          <!-- Menu Item Profile -->
+
+          <!-- Menu Item Task -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'Task' ? '':'Task')"
+              class="menu-item group"
+              :class=" (selected === 'Task') || (page === 'taskList' || page === 'taskKanban') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Task') || (page === 'taskList' || page === 'taskKanban') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M7.75586 5.50098C7.75586 5.08676 8.09165 4.75098 8.50586 4.75098H18.4985C18.9127 4.75098 19.2485 5.08676 19.2485 5.50098L19.2485 15.4956C19.2485 15.9098 18.9127 16.2456 18.4985 16.2456H8.50586C8.09165 16.2456 7.75586 15.9098 7.75586 15.4956V5.50098ZM8.50586 3.25098C7.26322 3.25098 6.25586 4.25834 6.25586 5.50098V6.26318H5.50195C4.25931 6.26318 3.25195 7.27054 3.25195 8.51318V18.4995C3.25195 19.7422 4.25931 20.7495 5.50195 20.7495H15.4883C16.7309 20.7495 17.7383 19.7421 17.7383 18.4995L17.7383 17.7456H18.4985C19.7411 17.7456 20.7485 16.7382 20.7485 15.4956L20.7485 5.50097C20.7485 4.25833 19.7411 3.25098 18.4985 3.25098H8.50586ZM16.2383 17.7456H8.50586C7.26322 17.7456 6.25586 16.7382 6.25586 15.4956V7.76318H5.50195C5.08774 7.76318 4.75195 8.09897 4.75195 8.51318V18.4995C4.75195 18.9137 5.08774 19.2495 5.50195 19.2495H15.4883C15.9025 19.2495 16.2383 18.9137 16.2383 18.4995L16.2383 17.7456Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Task
+              </span>
+
+              <svg
+                class="menu-item-arrow"
+                :class="[(selected === 'Task') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'Task') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'lg:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="task-list.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'taskList' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    List
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="task-kanban.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'taskKanban' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Kanban
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Task -->
+
+          <!-- Menu Item Forms -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'Forms' ? '':'Forms')"
+              class="menu-item group"
+              :class=" (selected === 'Forms') || (page === 'formElements' || page === 'formLayout' || page === 'proFormElements' || page === 'proFormLayout') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Forms') || (page === 'formElements' || page === 'formLayout' || page === 'proFormElements' || page === 'proFormLayout') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M5.5 3.25C4.25736 3.25 3.25 4.25736 3.25 5.5V18.5C3.25 19.7426 4.25736 20.75 5.5 20.75H18.5001C19.7427 20.75 20.7501 19.7426 20.7501 18.5V5.5C20.7501 4.25736 19.7427 3.25 18.5001 3.25H5.5ZM4.75 5.5C4.75 5.08579 5.08579 4.75 5.5 4.75H18.5001C18.9143 4.75 19.2501 5.08579 19.2501 5.5V18.5C19.2501 18.9142 18.9143 19.25 18.5001 19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5V5.5ZM6.25005 9.7143C6.25005 9.30008 6.58583 8.9643 7.00005 8.9643L17 8.96429C17.4143 8.96429 17.75 9.30008 17.75 9.71429C17.75 10.1285 17.4143 10.4643 17 10.4643L7.00005 10.4643C6.58583 10.4643 6.25005 10.1285 6.25005 9.7143ZM6.25005 14.2857C6.25005 13.8715 6.58583 13.5357 7.00005 13.5357H17C17.4143 13.5357 17.75 13.8715 17.75 14.2857C17.75 14.6999 17.4143 15.0357 17 15.0357H7.00005C6.58583 15.0357 6.25005 14.6999 6.25005 14.2857Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Forms
+              </span>
+
+              <svg
+                class="menu-item-arrow absolute top-1/2 right-2.5 -translate-y-1/2 stroke-current"
+                :class="[(selected === 'Forms') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'Forms') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'xl:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="form-elements.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'formElements' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Form Elements
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="form-layout.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'formLayout' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Form Layout
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Forms -->
+
+          <!-- Menu Item Tables -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'Tables' ? '':'Tables')"
+              class="menu-item group"
+              :class="(selected === 'Tables') || (page === 'basicTables' || page === 'dataTables') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Tables') || (page === 'basicTables' || page === 'dataTables') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M3.25 5.5C3.25 4.25736 4.25736 3.25 5.5 3.25H18.5C19.7426 3.25 20.75 4.25736 20.75 5.5V18.5C20.75 19.7426 19.7426 20.75 18.5 20.75H5.5C4.25736 20.75 3.25 19.7426 3.25 18.5V5.5ZM5.5 4.75C5.08579 4.75 4.75 5.08579 4.75 5.5V8.58325L19.25 8.58325V5.5C19.25 5.08579 18.9142 4.75 18.5 4.75H5.5ZM19.25 10.0833H15.416V13.9165H19.25V10.0833ZM13.916 10.0833L10.083 10.0833V13.9165L13.916 13.9165V10.0833ZM8.58301 10.0833H4.75V13.9165H8.58301V10.0833ZM4.75 18.5V15.4165H8.58301V19.25H5.5C5.08579 19.25 4.75 18.9142 4.75 18.5ZM10.083 19.25V15.4165L13.916 15.4165V19.25H10.083ZM15.416 19.25V15.4165H19.25V18.5C19.25 18.9142 18.9142 19.25 18.5 19.25H15.416Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Tables
+              </span>
+
+              <svg
+                class="menu-item-arrow absolute top-1/2 right-2.5 -translate-y-1/2 stroke-current"
+                :class="[(selected === 'Tables') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'Tables') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'lg:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="basic-tables.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'basicTables' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Basic Tables
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="data-tables.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'dataTables' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Data Tables
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Tables -->
+
+          <!-- Menu Item Pages -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'Pages' ? '':'Pages')"
+              class="menu-item group"
+              :class="(selected === 'Pages') || (page === 'fileManager' || page === 'pricingTables' || page === 'blank' || page === 'page404' || page === 'page500' || page === 'page503' || page === 'success' || page === 'faq' || page === 'ai-chat' || page === 'api' || page === 'integrations' || page === 'billing' || page === 'comingSoon' || page === 'maintenance') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Pages') || (page === 'fileManager' || page === 'pricingTables' || page === 'blank' || page === 'page404' || page === 'page500' || page === 'page503' || page === 'success' || page === 'faq' || page === 'comingSoon' || page === 'maintenance') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M8.50391 4.25C8.50391 3.83579 8.83969 3.5 9.25391 3.5H15.2777C15.4766 3.5 15.6674 3.57902 15.8081 3.71967L18.2807 6.19234C18.4214 6.333 18.5004 6.52376 18.5004 6.72268V16.75C18.5004 17.1642 18.1646 17.5 17.7504 17.5H16.248V17.4993H14.748V17.5H9.25391C8.83969 17.5 8.50391 17.1642 8.50391 16.75V4.25ZM14.748 19H9.25391C8.01126 19 7.00391 17.9926 7.00391 16.75V6.49854H6.24805C5.83383 6.49854 5.49805 6.83432 5.49805 7.24854V19.75C5.49805 20.1642 5.83383 20.5 6.24805 20.5H13.998C14.4123 20.5 14.748 20.1642 14.748 19.75L14.748 19ZM7.00391 4.99854V4.25C7.00391 3.00736 8.01127 2 9.25391 2H15.2777C15.8745 2 16.4468 2.23705 16.8687 2.659L19.3414 5.13168C19.7634 5.55364 20.0004 6.12594 20.0004 6.72268V16.75C20.0004 17.9926 18.9931 19 17.7504 19H16.248L16.248 19.75C16.248 20.9926 15.2407 22 13.998 22H6.24805C5.00541 22 3.99805 20.9926 3.99805 19.75V7.24854C3.99805 6.00589 5.00541 4.99854 6.24805 4.99854H7.00391Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Pages
+              </span>
+
+              <svg
+                class="menu-item-arrow absolute top-1/2 right-2.5 -translate-y-1/2 stroke-current"
+                :class="[(selected === 'Pages') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'Pages') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'lg:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="file-manager.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'fileManager' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    File Manager
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="pricing-tables.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'pricingTables' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Pricing Tables
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="faq.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'faq' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    FAQ
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="api-keys.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'api' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    API Keys
+                    <span class="absolute right-3 flex items-center gap-1">
+                      <span
+                        class="menu-dropdown-badge"
+                        :class="page === 'api' ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'"
+                      >
+                        New
+                      </span>
+                    </span>
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="integrations.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'integrations' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Integrations
+                    <span class="absolute right-3 flex items-center gap-1">
+                      <span
+                        class="menu-dropdown-badge"
+                        :class="page === 'integrations' ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'"
+                      >
+                        New
+                      </span>
+                    </span>
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="blank.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'blank' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Blank Page
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="404.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'page404' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    404 Error
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="500.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'page500' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    500 Error
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="503.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'page503' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    503 Error
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="coming-soon.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'comingSoon' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Coming Soon
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="maintenance.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'termsCondition' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Maintenance
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="success.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'success' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Success
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Pages -->
+        </ul>
+      </div>
+
+      <!-- Support Group -->
+      <div>
+        <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
+          <span
+            class="menu-group-title"
+            :class="sidebarToggle ? 'xl:hidden' : ''"
+          >
+            Support
+          </span>
+
+          <svg
+            :class="sidebarToggle ? 'xl:block hidden' : 'hidden'"
+            class="menu-group-icon mx-auto fill-current"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M5.99915 10.2451C6.96564 10.2451 7.74915 11.0286 7.74915 11.9951V12.0051C7.74915 12.9716 6.96564 13.7551 5.99915 13.7551C5.03265 13.7551 4.24915 12.9716 4.24915 12.0051V11.9951C4.24915 11.0286 5.03265 10.2451 5.99915 10.2451ZM17.9991 10.2451C18.9656 10.2451 19.7491 11.0286 19.7491 11.9951V12.0051C19.7491 12.9716 18.9656 13.7551 17.9991 13.7551C17.0326 13.7551 16.2491 12.9716 16.2491 12.0051V11.9951C16.2491 11.0286 17.0326 10.2451 17.9991 10.2451ZM13.7491 11.9951C13.7491 11.0286 12.9656 10.2451 11.9991 10.2451C11.0326 10.2451 10.2491 11.0286 10.2491 11.9951V12.0051C10.2491 12.9716 11.0326 13.7551 11.9991 13.7551C12.9656 13.7551 13.7491 12.9716 13.7491 12.0051V11.9951Z"
+              fill="currentColor"
+            />
+          </svg>
+        </h3>
+
+        <ul class="mb-6 flex flex-col gap-1">
+          <!-- Menu Item Chat -->
+          <li>
+            <a
+              href="chat.html"
+              @click="selected = (selected === 'Chat' ? '':'Chat')"
+              class="menu-item group"
+              :class=" (selected === 'Chat') && (page === 'chat') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Chat') && (page === 'chat') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M4.00002 12.0957C4.00002 7.67742 7.58174 4.0957 12 4.0957C16.4183 4.0957 20 7.67742 20 12.0957C20 16.514 16.4183 20.0957 12 20.0957H5.06068L6.34317 18.8132C6.48382 18.6726 6.56284 18.4818 6.56284 18.2829C6.56284 18.084 6.48382 17.8932 6.34317 17.7526C4.89463 16.304 4.00002 14.305 4.00002 12.0957ZM12 2.5957C6.75332 2.5957 2.50002 6.849 2.50002 12.0957C2.50002 14.4488 3.35633 16.603 4.77303 18.262L2.71969 20.3154C2.50519 20.5299 2.44103 20.8525 2.55711 21.1327C2.6732 21.413 2.94668 21.5957 3.25002 21.5957H12C17.2467 21.5957 21.5 17.3424 21.5 12.0957C21.5 6.849 17.2467 2.5957 12 2.5957ZM7.62502 10.8467C6.93467 10.8467 6.37502 11.4063 6.37502 12.0967C6.37502 12.787 6.93467 13.3467 7.62502 13.3467H7.62512C8.31548 13.3467 8.87512 12.787 8.87512 12.0967C8.87512 11.4063 8.31548 10.8467 7.62512 10.8467H7.62502ZM10.75 12.0967C10.75 11.4063 11.3097 10.8467 12 10.8467H12.0001C12.6905 10.8467 13.2501 11.4063 13.2501 12.0967C13.2501 12.787 12.6905 13.3467 12.0001 13.3467H12C11.3097 13.3467 10.75 12.787 10.75 12.0967ZM16.375 10.8467C15.6847 10.8467 15.125 11.4063 15.125 12.0967C15.125 12.787 15.6847 13.3467 16.375 13.3467H16.3751C17.0655 13.3467 17.6251 12.787 17.6251 12.0967C17.6251 11.4063 17.0655 10.8467 16.3751 10.8467H16.375Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Chat
+              </span>
+            </a>
+          </li>
+          <!-- Menu Item Chat -->
+
+          <!-- Menu Item Tables -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'Support' ? '':'Support')"
+              class="menu-item group"
+              :class="(selected === 'Support') || (page === 'ticketLists' || page === 'ticketReply') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Support') || (page === 'ticketLists' || page === 'ticketLists') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M20 17.0518V12C20 7.58174 16.4183 4 12 4C7.58168 4 3.99994 7.58174 3.99994 12V17.0518M19.9998 14.041V19.75C19.9998 20.5784 19.3282 21.25 18.4998 21.25H13.9998M6.5 18.75H5.5C4.67157 18.75 4 18.0784 4 17.25V13.75C4 12.9216 4.67157 12.25 5.5 12.25H6.5C7.32843 12.25 8 12.9216 8 13.75V17.25C8 18.0784 7.32843 18.75 6.5 18.75ZM17.4999 18.75H18.4999C19.3284 18.75 19.9999 18.0784 19.9999 17.25V13.75C19.9999 12.9216 19.3284 12.25 18.4999 12.25H17.4999C16.6715 12.25 15.9999 12.9216 15.9999 13.75V17.25C15.9999 18.0784 16.6715 18.75 17.4999 18.75Z"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Support Ticket
+              </span>
+              <span
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+                class="absolute right-10 flex items-center gap-1"
+              >
+                <span
+                  class="menu-dropdown-badge"
+                  :class="page === 'products' ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive'"
+                >
+                  New
+                </span>
+              </span>
+
+              <svg
+                class="menu-item-arrow absolute top-1/2 right-2.5 -translate-y-1/2 stroke-current"
+                :class="[(selected === 'Support') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'Support') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'xl:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="support-tickets.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'ticketLists' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Ticket List
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="support-ticket-reply.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'ticketReply' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Ticket Reply
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Tables -->
+
+          <!-- Menu Item Inbox -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'Email' ? '':'Email')"
+              class="menu-item group"
+              :class="(selected === 'Email') || (page === 'inbox' || page === 'inboxDetails') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Email') || (page === 'inbox' || page === 'inboxDetails') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M3.5 8.187V17.25C3.5 17.6642 3.83579 18 4.25 18H19.75C20.1642 18 20.5 17.6642 20.5 17.25V8.18747L13.2873 13.2171C12.5141 13.7563 11.4866 13.7563 10.7134 13.2171L3.5 8.187ZM20.5 6.2286C20.5 6.23039 20.5 6.23218 20.5 6.23398V6.24336C20.4976 6.31753 20.4604 6.38643 20.3992 6.42905L12.4293 11.9867C12.1716 12.1664 11.8291 12.1664 11.5713 11.9867L3.60116 6.42885C3.538 6.38481 3.50035 6.31268 3.50032 6.23568C3.50028 6.10553 3.60577 6 3.73592 6H20.2644C20.3922 6 20.4963 6.10171 20.5 6.2286ZM22 6.25648V17.25C22 18.4926 20.9926 19.5 19.75 19.5H4.25C3.00736 19.5 2 18.4926 2 17.25V6.23398C2 6.22371 2.00021 6.2135 2.00061 6.20333C2.01781 5.25971 2.78812 4.5 3.73592 4.5H20.2644C21.2229 4.5 22 5.27697 22.0001 6.23549C22.0001 6.24249 22.0001 6.24949 22 6.25648Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Email
+              </span>
+
+              <svg
+                class="menu-item-arrow absolute top-1/2 right-2.5 -translate-y-1/2 stroke-current"
+                :class="[(selected === 'Email') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'Email') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'xl:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="inbox.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'inbox' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Inbox
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="inbox-details.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'inboxDetails' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Details
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Inbox -->
+        </ul>
+      </div>
+
+      <!-- Others Group -->
+      <div>
+        <h3 class="mb-4 text-xs leading-[20px] text-gray-400 uppercase">
+          <span
+            class="menu-group-title"
+            :class="sidebarToggle ? 'xl:hidden' : ''"
+          >
+            others
+          </span>
+
+          <svg
+            :class="sidebarToggle ? 'xl:block hidden' : 'hidden'"
+            class="menu-group-icon mx-auto fill-current"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M5.99915 10.2451C6.96564 10.2451 7.74915 11.0286 7.74915 11.9951V12.0051C7.74915 12.9716 6.96564 13.7551 5.99915 13.7551C5.03265 13.7551 4.24915 12.9716 4.24915 12.0051V11.9951C4.24915 11.0286 5.03265 10.2451 5.99915 10.2451ZM17.9991 10.2451C18.9656 10.2451 19.7491 11.0286 19.7491 11.9951V12.0051C19.7491 12.9716 18.9656 13.7551 17.9991 13.7551C17.0326 13.7551 16.2491 12.9716 16.2491 12.0051V11.9951C16.2491 11.0286 17.0326 10.2451 17.9991 10.2451ZM13.7491 11.9951C13.7491 11.0286 12.9656 10.2451 11.9991 10.2451C11.0326 10.2451 10.2491 11.0286 10.2491 11.9951V12.0051C10.2491 12.9716 11.0326 13.7551 11.9991 13.7551C12.9656 13.7551 13.7491 12.9716 13.7491 12.0051V11.9951Z"
+              fill="currentColor"
+            />
+          </svg>
+        </h3>
+
+        <ul class="mb-6 flex flex-col gap-1">
+          <!-- Menu Item Charts -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'Charts' ? '':'Charts')"
+              class="menu-item group"
+              :class="(selected === 'Charts') || (page === 'lineChart' || page === 'barChart' || page === 'pieChart') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Charts') || (page === 'lineChart' || page === 'barChart' || page === 'pieChart') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M12 2C11.5858 2 11.25 2.33579 11.25 2.75V12C11.25 12.4142 11.5858 12.75 12 12.75H21.25C21.6642 12.75 22 12.4142 22 12C22 6.47715 17.5228 2 12 2ZM12.75 11.25V3.53263C13.2645 3.57761 13.7659 3.66843 14.25 3.80098V3.80099C15.6929 4.19606 16.9827 4.96184 18.0104 5.98959C19.0382 7.01734 19.8039 8.30707 20.199 9.75C20.3316 10.2341 20.4224 10.7355 20.4674 11.25H12.75ZM2 12C2 7.25083 5.31065 3.27489 9.75 2.25415V3.80099C6.14748 4.78734 3.5 8.0845 3.5 12C3.5 16.6944 7.30558 20.5 12 20.5C15.9155 20.5 19.2127 17.8525 20.199 14.25H21.7459C20.7251 18.6894 16.7492 22 12 22C6.47715 22 2 17.5229 2 12Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Charts
+              </span>
+
+              <svg
+                class="menu-item-arrow absolute top-1/2 right-2.5 -translate-y-1/2 stroke-current"
+                :class="[(selected === 'Charts') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'Charts') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'lg:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="line-chart.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'lineChart' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Line Chart
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="bar-chart.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'barChart' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Bar Chart
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="pie-chart.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'pieChart' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Pie Chart
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Charts -->
+
+          <!-- Menu Item Ui Elements -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'UiElements' ? '':'UiElements')"
+              class="menu-item group"
+              :class="(selected === 'UiElements') || (page === 'alerts' || page === 'avatars' || page === 'badge' || page === 'breadcrumb' || page === 'buttons' || page === 'buttonsGroup' || page === 'cards'|| page === 'carousel' || page === 'dropdowns' || page === 'images' || page === 'list' || page === 'modals' || page === 'notifications' || page === 'pagination' || page === 'popovers' || page === 'progress' || page === 'spinners' || page === 'tooltips' || page === 'videos') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'UiElements') || (page === 'alerts' || page === 'avatars' || page === 'badge' || page === 'breadcrumb' || page === 'buttons' || page === 'buttonsGroup' || page === 'cards'|| page === 'carousel' || page === 'dropdowns' || page === 'images' || page === 'list' || page === 'modals' || page === 'notifications' || page === 'pagination' || page === 'popovers' || page === 'progress' || page === 'spinners' || page === 'tooltips' || page === 'videos') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M11.665 3.75618C11.8762 3.65061 12.1247 3.65061 12.3358 3.75618L18.7807 6.97853L12.3358 10.2009C12.1247 10.3064 11.8762 10.3064 11.665 10.2009L5.22014 6.97853L11.665 3.75618ZM4.29297 8.19199V16.0946C4.29297 16.3787 4.45347 16.6384 4.70757 16.7654L11.25 20.0365V11.6512C11.1631 11.6205 11.0777 11.5843 10.9942 11.5425L4.29297 8.19199ZM12.75 20.037L19.2933 16.7654C19.5474 16.6384 19.7079 16.3787 19.7079 16.0946V8.19199L13.0066 11.5425C12.9229 11.5844 12.8372 11.6207 12.75 11.6515V20.037ZM13.0066 2.41453C12.3732 2.09783 11.6277 2.09783 10.9942 2.41453L4.03676 5.89316C3.27449 6.27429 2.79297 7.05339 2.79297 7.90563V16.0946C2.79297 16.9468 3.27448 17.7259 4.03676 18.1071L10.9942 21.5857L11.3296 20.9149L10.9942 21.5857C11.6277 21.9024 12.3732 21.9024 13.0066 21.5857L19.9641 18.1071C20.7264 17.7259 21.2079 16.9468 21.2079 16.0946V7.90563C21.2079 7.05339 20.7264 6.27429 19.9641 5.89316L13.0066 2.41453Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                UI Elements
+              </span>
+
+              <svg
+                class="menu-item-arrow absolute top-1/2 right-2.5 -translate-y-1/2 stroke-current"
+                :class="[(selected === 'UiElements') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'UiElements') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'lg:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="alerts.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'alerts' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Alerts
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="avatars.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'avatars' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Avatars
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="badge.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'badge' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Badge
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="breadcrumb.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'breadcrumb' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Breadcrumb
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="buttons.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'buttons' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Buttons
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="buttons-group.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'buttonsGroup' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Buttons Group
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="cards.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'cards' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Cards
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="carousel.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'carousel' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Carousel
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="dropdowns.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'dropdowns' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Dropdowns
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="images.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'images' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Images
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="links.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'links' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Links
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="list.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'list' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    List
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="modals.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'modals' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Modals
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="notifications.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'notifications' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Notifications
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="pagination.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'pagination' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Pagination
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="popovers.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'popovers' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Popovers
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="progress-bar.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'progress' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Progress Bars
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="ribbons.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'ribbons' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Ribbons
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="spinners.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'spinners' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Spinners
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="tabs.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'tabs' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Tabs
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="tooltips.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'tooltips' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Tooltips
+                  </a>
+                </li>
+
+                <li>
+                  <a
+                    href="videos.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'videos' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Videos
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Ui Elements -->
+
+          <!-- Menu Item Authentication -->
+          <li>
+            <a
+              href="#"
+              @click.prevent="selected = (selected === 'Authentication' ? '':'Authentication')"
+              class="menu-item group"
+              :class="(selected === 'Authentication') || (page === 'basicChart' || page === 'advancedChart') ? 'menu-item-active' : 'menu-item-inactive'"
+            >
+              <svg
+                :class="(selected === 'Authentication') || (page === 'basicChart' || page === 'advancedChart') ? 'menu-item-icon-active'  :'menu-item-icon-inactive'"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M14 2.75C14 2.33579 14.3358 2 14.75 2C15.1642 2 15.5 2.33579 15.5 2.75V5.73291L17.75 5.73291H19C19.4142 5.73291 19.75 6.0687 19.75 6.48291C19.75 6.89712 19.4142 7.23291 19 7.23291H18.5L18.5 12.2329C18.5 15.5691 15.9866 18.3183 12.75 18.6901V21.25C12.75 21.6642 12.4142 22 12 22C11.5858 22 11.25 21.6642 11.25 21.25V18.6901C8.01342 18.3183 5.5 15.5691 5.5 12.2329L5.5 7.23291H5C4.58579 7.23291 4.25 6.89712 4.25 6.48291C4.25 6.0687 4.58579 5.73291 5 5.73291L6.25 5.73291L8.5 5.73291L8.5 2.75C8.5 2.33579 8.83579 2 9.25 2C9.66421 2 10 2.33579 10 2.75L10 5.73291L14 5.73291V2.75ZM7 7.23291L7 12.2329C7 14.9943 9.23858 17.2329 12 17.2329C14.7614 17.2329 17 14.9943 17 12.2329L17 7.23291L7 7.23291Z"
+                  fill="currentColor"
+                />
+              </svg>
+
+              <span
+                class="menu-item-text"
+                :class="sidebarToggle ? 'xl:hidden' : ''"
+              >
+                Authentication
+              </span>
+
+              <svg
+                class="menu-item-arrow absolute top-1/2 right-2.5 -translate-y-1/2 stroke-current"
+                :class="[(selected === 'Authentication') ? 'menu-item-arrow-active' : 'menu-item-arrow-inactive', sidebarToggle ? 'xl:hidden' : '' ]"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d="M4.79175 7.39584L10.0001 12.6042L15.2084 7.39585"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </a>
+
+            <!-- Dropdown Menu Start -->
+            <div
+              class="translate transform overflow-hidden"
+              :class="(selected === 'Authentication') ? 'block' :'hidden'"
+            >
+              <ul
+                :class="sidebarToggle ? 'lg:hidden' : 'flex'"
+                class="menu-dropdown mt-2 flex flex-col gap-1 pl-9"
+              >
+                <li>
+                  <a
+                    href="signin.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'signin' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Sign In
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="signup.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'signup' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Sign Up
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="reset-password.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'resetPassword' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Reset Password
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="two-step-verification.html"
+                    class="menu-dropdown-item group"
+                    :class="page === 'twoStepVerification' ? 'menu-dropdown-item-active' : 'menu-dropdown-item-inactive'"
+                  >
+                    Two Step Verification
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <!-- Dropdown Menu End -->
+          </li>
+          <!-- Menu Item Authentication -->
+        </ul>
+      </div>
+    </nav>
+    <!-- Sidebar Menu -->
+
+    <!-- Promo Box -->
+    <div class="pb-20" :class="sidebarToggle ? 'xl:hidden' : ''">
+      <div
+        class="mx-auto mb-10 w-full max-w-60 rounded-2xl bg-gray-50 px-4 py-5 text-center dark:bg-white/[0.03]"
+      >
+        <h3 class="mb-2 font-semibold text-gray-900 dark:text-white">
+          #1 Tailwind CSS Dashboard
+        </h3>
+        <p class="text-theme-sm mb-4 text-gray-500 dark:text-gray-400">
+          Leading Tailwind CSS Admin Template with 400+ UI Component and Pages.
+        </p>
+        <a
+          href="https://tailadmin.com/pricing"
+          target="_blank"
+          rel="nofollow"
+          class="bg-brand-500 text-theme-sm hover:bg-brand-600 flex items-center justify-center rounded-lg p-3 font-medium text-white"
+        >
+          Purchase Plan
+        </a>
+      </div>
+    </div>
+
+    <!-- Promo Box -->
+  </div>
+</aside>
+
+      <!-- ===== Sidebar End ===== -->
+
+      <!-- ===== Content Area Start ===== -->
+      <div
+        class="relative flex flex-1 flex-col overflow-x-hidden overflow-y-auto"
+      >
+        <!-- Small Device Overlay Start -->
+        <div
+  :class="sidebarToggle ? 'block xl:hidden' : 'hidden'"
+  class="fixed z-50 h-screen w-full bg-gray-900/50"
+></div>
+<!-- Small Device Overlay End -->
+
+        <!-- ===== Header Start ===== -->
+        <header
+  x-data="{menuToggle: false}"
+  class="sticky top-0 z-99999 flex w-full border-gray-200 bg-white xl:border-b dark:border-gray-800 dark:bg-gray-900"
+>
+  <div
+    class="flex grow flex-col items-center justify-between xl:flex-row xl:px-6"
+  >
+    <div
+      class="flex w-full items-center justify-between gap-2 border-b border-gray-200 px-3 py-3 sm:gap-4 lg:py-4 xl:justify-normal xl:border-b-0 xl:px-0 dark:border-gray-800"
+    >
+      <!-- Hamburger Toggle BTN -->
+      <button
+        :class="sidebarToggle ? 'xl:bg-transparent dark:xl:bg-transparent bg-gray-100 dark:bg-gray-800' : ''"
+        class="z-99999 flex h-10 w-10 items-center justify-center rounded-lg border-gray-200 text-gray-500 xl:h-11 xl:w-11 xl:border dark:border-gray-800 dark:text-gray-400"
+        @click.stop="sidebarToggle = !sidebarToggle"
+      >
+        <svg
+          class="hidden fill-current xl:block"
+          width="16"
+          height="12"
+          viewBox="0 0 16 12"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M0.583252 1C0.583252 0.585788 0.919038 0.25 1.33325 0.25H14.6666C15.0808 0.25 15.4166 0.585786 15.4166 1C15.4166 1.41421 15.0808 1.75 14.6666 1.75L1.33325 1.75C0.919038 1.75 0.583252 1.41422 0.583252 1ZM0.583252 11C0.583252 10.5858 0.919038 10.25 1.33325 10.25L14.6666 10.25C15.0808 10.25 15.4166 10.5858 15.4166 11C15.4166 11.4142 15.0808 11.75 14.6666 11.75L1.33325 11.75C0.919038 11.75 0.583252 11.4142 0.583252 11ZM1.33325 5.25C0.919038 5.25 0.583252 5.58579 0.583252 6C0.583252 6.41421 0.919038 6.75 1.33325 6.75L7.99992 6.75C8.41413 6.75 8.74992 6.41421 8.74992 6C8.74992 5.58579 8.41413 5.25 7.99992 5.25L1.33325 5.25Z"
+            fill=""
+          />
+        </svg>
+
+        <svg
+          :class="sidebarToggle ? 'hidden' : 'block xl:hidden'"
+          class="fill-current xl:hidden"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M3.25 6C3.25 5.58579 3.58579 5.25 4 5.25L20 5.25C20.4142 5.25 20.75 5.58579 20.75 6C20.75 6.41421 20.4142 6.75 20 6.75L4 6.75C3.58579 6.75 3.25 6.41422 3.25 6ZM3.25 18C3.25 17.5858 3.58579 17.25 4 17.25L20 17.25C20.4142 17.25 20.75 17.5858 20.75 18C20.75 18.4142 20.4142 18.75 20 18.75L4 18.75C3.58579 18.75 3.25 18.4142 3.25 18ZM4 11.25C3.58579 11.25 3.25 11.5858 3.25 12C3.25 12.4142 3.58579 12.75 4 12.75L12 12.75C12.4142 12.75 12.75 12.4142 12.75 12C12.75 11.5858 12.4142 11.25 12 11.25L4 11.25Z"
+            fill=""
+          />
+        </svg>
+
+        <!-- cross icon -->
+        <svg
+          :class="sidebarToggle ? 'block xl:hidden' : 'hidden'"
+          class="fill-current"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z"
+            fill=""
+          />
+        </svg>
+      </button>
+      <!-- Hamburger Toggle BTN -->
+
+      <a href="index.html" class="xl:hidden">
+        <img class="dark:hidden" src="src/images/logo/logo.svg" alt="Logo" />
+        <img
+          class="hidden dark:block"
+          src="src/images/logo/logo-dark.svg"
+          alt="Logo"
+        />
+      </a>
+
+      <!-- Application nav menu button -->
+      <button
+        class="z-99999 flex h-10 w-10 items-center justify-center rounded-lg text-gray-700 hover:bg-gray-100 xl:hidden dark:text-gray-400 dark:hover:bg-gray-800"
+        :class="menuToggle ? 'bg-gray-100 dark:bg-gray-800' : ''"
+        @click.stop="menuToggle = !menuToggle"
+      >
+        <svg
+          class="fill-current"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M5.99902 10.4951C6.82745 10.4951 7.49902 11.1667 7.49902 11.9951V12.0051C7.49902 12.8335 6.82745 13.5051 5.99902 13.5051C5.1706 13.5051 4.49902 12.8335 4.49902 12.0051V11.9951C4.49902 11.1667 5.1706 10.4951 5.99902 10.4951ZM17.999 10.4951C18.8275 10.4951 19.499 11.1667 19.499 11.9951V12.0051C19.499 12.8335 18.8275 13.5051 17.999 13.5051C17.1706 13.5051 16.499 12.8335 16.499 12.0051V11.9951C16.499 11.1667 17.1706 10.4951 17.999 10.4951ZM13.499 11.9951C13.499 11.1667 12.8275 10.4951 11.999 10.4951C11.1706 10.4951 10.499 11.1667 10.499 11.9951V12.0051C10.499 12.8335 11.1706 13.5051 11.999 13.5051C12.8275 13.5051 13.499 12.8335 13.499 12.0051V11.9951Z"
+            fill=""
+          />
+        </svg>
+      </button>
+      <!-- Application nav menu button -->
+
+      <div class="hidden xl:block">
+        <form>
+          <div class="relative">
+            <span
+              class="pointer-events-none absolute top-1/2 left-4 -translate-y-1/2"
+            >
+              <svg
+                class="fill-gray-500 dark:fill-gray-400"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fill-rule="evenodd"
+                  clip-rule="evenodd"
+                  d="M3.04175 9.37363C3.04175 5.87693 5.87711 3.04199 9.37508 3.04199C12.8731 3.04199 15.7084 5.87693 15.7084 9.37363C15.7084 12.8703 12.8731 15.7053 9.37508 15.7053C5.87711 15.7053 3.04175 12.8703 3.04175 9.37363ZM9.37508 1.54199C5.04902 1.54199 1.54175 5.04817 1.54175 9.37363C1.54175 13.6991 5.04902 17.2053 9.37508 17.2053C11.2674 17.2053 13.003 16.5344 14.357 15.4176L17.177 18.238C17.4699 18.5309 17.9448 18.5309 18.2377 18.238C18.5306 17.9451 18.5306 17.4703 18.2377 17.1774L15.418 14.3573C16.5365 13.0033 17.2084 11.2669 17.2084 9.37363C17.2084 5.04817 13.7011 1.54199 9.37508 1.54199Z"
+                  fill=""
+                />
+              </svg>
+            </span>
+            <input
+              id="search-input"
+              type="text"
+              placeholder="Search or type command..."
+              class="dark:bg-dark-900 shadow-theme-xs focus:border-brand-300 focus:ring-brand-500/10 dark:focus:border-brand-800 h-11 w-full rounded-lg border border-gray-200 bg-transparent py-2.5 pr-14 pl-12 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-3 focus:outline-hidden xl:w-[430px] dark:border-gray-800 dark:bg-gray-900 dark:bg-white/[0.03] dark:text-white/90 dark:placeholder:text-white/30"
+            />
+
+            <button
+              id="search-button"
+              class="absolute top-1/2 right-2.5 inline-flex -translate-y-1/2 items-center gap-0.5 rounded-lg border border-gray-200 bg-gray-50 px-[7px] py-[4.5px] text-xs -tracking-[0.2px] text-gray-500 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400"
+            >
+              <span> ⌘ </span>
+              <span> K </span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div
+      :class="menuToggle ? 'flex' : 'hidden'"
+      class="shadow-theme-md w-full items-center justify-between gap-4 px-5 py-4 xl:flex xl:justify-end xl:px-0 xl:shadow-none"
+    >
+      <div class="2xsm:gap-3 flex items-center gap-2">
+        <!-- Dark Mode Toggler -->
+        <button
+          class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+          @click.prevent="darkMode = !darkMode"
+        >
+          <svg
+            class="hidden dark:block"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M9.99998 1.5415C10.4142 1.5415 10.75 1.87729 10.75 2.2915V3.5415C10.75 3.95572 10.4142 4.2915 9.99998 4.2915C9.58577 4.2915 9.24998 3.95572 9.24998 3.5415V2.2915C9.24998 1.87729 9.58577 1.5415 9.99998 1.5415ZM10.0009 6.79327C8.22978 6.79327 6.79402 8.22904 6.79402 10.0001C6.79402 11.7712 8.22978 13.207 10.0009 13.207C11.772 13.207 13.2078 11.7712 13.2078 10.0001C13.2078 8.22904 11.772 6.79327 10.0009 6.79327ZM5.29402 10.0001C5.29402 7.40061 7.40135 5.29327 10.0009 5.29327C12.6004 5.29327 14.7078 7.40061 14.7078 10.0001C14.7078 12.5997 12.6004 14.707 10.0009 14.707C7.40135 14.707 5.29402 12.5997 5.29402 10.0001ZM15.9813 5.08035C16.2742 4.78746 16.2742 4.31258 15.9813 4.01969C15.6884 3.7268 15.2135 3.7268 14.9207 4.01969L14.0368 4.90357C13.7439 5.19647 13.7439 5.67134 14.0368 5.96423C14.3297 6.25713 14.8045 6.25713 15.0974 5.96423L15.9813 5.08035ZM18.4577 10.0001C18.4577 10.4143 18.1219 10.7501 17.7077 10.7501H16.4577C16.0435 10.7501 15.7077 10.4143 15.7077 10.0001C15.7077 9.58592 16.0435 9.25013 16.4577 9.25013H17.7077C18.1219 9.25013 18.4577 9.58592 18.4577 10.0001ZM14.9207 15.9806C15.2135 16.2735 15.6884 16.2735 15.9813 15.9806C16.2742 15.6877 16.2742 15.2128 15.9813 14.9199L15.0974 14.036C14.8045 13.7431 14.3297 13.7431 14.0368 14.036C13.7439 14.3289 13.7439 14.8038 14.0368 15.0967L14.9207 15.9806ZM9.99998 15.7088C10.4142 15.7088 10.75 16.0445 10.75 16.4588V17.7088C10.75 18.123 10.4142 18.4588 9.99998 18.4588C9.58577 18.4588 9.24998 18.123 9.24998 17.7088V16.4588C9.24998 16.0445 9.58577 15.7088 9.99998 15.7088ZM5.96356 15.0972C6.25646 14.8043 6.25646 14.3295 5.96356 14.0366C5.67067 13.7437 5.1958 13.7437 4.9029 14.0366L4.01902 14.9204C3.72613 15.2133 3.72613 15.6882 4.01902 15.9811C4.31191 16.274 4.78679 16.274 5.07968 15.9811L5.96356 15.0972ZM4.29224 10.0001C4.29224 10.4143 3.95645 10.7501 3.54224 10.7501H2.29224C1.87802 10.7501 1.54224 10.4143 1.54224 10.0001C1.54224 9.58592 1.87802 9.25013 2.29224 9.25013H3.54224C3.95645 9.25013 4.29224 9.58592 4.29224 10.0001ZM4.9029 5.9637C5.1958 6.25659 5.67067 6.25659 5.96356 5.9637C6.25646 5.6708 6.25646 5.19593 5.96356 4.90303L5.07968 4.01915C4.78679 3.72626 4.31191 3.72626 4.01902 4.01915C3.72613 4.31204 3.72613 4.78692 4.01902 5.07981L4.9029 5.9637Z"
+              fill="currentColor"
+            />
+          </svg>
+          <svg
+            class="dark:hidden"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M17.4547 11.97L18.1799 12.1611C18.265 11.8383 18.1265 11.4982 17.8401 11.3266C17.5538 11.1551 17.1885 11.1934 16.944 11.4207L17.4547 11.97ZM8.0306 2.5459L8.57989 3.05657C8.80718 2.81209 8.84554 2.44682 8.67398 2.16046C8.50243 1.8741 8.16227 1.73559 7.83948 1.82066L8.0306 2.5459ZM12.9154 13.0035C9.64678 13.0035 6.99707 10.3538 6.99707 7.08524H5.49707C5.49707 11.1823 8.81835 14.5035 12.9154 14.5035V13.0035ZM16.944 11.4207C15.8869 12.4035 14.4721 13.0035 12.9154 13.0035V14.5035C14.8657 14.5035 16.6418 13.7499 17.9654 12.5193L16.944 11.4207ZM16.7295 11.7789C15.9437 14.7607 13.2277 16.9586 10.0003 16.9586V18.4586C13.9257 18.4586 17.2249 15.7853 18.1799 12.1611L16.7295 11.7789ZM10.0003 16.9586C6.15734 16.9586 3.04199 13.8433 3.04199 10.0003H1.54199C1.54199 14.6717 5.32892 18.4586 10.0003 18.4586V16.9586ZM3.04199 10.0003C3.04199 6.77289 5.23988 4.05695 8.22173 3.27114L7.83948 1.82066C4.21532 2.77574 1.54199 6.07486 1.54199 10.0003H3.04199ZM6.99707 7.08524C6.99707 5.52854 7.5971 4.11366 8.57989 3.05657L7.48132 2.03522C6.25073 3.35885 5.49707 5.13487 5.49707 7.08524H6.99707Z"
+              fill="currentColor"
+            />
+          </svg>
+        </button>
+        <!-- Dark Mode Toggler -->
+
+        <!-- Notification Menu Area -->
+        <div
+          class="relative"
+          x-data="{ dropdownOpen: false, notifying: true }"
+          @click.outside="dropdownOpen = false"
+        >
+          <button
+            class="hover:text-dark-900 relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+            @click.prevent="dropdownOpen = ! dropdownOpen; notifying = false"
+          >
+            <span
+              :class="!notifying ? 'hidden' : 'flex'"
+              class="absolute top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-orange-400"
+            >
+              <span
+                class="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"
+              ></span>
+            </span>
+            <svg
+              class="fill-current"
+              width="20"
+              height="20"
+              viewBox="0 0 20 20"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M10.75 2.29248C10.75 1.87827 10.4143 1.54248 10 1.54248C9.58583 1.54248 9.25004 1.87827 9.25004 2.29248V2.83613C6.08266 3.20733 3.62504 5.9004 3.62504 9.16748V14.4591H3.33337C2.91916 14.4591 2.58337 14.7949 2.58337 15.2091C2.58337 15.6234 2.91916 15.9591 3.33337 15.9591H4.37504H15.625H16.6667C17.0809 15.9591 17.4167 15.6234 17.4167 15.2091C17.4167 14.7949 17.0809 14.4591 16.6667 14.4591H16.375V9.16748C16.375 5.9004 13.9174 3.20733 10.75 2.83613V2.29248ZM14.875 14.4591V9.16748C14.875 6.47509 12.6924 4.29248 10 4.29248C7.30765 4.29248 5.12504 6.47509 5.12504 9.16748V14.4591H14.875ZM8.00004 17.7085C8.00004 18.1228 8.33583 18.4585 8.75004 18.4585H11.25C11.6643 18.4585 12 18.1228 12 17.7085C12 17.2943 11.6643 16.9585 11.25 16.9585H8.75004C8.33583 16.9585 8.00004 17.2943 8.00004 17.7085Z"
+                fill=""
+              />
+            </svg>
+          </button>
+
+          <!-- Dropdown Start -->
+          <div
+            x-show="dropdownOpen"
+            class="shadow-theme-lg dark:bg-gray-dark absolute -right-[240px] mt-[17px] flex h-[480px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 sm:w-[361px] lg:right-0 dark:border-gray-800"
+          >
+            <div
+              class="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-800"
+            >
+              <h5
+                class="text-lg font-semibold text-gray-800 dark:text-white/90"
+              >
+                Notification
+              </h5>
+
+              <button
+                @click="dropdownOpen = false"
+                class="text-gray-500 dark:text-gray-400"
+              >
+                <svg
+                  class="fill-current"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z"
+                    fill=""
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <ul class="custom-scrollbar flex h-auto flex-col overflow-y-auto">
+              <li>
+                <a
+                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                  href="#"
+                >
+                  <span
+                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
+                  >
+                    <img
+                      src="src/images/user/user-02.jpg"
+                      alt="User"
+                      class="overflow-hidden rounded-full"
+                    />
+                    <span
+                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
+                    ></span>
+                  </span>
+
+                  <span class="block">
+                    <span
+                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
+                    >
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Terry Franci</span
+                      >
+                      requests permission to change
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Project - Nganter App</span
+                      >
+                    </span>
+
+                    <span
+                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
+                    >
+                      <span>Project</span>
+                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                      <span>5 min ago</span>
+                    </span>
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a
+                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                  href="#"
+                >
+                  <span
+                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
+                  >
+                    <img
+                      src="src/images/user/user-03.jpg"
+                      alt="User"
+                      class="overflow-hidden rounded-full"
+                    />
+                    <span
+                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
+                    ></span>
+                  </span>
+
+                  <span class="block">
+                    <span
+                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
+                    >
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Alena Franci</span
+                      >
+                      requests permission to change
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Project - Nganter App</span
+                      >
+                    </span>
+
+                    <span
+                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
+                    >
+                      <span>Project</span>
+                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                      <span>8 min ago</span>
+                    </span>
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a
+                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                  href="#"
+                >
+                  <span
+                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
+                  >
+                    <img
+                      src="src/images/user/user-04.jpg"
+                      alt="User"
+                      class="overflow-hidden rounded-full"
+                    />
+                    <span
+                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
+                    ></span>
+                  </span>
+
+                  <span class="block">
+                    <span
+                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
+                    >
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Jocelyn Kenter</span
+                      >
+                      requests permission to change
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Project - Nganter App</span
+                      >
+                    </span>
+
+                    <span
+                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
+                    >
+                      <span>Project</span>
+                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                      <span>15 min ago</span>
+                    </span>
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a
+                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                  href="#"
+                >
+                  <span
+                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
+                  >
+                    <img
+                      src="src/images/user/user-05.jpg"
+                      alt="User"
+                      class="overflow-hidden rounded-full"
+                    />
+                    <span
+                      class="bg-error-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
+                    ></span>
+                  </span>
+
+                  <span class="block">
+                    <span
+                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
+                    >
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Brandon Philips</span
+                      >
+                      requests permission to change
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Project - Nganter App</span
+                      >
+                    </span>
+
+                    <span
+                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
+                    >
+                      <span>Project</span>
+                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                      <span>1 hr ago</span>
+                    </span>
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a
+                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                  href="#"
+                >
+                  <span
+                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
+                  >
+                    <img
+                      src="src/images/user/user-02.jpg"
+                      alt="User"
+                      class="overflow-hidden rounded-full"
+                    />
+                    <span
+                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
+                    ></span>
+                  </span>
+
+                  <span class="block">
+                    <span
+                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
+                    >
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Terry Franci</span
+                      >
+                      requests permission to change
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Project - Nganter App</span
+                      >
+                    </span>
+
+                    <span
+                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
+                    >
+                      <span>Project</span>
+                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                      <span>5 min ago</span>
+                    </span>
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a
+                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                  href="#"
+                >
+                  <span
+                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
+                  >
+                    <img
+                      src="src/images/user/user-03.jpg"
+                      alt="User"
+                      class="overflow-hidden rounded-full"
+                    />
+                    <span
+                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
+                    ></span>
+                  </span>
+
+                  <span class="block">
+                    <span
+                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
+                    >
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Alena Franci</span
+                      >
+                      requests permission to change
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Project - Nganter App</span
+                      >
+                    </span>
+
+                    <span
+                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
+                    >
+                      <span>Project</span>
+                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                      <span>8 min ago</span>
+                    </span>
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a
+                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                  href="#"
+                >
+                  <span
+                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
+                  >
+                    <img
+                      src="src/images/user/user-04.jpg"
+                      alt="User"
+                      class="overflow-hidden rounded-full"
+                    />
+                    <span
+                      class="bg-success-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
+                    ></span>
+                  </span>
+
+                  <span class="block">
+                    <span
+                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
+                    >
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Jocelyn Kenter</span
+                      >
+                      requests permission to change
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Project - Nganter App</span
+                      >
+                    </span>
+
+                    <span
+                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
+                    >
+                      <span>Project</span>
+                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                      <span>15 min ago</span>
+                    </span>
+                  </span>
+                </a>
+              </li>
+
+              <li>
+                <a
+                  class="flex gap-3 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5"
+                  href="#"
+                >
+                  <span
+                    class="relative z-1 block h-10 w-full max-w-10 rounded-full"
+                  >
+                    <img
+                      src="src/images/user/user-05.jpg"
+                      alt="User"
+                      class="overflow-hidden rounded-full"
+                    />
+                    <span
+                      class="bg-error-500 absolute right-0 bottom-0 z-10 h-2.5 w-full max-w-2.5 rounded-full border-[1.5px] border-white dark:border-gray-900"
+                    ></span>
+                  </span>
+
+                  <span class="block">
+                    <span
+                      class="text-theme-sm mb-1.5 block text-gray-500 dark:text-gray-400"
+                    >
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Brandon Philips</span
+                      >
+                      requests permission to change
+                      <span class="font-medium text-gray-800 dark:text-white/90"
+                        >Project - Nganter App</span
+                      >
+                    </span>
+
+                    <span
+                      class="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400"
+                    >
+                      <span>Project</span>
+                      <span class="h-1 w-1 rounded-full bg-gray-400"></span>
+                      <span>1 hr ago</span>
+                    </span>
+                  </span>
+                </a>
+              </li>
+            </ul>
+
+            <a
+              href="#"
+              class="text-theme-sm shadow-theme-xs mt-3 flex justify-center rounded-lg border border-gray-300 bg-white p-3 font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+            >
+              View All Notification
+            </a>
+          </div>
+          <!-- Dropdown End -->
+        </div>
+        <!-- Notification Menu Area -->
+      </div>
+
+      <!-- User Area -->
+      <div
+        class="relative"
+        x-data="{ dropdownOpen: false }"
+        @click.outside="dropdownOpen = false"
+      >
+        <a
+          class="flex items-center text-gray-700 dark:text-gray-400"
+          href="#"
+          @click.prevent="dropdownOpen = ! dropdownOpen"
+        >
+          <span class="mr-3 h-11 w-11 overflow-hidden rounded-full">
+            <img src="src/images/user/owner.png" alt="User" />
+          </span>
+
+          <span class="text-theme-sm mr-1 block font-medium"> Musharof </span>
+
+          <svg
+            :class="dropdownOpen && 'rotate-180'"
+            class="stroke-gray-500 dark:stroke-gray-400"
+            width="18"
+            height="20"
+            viewBox="0 0 18 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M4.3125 8.65625L9 13.3437L13.6875 8.65625"
+              stroke=""
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+
+        <!-- Dropdown Start -->
+        <div
+          x-show="dropdownOpen"
+          class="shadow-theme-lg dark:bg-gray-dark absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 dark:border-gray-800"
+        >
+          <div>
+            <span
+              class="text-theme-sm block font-medium text-gray-700 dark:text-gray-400"
+            >
+              Musharof Chowdhury
+            </span>
+            <span
+              class="text-theme-xs mt-0.5 block text-gray-500 dark:text-gray-400"
+            >
+              <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="c9bba8a7ada6a4bcbaacbb89b9a0a4a3a6e7aaa6a4">[email&#160;protected]</a>
+            </span>
+          </div>
+
+          <ul
+            class="flex flex-col gap-1 border-b border-gray-200 pt-4 pb-3 dark:border-gray-800"
+          >
+            <li>
+              <a
+                href="profile.html"
+                class="group text-theme-sm flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              >
+                <svg
+                  class="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M12 3.5C7.30558 3.5 3.5 7.30558 3.5 12C3.5 14.1526 4.3002 16.1184 5.61936 17.616C6.17279 15.3096 8.24852 13.5955 10.7246 13.5955H13.2746C15.7509 13.5955 17.8268 15.31 18.38 17.6167C19.6996 16.119 20.5 14.153 20.5 12C20.5 7.30558 16.6944 3.5 12 3.5ZM17.0246 18.8566V18.8455C17.0246 16.7744 15.3457 15.0955 13.2746 15.0955H10.7246C8.65354 15.0955 6.97461 16.7744 6.97461 18.8455V18.856C8.38223 19.8895 10.1198 20.5 12 20.5C13.8798 20.5 15.6171 19.8898 17.0246 18.8566ZM2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12ZM11.9991 7.25C10.8847 7.25 9.98126 8.15342 9.98126 9.26784C9.98126 10.3823 10.8847 11.2857 11.9991 11.2857C13.1135 11.2857 14.0169 10.3823 14.0169 9.26784C14.0169 8.15342 13.1135 7.25 11.9991 7.25ZM8.48126 9.26784C8.48126 7.32499 10.0563 5.75 11.9991 5.75C13.9419 5.75 15.5169 7.32499 15.5169 9.26784C15.5169 11.2107 13.9419 12.7857 11.9991 12.7857C10.0563 12.7857 8.48126 11.2107 8.48126 9.26784Z"
+                    fill=""
+                  />
+                </svg>
+                Edit profile
+              </a>
+            </li>
+            <li>
+              <a
+                href="chat.html"
+                class="group text-theme-sm flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              >
+                <svg
+                  class="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M10.4858 3.5L13.5182 3.5C13.9233 3.5 14.2518 3.82851 14.2518 4.23377C14.2518 5.9529 16.1129 7.02795 17.602 6.1682C17.9528 5.96567 18.4014 6.08586 18.6039 6.43667L20.1203 9.0631C20.3229 9.41407 20.2027 9.86286 19.8517 10.0655C18.3625 10.9253 18.3625 13.0747 19.8517 13.9345C20.2026 14.1372 20.3229 14.5859 20.1203 14.9369L18.6039 17.5634C18.4013 17.9142 17.9528 18.0344 17.602 17.8318C16.1129 16.9721 14.2518 18.0471 14.2518 19.7663C14.2518 20.1715 13.9233 20.5 13.5182 20.5H10.4858C10.0804 20.5 9.75182 20.1714 9.75182 19.766C9.75182 18.0461 7.88983 16.9717 6.40067 17.8314C6.04945 18.0342 5.60037 17.9139 5.39767 17.5628L3.88167 14.937C3.67903 14.586 3.79928 14.1372 4.15026 13.9346C5.63949 13.0748 5.63946 10.9253 4.15025 10.0655C3.79926 9.86282 3.67901 9.41401 3.88165 9.06303L5.39764 6.43725C5.60034 6.08617 6.04943 5.96581 6.40065 6.16858C7.88982 7.02836 9.75182 5.9539 9.75182 4.23399C9.75182 3.82862 10.0804 3.5 10.4858 3.5ZM13.5182 2L10.4858 2C9.25201 2 8.25182 3.00019 8.25182 4.23399C8.25182 4.79884 7.64013 5.15215 7.15065 4.86955C6.08213 4.25263 4.71559 4.61859 4.0986 5.68725L2.58261 8.31303C1.96575 9.38146 2.33183 10.7477 3.40025 11.3645C3.88948 11.647 3.88947 12.3531 3.40026 12.6355C2.33184 13.2524 1.96578 14.6186 2.58263 15.687L4.09863 18.3128C4.71562 19.3814 6.08215 19.7474 7.15067 19.1305C7.64015 18.8479 8.25182 19.2012 8.25182 19.766C8.25182 20.9998 9.25201 22 10.4858 22H13.5182C14.7519 22 15.7518 20.9998 15.7518 19.7663C15.7518 19.2015 16.3632 18.8487 16.852 19.1309C17.9202 19.7476 19.2862 19.3816 19.9029 18.3134L21.4193 15.6869C22.0361 14.6185 21.6701 13.2523 20.6017 12.6355C20.1125 12.3531 20.1125 11.647 20.6017 11.3645C21.6701 10.7477 22.0362 9.38152 21.4193 8.3131L19.903 5.68667C19.2862 4.61842 17.9202 4.25241 16.852 4.86917C16.3632 5.15138 15.7518 4.79856 15.7518 4.23377C15.7518 3.00024 14.7519 2 13.5182 2ZM9.6659 11.9999C9.6659 10.7103 10.7113 9.66493 12.0009 9.66493C13.2905 9.66493 14.3359 10.7103 14.3359 11.9999C14.3359 13.2895 13.2905 14.3349 12.0009 14.3349C10.7113 14.3349 9.6659 13.2895 9.6659 11.9999ZM12.0009 8.16493C9.88289 8.16493 8.1659 9.88191 8.1659 11.9999C8.1659 14.1179 9.88289 15.8349 12.0009 15.8349C14.1189 15.8349 15.8359 14.1179 15.8359 11.9999C15.8359 9.88191 14.1189 8.16493 12.0009 8.16493Z"
+                    fill=""
+                  />
+                </svg>
+                Account settings
+              </a>
+            </li>
+            <li>
+              <a
+                href="profile.html"
+                class="group text-theme-sm flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+              >
+                <svg
+                  class="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M3.5 12C3.5 7.30558 7.30558 3.5 12 3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5C7.30558 20.5 3.5 16.6944 3.5 12ZM12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2ZM11.0991 7.52507C11.0991 8.02213 11.5021 8.42507 11.9991 8.42507H12.0001C12.4972 8.42507 12.9001 8.02213 12.9001 7.52507C12.9001 7.02802 12.4972 6.62507 12.0001 6.62507H11.9991C11.5021 6.62507 11.0991 7.02802 11.0991 7.52507ZM12.0001 17.3714C11.5859 17.3714 11.2501 17.0356 11.2501 16.6214V10.9449C11.2501 10.5307 11.5859 10.1949 12.0001 10.1949C12.4143 10.1949 12.7501 10.5307 12.7501 10.9449V16.6214C12.7501 17.0356 12.4143 17.3714 12.0001 17.3714Z"
+                    fill=""
+                  />
+                </svg>
+                Support
+              </a>
+            </li>
+          </ul>
+          <button
+            class="group text-theme-sm mt-3 flex items-center gap-3 rounded-lg px-3 py-2 font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          >
+            <svg
+              class="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fill-rule="evenodd"
+                clip-rule="evenodd"
+                d="M15.1007 19.247C14.6865 19.247 14.3507 18.9112 14.3507 18.497L14.3507 14.245H12.8507V18.497C12.8507 19.7396 13.8581 20.747 15.1007 20.747H18.5007C19.7434 20.747 20.7507 19.7396 20.7507 18.497L20.7507 5.49609C20.7507 4.25345 19.7433 3.24609 18.5007 3.24609H15.1007C13.8581 3.24609 12.8507 4.25345 12.8507 5.49609V9.74501L14.3507 9.74501V5.49609C14.3507 5.08188 14.6865 4.74609 15.1007 4.74609L18.5007 4.74609C18.9149 4.74609 19.2507 5.08188 19.2507 5.49609L19.2507 18.497C19.2507 18.9112 18.9149 19.247 18.5007 19.247H15.1007ZM3.25073 11.9984C3.25073 12.2144 3.34204 12.4091 3.48817 12.546L8.09483 17.1556C8.38763 17.4485 8.86251 17.4487 9.15549 17.1559C9.44848 16.8631 9.44863 16.3882 9.15583 16.0952L5.81116 12.7484L16.0007 12.7484C16.4149 12.7484 16.7507 12.4127 16.7507 11.9984C16.7507 11.5842 16.4149 11.2484 16.0007 11.2484L5.81528 11.2484L9.15585 7.90554C9.44864 7.61255 9.44847 7.13767 9.15547 6.84488C8.86248 6.55209 8.3876 6.55226 8.09481 6.84525L3.52309 11.4202C3.35673 11.5577 3.25073 11.7657 3.25073 11.9984Z"
+                fill=""
+              />
+            </svg>
+
+            Sign out
+          </button>
+        </div>
+        <!-- Dropdown End -->
+      </div>
+      <!-- User Area -->
+    </div>
+  </div>
+</header>
+<!-- ===== Header End ===== -->
+
+        <!-- ===== Main Content Start ===== -->
+        <main>
+          <div
+            class="mx-auto max-w-(--breakpoint-2xl) p-4 pb-20 md:p-6 md:pb-6"
+          >
+            <!-- Breadcrumb Start -->
+            <div x-data="{ pageName: `Inbox`}">
+              <div class="flex flex-wrap items-center justify-between gap-3 pb-6">
+  <h2
+    class="text-xl font-semibold text-gray-800 dark:text-white/90"
+    x-text="pageName"
+  ></h2>
+  <nav>
+    <ol class="flex items-center gap-1.5">
+      <li>
+        <a
+          class="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400"
+          href="index.html"
+        >
+          Home
+          <svg
+            class="stroke-current"
+            width="17"
+            height="16"
+            viewBox="0 0 17 16"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M6.0765 12.667L10.2432 8.50033L6.0765 4.33366"
+              stroke=""
+              stroke-width="1.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            />
+          </svg>
+        </a>
+      </li>
+      <li
+        class="text-sm text-gray-800 dark:text-white/90"
+        x-text="pageName"
+      ></li>
+    </ol>
+  </nav>
+</div>
+</div>
+            <!-- Breadcrumb End -->
+
+            <div
+              class="overflow-hidden sm:h-[calc(100vh-174px)] xl:h-[calc(100vh-186px)]"
+            >
+              <div class="flex h-full flex-col gap-6 sm:gap-5 xl:flex-row">
+                <!-- Inbox Sidebar Start -->
+                <div
+  class="flex flex-col rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03] xl:w-1/5"
+>
+  <div class="pb-5">
+    <button
+      class="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 p-3 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600"
+    >
+      <svg
+        class="fill-current"
+        width="21"
+        height="20"
+        viewBox="0 0 21 20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          fill-rule="evenodd"
+          clip-rule="evenodd"
+          d="M17.0911 3.03206C16.2124 2.15338 14.7878 2.15338 13.9091 3.03206L5.6074 11.3337C5.29899 11.6421 5.08687 12.0335 4.99684 12.4603L4.26177 15.945C4.20943 16.1931 4.286 16.4508 4.46529 16.6301C4.64458 16.8094 4.90232 16.8859 5.15042 16.8336L8.63507 16.0985C9.06184 16.0085 9.45324 15.7964 9.76165 15.488L18.0633 7.18631C18.942 6.30763 18.942 4.88301 18.0633 4.00433L17.0911 3.03206ZM14.9697 4.09272C15.2626 3.79982 15.7375 3.79982 16.0304 4.09272L17.0027 5.06499C17.2956 5.35788 17.2956 5.83276 17.0027 6.12565L16.1043 7.02402L14.0714 4.99109L14.9697 4.09272ZM13.0107 6.05175L6.66806 12.3944C6.56526 12.4972 6.49455 12.6277 6.46454 12.7699L5.96704 15.1283L8.32547 14.6308C8.46772 14.6008 8.59819 14.5301 8.70099 14.4273L15.0436 8.08468L13.0107 6.05175Z"
+          fill=""
+        />
+      </svg>
+
+      Compose
+    </button>
+  </div>
+
+  <div class="no-scrollbar max-h-full overflow-auto py-6">
+    <!--== Inbox Menu Start ==-->
+    <nav x-data="{ isActive: 'inbox' }" class="space-y-5">
+      <!--== Mailbox Group Start ==-->
+      <div>
+        <h3
+          class="mb-3 text-xs font-medium uppercase leading-[18px] text-gray-700 dark:text-gray-400"
+        >
+          MAILBOX
+        </h3>
+
+        <ul class="flex flex-col gap-1">
+          <li>
+            <a
+              href="#"
+              class="group flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'inbox' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  class="fill-current"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M12.2996 1.12891C11.4713 1.12891 10.7998 1.80033 10.7996 2.62867L10.7996 3.1264V3.12659L10.7997 4.87507H6.14591C3.6031 4.87507 1.54175 6.93642 1.54175 9.47923V14.3207C1.54175 15.4553 2.46151 16.3751 3.5961 16.3751H6.14591H10.0001H16.2084C17.4511 16.3751 18.4584 15.3677 18.4584 14.1251V10.1251C18.4584 7.22557 16.1079 4.87507 13.2084 4.87507H12.2997L12.2996 3.87651H13.7511C14.5097 3.87651 15.1248 3.26157 15.1249 2.50293C15.125 1.74411 14.5099 1.12891 13.7511 1.12891H12.2996ZM3.04175 9.47923C3.04175 7.76485 4.43153 6.37507 6.14591 6.37507C7.8603 6.37507 9.25008 7.76485 9.25008 9.47923V14.8751H6.14591H3.5961C3.28994 14.8751 3.04175 14.6269 3.04175 14.3207V9.47923ZM10.7501 9.47923V14.8751H16.2084C16.6226 14.8751 16.9584 14.5393 16.9584 14.1251V10.1251C16.9584 8.054 15.2795 6.37507 13.2084 6.37507H9.54632C10.294 7.19366 10.7501 8.28319 10.7501 9.47923Z"
+                    fill=""
+                  />
+                </svg>
+
+                Inbox
+              </span>
+
+              <span
+                :class="isActive === 'inbox' ? 'text-brand-500 dark:text-brand-400' : 'text-gray-700 dark:text-gray-300 group-hover:text-brand-500 dark:group-hover:text-brand-400'"
+              >
+                3
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'sent' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  class="fill-current"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M4.98481 2.44399C3.11333 1.57147 1.15325 3.46979 1.96543 5.36824L3.82086 9.70527C3.90146 9.89367 3.90146 10.1069 3.82086 10.2953L1.96543 14.6323C1.15326 16.5307 3.11332 18.4291 4.98481 17.5565L16.8184 12.0395C18.5508 11.2319 18.5508 8.76865 16.8184 7.961L4.98481 2.44399ZM3.34453 4.77824C3.0738 4.14543 3.72716 3.51266 4.35099 3.80349L16.1846 9.32051C16.762 9.58973 16.762 10.4108 16.1846 10.68L4.35098 16.197C3.72716 16.4879 3.0738 15.8551 3.34453 15.2223L5.19996 10.8853C5.21944 10.8397 5.23735 10.7937 5.2537 10.7473L9.11784 10.7473C9.53206 10.7473 9.86784 10.4115 9.86784 9.99726C9.86784 9.58304 9.53206 9.24726 9.11784 9.24726L5.25157 9.24726C5.2358 9.20287 5.2186 9.15885 5.19996 9.11528L3.34453 4.77824Z"
+                    fill=""
+                  />
+                </svg>
+
+                Sent
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'drafts' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  class="fill-current"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M3.04175 7.06206V14.375C3.04175 14.6511 3.26561 14.875 3.54175 14.875H16.4584C16.7346 14.875 16.9584 14.6511 16.9584 14.375V7.06245L11.1443 11.1168C10.457 11.5961 9.54373 11.5961 8.85638 11.1168L3.04175 7.06206ZM16.9584 5.19262C16.9584 5.19341 16.9584 5.1942 16.9584 5.19498V5.20026C16.9572 5.22216 16.946 5.24239 16.9279 5.25501L10.2864 9.88638C10.1145 10.0062 9.8862 10.0062 9.71437 9.88638L3.07255 5.25485C3.05342 5.24151 3.04202 5.21967 3.04202 5.19636C3.042 5.15695 3.07394 5.125 3.11335 5.125H16.8871C16.9253 5.125 16.9564 5.15494 16.9584 5.19262ZM18.4584 5.21428V14.375C18.4584 15.4796 17.563 16.375 16.4584 16.375H3.54175C2.43718 16.375 1.54175 15.4796 1.54175 14.375V5.19498C1.54175 5.1852 1.54194 5.17546 1.54231 5.16577C1.55858 4.31209 2.25571 3.625 3.11335 3.625H16.8871C17.7549 3.625 18.4584 4.32843 18.4585 5.19622C18.4585 5.20225 18.4585 5.20826 18.4584 5.21428Z"
+                    fill=""
+                  />
+                </svg>
+
+                Drafts
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="group flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'spam' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  class="fill-current"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M12.2996 1.12891C11.4713 1.12891 10.7998 1.80033 10.7996 2.62867L10.7996 3.1264V3.12659L10.7997 4.87507H6.14591C3.6031 4.87507 1.54175 6.93642 1.54175 9.47923V14.3207C1.54175 15.4553 2.46151 16.3751 3.5961 16.3751H6.14591H10.0001H16.2084C17.4511 16.3751 18.4584 15.3677 18.4584 14.1251V10.1251C18.4584 7.22557 16.1079 4.87507 13.2084 4.87507H12.2997L12.2996 3.87651H13.7511C14.5097 3.87651 15.1248 3.26157 15.1249 2.50293C15.125 1.74411 14.5099 1.12891 13.7511 1.12891H12.2996ZM3.04175 9.47923C3.04175 7.76485 4.43153 6.37507 6.14591 6.37507C7.8603 6.37507 9.25008 7.76485 9.25008 9.47923V14.8751H6.14591H3.5961C3.28994 14.8751 3.04175 14.6269 3.04175 14.3207V9.47923ZM10.7501 9.47923V14.8751H16.2084C16.6226 14.8751 16.9584 14.5393 16.9584 14.1251V10.1251C16.9584 8.054 15.2795 6.37507 13.2084 6.37507H9.54632C10.294 7.19366 10.7501 8.28319 10.7501 9.47923Z"
+                    fill=""
+                  />
+                </svg>
+
+                Spam
+              </span>
+
+              <span
+                :class="isActive === 'spam' ? 'text-brand-500 dark:text-brand-400' : 'text-gray-700 dark:text-gray-300 group-hover:text-brand-500 dark:group-hover:text-brand-400'"
+              >
+                2
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'trash' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  class="fill-current"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M6.54118 3.7915C6.54118 2.54886 7.54854 1.5415 8.79118 1.5415H11.2078C12.4505 1.5415 13.4578 2.54886 13.4578 3.7915V4.0415H15.6249H16.6658C17.08 4.0415 17.4158 4.37729 17.4158 4.7915C17.4158 5.20572 17.08 5.5415 16.6658 5.5415H16.3749V8.24638V13.2464V16.2082C16.3749 17.4508 15.3676 18.4582 14.1249 18.4582H5.87492C4.63228 18.4582 3.62492 17.4508 3.62492 16.2082V13.2464V8.24638V5.5415H3.33325C2.91904 5.5415 2.58325 5.20572 2.58325 4.7915C2.58325 4.37729 2.91904 4.0415 3.33325 4.0415H4.37492H6.54118V3.7915ZM14.8749 13.2464V8.24638V5.5415H13.4578H12.7078H7.29118H6.54118H5.12492V8.24638V13.2464V16.2082C5.12492 16.6224 5.46071 16.9582 5.87492 16.9582H14.1249C14.5391 16.9582 14.8749 16.6224 14.8749 16.2082V13.2464ZM8.04118 4.0415H11.9578V3.7915C11.9578 3.37729 11.6221 3.0415 11.2078 3.0415H8.79118C8.37696 3.0415 8.04118 3.37729 8.04118 3.7915V4.0415ZM8.33325 7.99984C8.74747 7.99984 9.08325 8.33562 9.08325 8.74984V13.7498C9.08325 14.1641 8.74747 14.4998 8.33325 14.4998C7.91904 14.4998 7.58325 14.1641 7.58325 13.7498V8.74984C7.58325 8.33562 7.91904 7.99984 8.33325 7.99984ZM12.4166 8.74984C12.4166 8.33562 12.0808 7.99984 11.6666 7.99984C11.2524 7.99984 10.9166 8.33562 10.9166 8.74984V13.7498C10.9166 14.1641 11.2524 14.4998 11.6666 14.4998C12.0808 14.4998 12.4166 14.1641 12.4166 13.7498V8.74984Z"
+                    fill=""
+                  />
+                </svg>
+
+                Trash
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'archive' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  class="fill-current"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M1.54175 4.8335C1.54175 3.59085 2.54911 2.5835 3.79175 2.5835H16.2084C17.4511 2.5835 18.4584 3.59085 18.4584 4.8335V5.16683C18.4584 5.96477 18.0431 6.66569 17.4167 7.06517V15.1668C17.4167 16.4095 16.4094 17.4168 15.1667 17.4168H4.83341C3.59077 17.4168 2.58341 16.4095 2.58341 15.1668V7.06517C1.95711 6.66568 1.54175 5.96476 1.54175 5.16683V4.8335ZM4.08341 7.41683H15.9167V15.1668C15.9167 15.581 15.581 15.9168 15.1667 15.9168H4.83341C4.4192 15.9168 4.08341 15.581 4.08341 15.1668V7.41683ZM16.9584 5.16683C16.9584 5.58104 16.6226 5.91683 16.2084 5.91683H3.79175C3.37753 5.91683 3.04175 5.58104 3.04175 5.16683V4.8335C3.04175 4.41928 3.37753 4.0835 3.79175 4.0835H16.2084C16.6226 4.0835 16.9584 4.41928 16.9584 4.8335V5.16683ZM8.33341 9.04183C7.9192 9.04183 7.58341 9.37762 7.58341 9.79183C7.58341 10.206 7.9192 10.5418 8.33341 10.5418H11.6667C12.081 10.5418 12.4167 10.206 12.4167 9.79183C12.4167 9.37762 12.081 9.04183 11.6667 9.04183H8.33341Z"
+                    fill=""
+                  />
+                </svg>
+
+                Archive
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <!--== Mailbox Group End ==-->
+
+      <!--== Filter Group Start ==-->
+      <div>
+        <h3
+          class="mb-3 text-xs font-medium uppercase leading-[18px] text-gray-700 dark:text-gray-400"
+        >
+          FILTER
+        </h3>
+
+        <ul class="flex flex-col gap-1">
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'starred' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  class="fill-current"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M9.99993 2.375C10.2854 2.375 10.5461 2.53707 10.6725 2.79308L12.7318 6.96563L17.3365 7.63473C17.619 7.67578 17.8537 7.87367 17.9419 8.14517C18.0301 8.41668 17.9565 8.71473 17.7521 8.914L14.4201 12.1619L15.2067 16.748C15.255 17.0293 15.1393 17.3137 14.9083 17.4815C14.6774 17.6493 14.3712 17.6714 14.1185 17.5386L9.99993 15.3733L5.88137 17.5386C5.62869 17.6714 5.32249 17.6493 5.09153 17.4815C4.86057 17.3137 4.7449 17.0293 4.79316 16.748L5.57974 12.1619L2.24775 8.914C2.04332 8.71473 1.96975 8.41668 2.05797 8.14517C2.14619 7.87367 2.3809 7.67578 2.66341 7.63473L7.2681 6.96563L9.32738 2.79308C9.45373 2.53707 9.71445 2.375 9.99993 2.375ZM9.99993 4.81966L8.4387 7.98306C8.32946 8.20442 8.11828 8.35785 7.874 8.39334L4.38298 8.90062L6.90911 11.363C7.08587 11.5353 7.16653 11.7835 7.1248 12.0268L6.52847 15.5037L9.65093 13.8622C9.86942 13.7473 10.1304 13.7473 10.3489 13.8622L13.4714 15.5037L12.8751 12.0268C12.8333 11.7835 12.914 11.5353 13.0908 11.363L15.6169 8.90062L12.1259 8.39334C11.8816 8.35785 11.6704 8.20442 11.5612 7.98306L9.99993 4.81966Z"
+                    fill=""
+                  />
+                </svg>
+
+                Starred
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'important' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  class="fill-current"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M12.2996 1.12891C11.4713 1.12891 10.7998 1.80033 10.7996 2.62867L10.7996 3.1264V3.12659L10.7997 4.87507H6.14591C3.6031 4.87507 1.54175 6.93642 1.54175 9.47923V14.3207C1.54175 15.4553 2.46151 16.3751 3.5961 16.3751H6.14591H10.0001H16.2084C17.4511 16.3751 18.4584 15.3677 18.4584 14.1251V10.1251C18.4584 7.22557 16.1079 4.87507 13.2084 4.87507H12.2997L12.2996 3.87651H13.7511C14.5097 3.87651 15.1248 3.26157 15.1249 2.50293C15.125 1.74411 14.5099 1.12891 13.7511 1.12891H12.2996ZM3.04175 9.47923C3.04175 7.76485 4.43153 6.37507 6.14591 6.37507C7.8603 6.37507 9.25008 7.76485 9.25008 9.47923V14.8751H6.14591H3.5961C3.28994 14.8751 3.04175 14.6269 3.04175 14.3207V9.47923ZM10.7501 9.47923V14.8751H16.2084C16.6226 14.8751 16.9584 14.5393 16.9584 14.1251V10.1251C16.9584 8.054 15.2795 6.37507 13.2084 6.37507H9.54632C10.294 7.19366 10.7501 8.28319 10.7501 9.47923Z"
+                    fill=""
+                  />
+                </svg>
+
+                Important
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <!--== Filter Group End ==-->
+
+      <!--== Label Group Start ==-->
+      <div>
+        <h3
+          class="mb-3 text-xs font-medium uppercase leading-[18px] text-gray-700 dark:text-gray-400"
+        >
+          LABEL
+        </h3>
+
+        <ul class="flex flex-col gap-1">
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'starred' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.7567 3.89683C11.6331 3.72282 11.4696 3.58089 11.28 3.48289C11.0904 3.3849 10.8801 3.33367 10.6667 3.3335L3.33333 3.34016C2.59667 3.34016 2 3.93016 2 4.66683V11.3335C2 12.0702 2.59667 12.6602 3.33333 12.6602L10.6667 12.6668C11.1167 12.6668 11.5133 12.4435 11.7567 12.1035L14.6667 8.00016L11.7567 3.89683Z"
+                    fill="#12B76A"
+                  />
+                </svg>
+
+                Personal
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'important' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.7567 3.89683C11.6331 3.72282 11.4696 3.58089 11.28 3.48289C11.0904 3.3849 10.8801 3.33367 10.6667 3.3335L3.33333 3.34016C2.59667 3.34016 2 3.93016 2 4.66683V11.3335C2 12.0702 2.59667 12.6602 3.33333 12.6602L10.6667 12.6668C11.1167 12.6668 11.5133 12.4435 11.7567 12.1035L14.6667 8.00016L11.7567 3.89683Z"
+                    fill="#F04438"
+                  />
+                </svg>
+
+                Work
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'important' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.7567 3.89683C11.6331 3.72282 11.4696 3.58089 11.28 3.48289C11.0904 3.3849 10.8801 3.33367 10.6667 3.3335L3.33333 3.34016C2.59667 3.34016 2 3.93016 2 4.66683V11.3335C2 12.0702 2.59667 12.6602 3.33333 12.6602L10.6667 12.6668C11.1167 12.6668 11.5133 12.4435 11.7567 12.1035L14.6667 8.00016L11.7567 3.89683Z"
+                    fill="#FD853A"
+                  />
+                </svg>
+
+                Payments
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'important' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.7567 3.89683C11.6331 3.72282 11.4696 3.58089 11.28 3.48289C11.0904 3.3849 10.8801 3.33367 10.6667 3.3335L3.33333 3.34016C2.59667 3.34016 2 3.93016 2 4.66683V11.3335C2 12.0702 2.59667 12.6602 3.33333 12.6602L10.6667 12.6668C11.1167 12.6668 11.5133 12.4435 11.7567 12.1035L14.6667 8.00016L11.7567 3.89683Z"
+                    fill="#36BFFA"
+                  />
+                </svg>
+
+                Invoices
+              </span>
+            </a>
+          </li>
+
+          <li>
+            <a
+              href="#"
+              class="flex items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-sm font-medium hover:bg-brand-50 hover:text-brand-500 dark:hover:bg-brand-500/[0.12] dark:hover:text-brand-400"
+              :class="isActive === 'important' ? 'text-brand-500 bg-brand-50 dark:text-brand-400 dark:bg-brand-500/[0.12]' : 'text-gray-500 dark:text-gray-400'"
+            >
+              <span class="flex items-center gap-3">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M11.7567 3.89683C11.6331 3.72282 11.4696 3.58089 11.28 3.48289C11.0904 3.3849 10.8801 3.33367 10.6667 3.3335L3.33333 3.34016C2.59667 3.34016 2 3.93016 2 4.66683V11.3335C2 12.0702 2.59667 12.6602 3.33333 12.6602L10.6667 12.6668C11.1167 12.6668 11.5133 12.4435 11.7567 12.1035L14.6667 8.00016L11.7567 3.89683Z"
+                    fill="#6172F3"
+                  />
+                </svg>
+
+                Blank
+              </span>
+            </a>
+          </li>
+        </ul>
+      </div>
+      <!--== Label Group End ==-->
+    </nav>
+    <!--== Inbox Menu End ==-->
+  </div>
+</div>
+<!-- Inbox Sidebar End -->
+
+                <!-- Inbox Mailbox Start -->
+                <div
+  x-data="mailApp()"
+  class="flex h-screen flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03] xl:h-full xl:w-4/5"
+>
+  <div
+    class="flex flex-col justify-between gap-3 border-b border-gray-200 p-4 dark:border-gray-800 sm:flex-row"
+  >
+    <div class="flex w-full items-center gap-2">
+      <div x-data="{openDropDown: false}" class="relative w-full sm:w-auto">
+        <button
+          @click="openDropDown = !openDropDown"
+          class="flex w-full items-center justify-between gap-3 rounded-lg border border-gray-200 p-3 dark:border-gray-800 sm:justify-center"
+          :class="openDropDown ? 'text-gray-700 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white'"
+        >
+          <label
+            for="checkboxAll"
+            class="flex cursor-pointer select-none items-center font-medium"
+          >
+            <span class="relative">
+              <input
+                type="checkbox"
+                id="checkboxAll"
+                class="tableCheckbox sr-only"
+                @change="toggleAll"
+                :checked="allChecked"
+              />
+              <span
+                class="box flex h-4 w-4 items-center justify-center rounded-sm border border-gray-300 bg-transparent text-white dark:border-gray-700"
+              >
+                <span :class="allChecked ? 'opacity-100' : 'opacity-0'">
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 12 12"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M10 3L4.5 8.5L2 6"
+                      stroke="white"
+                      stroke-width="1.6666"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+              </span>
+            </span>
+          </label>
+
+          <span
+            :class="openDropDown && 'rotate-180'"
+            class="text-gray-500 duration-300 ease-linear dark:text-gray-400"
+          >
+            <svg
+              class="stroke-current"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M3.83325 5.91699L7.99992 10.0837L12.1666 5.91699"
+                stroke=""
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </span>
+        </button>
+        <div
+          x-show="openDropDown"
+          @click.outside="openDropDown = false"
+          class="absolute left-0 top-full z-40 mt-1 w-40 space-y-1 rounded-2xl border border-gray-200 bg-white p-2 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
+        >
+          <button
+            class="flex w-full rounded-lg px-3 py-2 text-left text-theme-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          >
+            All
+          </button>
+          <button
+            class="flex w-full rounded-lg px-3 py-2 text-left text-theme-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          >
+            Read
+          </button>
+          <button
+            class="flex w-full rounded-lg px-3 py-2 text-left text-theme-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          >
+            Unread
+          </button>
+        </div>
+      </div>
+
+      <button
+        class="flex h-10 w-full max-w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M6.72763 4.33443C7.92401 3.6437 9.30836 3.34945 10.6823 3.49385C12.0562 3.63826 13.3491 4.2139 14.3757 5.13828C15.0468 5.74252 15.5815 6.4755 15.9517 7.28815L13.6069 6.49282C13.2147 6.35977 12.7888 6.5699 12.6557 6.96216C12.5227 7.35443 12.7328 7.78028 13.1251 7.91333L16.8227 9.16752C16.8668 9.18743 16.9129 9.20314 16.9605 9.21426L17.0868 9.25712C17.2752 9.32101 17.4813 9.30746 17.6597 9.21943C17.838 9.1314 17.9741 8.97611 18.038 8.78772L19.3816 4.82561C19.5147 4.43334 19.3045 4.0075 18.9122 3.87447C18.52 3.74145 18.0941 3.95161 17.9611 4.34388L17.2335 6.48938C16.783 5.5609 16.1553 4.72223 15.3794 4.02356C14.1174 2.88722 12.528 2.17958 10.839 2.00207C9.15012 1.82455 7.44834 2.18628 5.97763 3.03539C4.50692 3.88451 3.34277 5.17743 2.65203 6.72884C1.9613 8.28025 1.77944 10.0105 2.13252 11.6716C2.4856 13.3328 3.3555 14.8395 4.61753 15.9758C5.87957 17.1121 7.46894 17.8198 9.15788 17.9973C10.8468 18.1748 12.5486 17.8131 14.0193 16.964C14.378 16.7569 14.5009 16.2982 14.2938 15.9395C14.0867 15.5807 13.628 15.4578 13.2693 15.6649C12.0729 16.3557 10.6886 16.6499 9.31467 16.5055C7.94077 16.3611 6.64786 15.7855 5.62123 14.8611C4.5946 13.9367 3.88697 12.711 3.59974 11.3598C3.31252 10.0085 3.46046 8.60098 4.02235 7.33894C4.58424 6.07691 5.53125 5.02516 6.72763 4.33443Z"
+            fill="currentColor"
+          />
+        </svg>
+      </button>
+
+      <button
+        class="flex h-10 w-full max-w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition-colors hover:bg-gray-100 hover:text-error-700 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-error-500"
+      >
+        <svg
+          class="fill-current"
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M6.54118 3.7915C6.54118 2.54886 7.54854 1.5415 8.79118 1.5415H11.2078C12.4505 1.5415 13.4578 2.54886 13.4578 3.7915V4.0415H15.6249H16.6658C17.08 4.0415 17.4158 4.37729 17.4158 4.7915C17.4158 5.20572 17.08 5.5415 16.6658 5.5415H16.3749V8.24638V13.2464V16.2082C16.3749 17.4508 15.3676 18.4582 14.1249 18.4582H5.87492C4.63228 18.4582 3.62492 17.4508 3.62492 16.2082V13.2464V8.24638V5.5415H3.33325C2.91904 5.5415 2.58325 5.20572 2.58325 4.7915C2.58325 4.37729 2.91904 4.0415 3.33325 4.0415H4.37492H6.54118V3.7915ZM14.8749 13.2464V8.24638V5.5415H13.4578H12.7078H7.29118H6.54118H5.12492V8.24638V13.2464V16.2082C5.12492 16.6224 5.46071 16.9582 5.87492 16.9582H14.1249C14.5391 16.9582 14.8749 16.6224 14.8749 16.2082V13.2464ZM8.04118 4.0415H11.9578V3.7915C11.9578 3.37729 11.6221 3.0415 11.2078 3.0415H8.79118C8.37696 3.0415 8.04118 3.37729 8.04118 3.7915V4.0415ZM8.33325 7.99984C8.74747 7.99984 9.08325 8.33562 9.08325 8.74984V13.7498C9.08325 14.1641 8.74747 14.4998 8.33325 14.4998C7.91904 14.4998 7.58325 14.1641 7.58325 13.7498V8.74984C7.58325 8.33562 7.91904 7.99984 8.33325 7.99984ZM12.4166 8.74984C12.4166 8.33562 12.0808 7.99984 11.6666 7.99984C11.2524 7.99984 10.9166 8.33562 10.9166 8.74984V13.7498C10.9166 14.1641 11.2524 14.4998 11.6666 14.4998C12.0808 14.4998 12.4166 14.1641 12.4166 13.7498V8.74984Z"
+            fill=""
+          />
+        </svg>
+      </button>
+
+      <button
+        class="flex h-10 w-full max-w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+      >
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M1.54163 4.8335C1.54163 3.59085 2.54899 2.5835 3.79163 2.5835H16.2083C17.4509 2.5835 18.4583 3.59085 18.4583 4.8335V5.16683C18.4583 5.96477 18.0429 6.66569 17.4166 7.06517V15.1668C17.4166 16.4095 16.4093 17.4168 15.1666 17.4168H4.83329C3.59065 17.4168 2.58329 16.4095 2.58329 15.1668V7.06517C1.95699 6.66568 1.54163 5.96476 1.54163 5.16683V4.8335ZM4.08329 7.41683H15.9166V15.1668C15.9166 15.581 15.5808 15.9168 15.1666 15.9168H4.83329C4.41908 15.9168 4.08329 15.581 4.08329 15.1668V7.41683ZM16.9583 5.16683C16.9583 5.58104 16.6225 5.91683 16.2083 5.91683H3.79163C3.37741 5.91683 3.04163 5.58104 3.04163 5.16683V4.8335C3.04163 4.41928 3.37741 4.0835 3.79163 4.0835H16.2083C16.6225 4.0835 16.9583 4.41928 16.9583 4.8335V5.16683ZM8.33329 9.04183C7.91908 9.04183 7.58329 9.37762 7.58329 9.79183C7.58329 10.206 7.91908 10.5418 8.33329 10.5418H11.6666C12.0808 10.5418 12.4166 10.206 12.4166 9.79183C12.4166 9.37762 12.0808 9.04183 11.6666 9.04183H8.33329Z"
+            fill="currentColor"
+          />
+        </svg>
+      </button>
+
+      <div x-data="{openDropDown: false}" class="relative w-full max-w-10">
+        <button
+          @click="openDropDown = !openDropDown"
+          class="flex h-10 w-full max-w-10 items-center justify-center rounded-lg border border-gray-200 transition-colors hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-gray-800"
+          :class="openDropDown ? 'text-gray-700 dark:text-white' : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-white'"
+        >
+          <svg
+            class="fill-current"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M10.2441 6C10.2441 5.0335 11.0276 4.25 11.9941 4.25H12.0041C12.9706 4.25 13.7541 5.0335 13.7541 6C13.7541 6.9665 12.9706 7.75 12.0041 7.75H11.9941C11.0276 7.75 10.2441 6.9665 10.2441 6ZM10.2441 18C10.2441 17.0335 11.0276 16.25 11.9941 16.25H12.0041C12.9706 16.25 13.7541 17.0335 13.7541 18C13.7541 18.9665 12.9706 19.75 12.0041 19.75H11.9941C11.0276 19.75 10.2441 18.9665 10.2441 18ZM11.9941 10.25C11.0276 10.25 10.2441 11.0335 10.2441 12C10.2441 12.9665 11.0276 13.75 11.9941 13.75H12.0041C12.9706 13.75 13.7541 12.9665 13.7541 12C13.7541 11.0335 12.9706 10.25 12.0041 10.25H11.9941Z"
+              fill=""
+            />
+          </svg>
+        </button>
+        <div
+          x-show="openDropDown"
+          @click.outside="openDropDown = false"
+          class="absolute right-0 top-full z-40 mt-1 w-40 space-y-1 rounded-2xl border border-gray-200 bg-white p-2 shadow-theme-lg transition-colors hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-800 dark:hover:bg-gray-dark"
+        >
+          <button
+            class="flex w-full rounded-lg px-3 py-2 text-left text-theme-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          >
+            View More
+          </button>
+          <button
+            class="flex w-full rounded-lg px-3 py-2 text-left text-theme-xs font-medium text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative w-full sm:max-w-[236px]">
+      <form>
+        <button class="absolute left-4 top-1/2 -translate-y-1/2">
+          <svg
+            class="fill-gray-500 dark:fill-gray-400"
+            width="20"
+            height="20"
+            viewBox="0 0 20 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M3.04199 9.37381C3.04199 5.87712 5.87735 3.04218 9.37533 3.04218C12.8733 3.04218 15.7087 5.87712 15.7087 9.37381C15.7087 12.8705 12.8733 15.7055 9.37533 15.7055C5.87735 15.7055 3.04199 12.8705 3.04199 9.37381ZM9.37533 1.54218C5.04926 1.54218 1.54199 5.04835 1.54199 9.37381C1.54199 13.6993 5.04926 17.2055 9.37533 17.2055C11.2676 17.2055 13.0032 16.5346 14.3572 15.4178L17.1773 18.2381C17.4702 18.531 17.945 18.5311 18.2379 18.2382C18.5308 17.9453 18.5309 17.4704 18.238 17.1775L15.4182 14.3575C16.5367 13.0035 17.2087 11.2671 17.2087 9.37381C17.2087 5.04835 13.7014 1.54218 9.37533 1.54218Z"
+              fill=""
+            />
+          </svg>
+        </button>
+        <input
+          type="text"
+          placeholder="Search..."
+          class="dark:bg-dark-900 h-10 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 pl-[42px] text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:text-white/90 dark:placeholder:text-white/30 dark:focus:border-brand-800"
+        />
+      </form>
+    </div>
+  </div>
+
+  <!-- ====== Inbox List Start -->
+  <div class="h-screen overflow-y-auto">
+    <div class="custom-scrollbar block h-full max-h-full overflow-auto">
+      <template x-for="(item, index) in mails" :key="index">
+        <!-- mail item start -->
+        <div
+          x-data="{isStarred: false}"
+          class="flex cursor-pointer items-center border-b border-gray-200 px-4 py-4 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/[0.03]"
+        >
+          <div class="flex w-3/5 items-center sm:w-1/5">
+            <label
+              :for="'checkbox-' + index"
+              class="cursor-pointer select-none"
+            >
+              <span class="relative">
+                <input
+                  type="checkbox"
+                  :id="'checkbox-' + index"
+                  class="tableCheckbox sr-only"
+                  @change="toggleItem(index)"
+                  :checked="itemsChecked[index]"
+                />
+                <span
+                  class="box mr-3 flex h-4 w-4 items-center justify-center rounded-sm border border-gray-300 bg-transparent text-white dark:border-gray-700"
+                >
+                  <span
+                    :class="itemsChecked[index] ? 'opacity-100' : 'opacity-0'"
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M10 3L4.5 8.5L2 6"
+                        stroke="white"
+                        stroke-width="1.6666"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </span>
+                </span>
+              </span>
+            </label>
+
+            <div class="flex items-center">
+              <span class="pr-3 text-gray-400" @click="isStarred = !isStarred">
+                <svg
+                  class="fill-current"
+                  :class="isStarred ? 'hidden' : 'block'"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    clip-rule="evenodd"
+                    d="M9.99993 2.375C10.2854 2.375 10.5461 2.53707 10.6725 2.79308L12.7318 6.96563L17.3365 7.63473C17.619 7.67578 17.8537 7.87367 17.9419 8.14517C18.0301 8.41668 17.9565 8.71473 17.7521 8.914L14.4201 12.1619L15.2067 16.748C15.255 17.0293 15.1393 17.3137 14.9083 17.4815C14.6774 17.6493 14.3712 17.6714 14.1185 17.5386L9.99993 15.3733L5.88137 17.5386C5.62869 17.6714 5.32249 17.6493 5.09153 17.4815C4.86057 17.3137 4.7449 17.0293 4.79316 16.748L5.57974 12.1619L2.24775 8.914C2.04332 8.71473 1.96975 8.41668 2.05797 8.14517C2.14619 7.87367 2.3809 7.67578 2.66341 7.63473L7.2681 6.96563L9.32738 2.79308C9.45373 2.53707 9.71445 2.375 9.99993 2.375ZM9.99993 4.81966L8.4387 7.98306C8.32946 8.20442 8.11828 8.35785 7.874 8.39334L4.38298 8.90062L6.90911 11.363C7.08587 11.5353 7.16653 11.7835 7.1248 12.0268L6.52847 15.5037L9.65093 13.8622C9.86942 13.7473 10.1304 13.7473 10.3489 13.8622L13.4714 15.5037L12.8751 12.0268C12.8333 11.7835 12.914 11.5353 13.0908 11.363L15.6169 8.90062L12.1259 8.39334C11.8816 8.35785 11.6704 8.20442 11.5612 7.98306L9.99993 4.81966Z"
+                    fill=""
+                  />
+                </svg>
+
+                <svg
+                  :class="isStarred ? 'block' : 'hidden'"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M9.99991 3.125L12.2337 7.65114L17.2286 8.37694L13.6142 11.9L14.4675 16.8747L9.99991 14.526L5.53235 16.8747L6.38558 11.9L2.77124 8.37694L7.76613 7.65114L9.99991 3.125Z"
+                    fill="#FDB022"
+                  />
+                </svg>
+              </span>
+
+              <span
+                class="truncate text-sm text-gray-700 dark:text-gray-400"
+                x-text="item.subject"
+              >
+              </span>
+            </div>
+          </div>
+          <div class="flex w-1/5 items-center gap-3 sm:w-3/5">
+            <p
+              class="truncate text-sm text-gray-500 dark:text-gray-400"
+              x-text="item.content"
+            ></p>
+
+            <span
+              x-show="item.badge"
+              class="hidden rounded-full px-2 py-0.5 text-theme-xs font-medium sm:inline-block"
+              :class="item.badge === 'Important' ? 'text-error-700 dark:text-error-500 bg-error-50 dark:bg-error-500/15' : item.badge === 'Social' ? 'text-success-700 dark:text-success-500 bg-success-50 dark:bg-success-500/15' : item.badge === 'Promotional' ? 'text-brand-500 dark:text-brand-400 bg-brand-50 dark:bg-brand-500/15' : ''"
+              x-text="item.badge"
+            >
+            </span>
+          </div>
+          <div class="w-1/5">
+            <span
+              class="block text-right text-theme-xs text-gray-400"
+              x-text="item.time"
+            ></span>
+          </div>
+        </div>
+        <!-- mail item end -->
+      </template>
+    </div>
+  </div>
+  <!-- ====== Inbox List End -->
+
+  <div
+    class="sticky bottom-0 flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 dark:border-gray-800 dark:bg-[#171f2f]"
+  >
+    <p class="text-sm text-gray-500 dark:text-gray-400">Showing 1 of 159</p>
+    <div class="flex items-center justify-end gap-2">
+      <button
+        class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-white/[0.03]"
+      >
+        <svg
+          class="stroke-current"
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M12.7083 5L7.5 10.2083L12.7083 15.4167"
+            stroke=""
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+      <button
+        class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:bg-white/[0.03] dark:text-gray-400 dark:hover:bg-white/[0.03]"
+      >
+        <svg
+          class="stroke-current"
+          width="20"
+          height="20"
+          viewBox="0 0 20 20"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M7.29167 15.8335L12.5 10.6252L7.29167 5.41683"
+            stroke=""
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+  function mailApp() {
+    return {
+      allChecked: false,
+      mails: [
+        {
+          subject: "Material UI",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "12:16 pm",
+          badge: "Important",
+        },
+        {
+          subject: "Wise",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "12:16 pm",
+        },
+        {
+          subject: "Search Console",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Apr, 24",
+          badge: "Social",
+        },
+        {
+          subject: "PayPal",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Apr, 20",
+        },
+        {
+          subject: "Google Meet",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Apr, 16",
+        },
+        {
+          subject: "Loom",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Mar, 10",
+        },
+        {
+          subject: "Airbnb",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Mar, 05",
+        },
+        {
+          subject: "Facebook",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Feb, 25",
+        },
+        {
+          subject: "Instagram",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Feb, 20",
+          badge: "Promotional",
+        },
+        {
+          subject: "Google",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Feb, 02",
+        },
+        {
+          subject: "FormBold",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Jan, 22",
+        },
+        {
+          subject: "GrayGrids",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Feb, 25",
+        },
+        {
+          subject: "UIdeck",
+          content:
+            "Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda dolor dolore esse modi nesciunt, nobis numquam sed sequi sunt totam!",
+          time: "Feb, 15",
+        },
+      ],
+      itemsChecked: [],
+
+      toggleAll() {
+        this.allChecked = !this.allChecked;
+        this.itemsChecked = this.mails.map(() => this.allChecked);
+      },
+      toggleItem(index) {
+        this.itemsChecked[index] = !this.itemsChecked[index];
+      },
+      init() {
+        this.itemsChecked = this.mails.map(() => false);
+      },
+    };
+  }
+</script>
+<!-- Inbox Mailbox End -->
+              </div>
+            </div>
+          </div>
+        </main>
+        <!-- ===== Main Content End ===== -->
+      </div>
+      <!-- ===== Content Area End ===== -->
+    </div>
+    <!-- ===== Page Wrapper End ===== -->
+  <script defer src="bundle.js"></script><script defer src="https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015" integrity="sha512-ZpsOmlRQV6y907TI0dKBHq9Md29nnaEIPlkf84rnaERnq6zvWvPUqr2ft8M1aS28oN72PdrCzSjY4U6VaAw1EQ==" data-cf-beacon='{"version":"2024.11.0","token":"67f7a278e3374824ae6dd92295d38f77","r":1,"server_timing":{"name":{"cfCacheStatus":true,"cfEdge":true,"cfExtPri":true,"cfL4":true,"cfOrigin":true,"cfSpeedBrain":true},"location_startswith":null}}' crossorigin="anonymous"></script>
+</body>
+</html>

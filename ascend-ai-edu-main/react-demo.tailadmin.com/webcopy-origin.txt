@@ -1,0 +1,20 @@
+Uri: https://react-demo.tailadmin.com/
+File Name: C:\Downloaded Web Sites\react-demo.tailadmin.com\index.htm
+Content Type: text/html
+
+Uri: https://react-demo.tailadmin.com/assets/index--eTW4lAa.css
+File Name: C:\Downloaded Web Sites\react-demo.tailadmin.com\assets\index--eTW4lAa.css
+Content Type: text/css
+
+Uri: https://react-demo.tailadmin.com/assets/index-2WweZGQK.js
+File Name: C:\Downloaded Web Sites\react-demo.tailadmin.com\assets\index-2WweZGQK.js
+Content Type: application/javascript
+
+Uri: https://react-demo.tailadmin.com/favicon.png
+File Name: C:\Downloaded Web Sites\react-demo.tailadmin.com\favicon.png
+Content Type: image/png
+
+Uri: https://static.cloudflareinsights.com/beacon.min.js/vcd15cbe7772f49c399c6a5babf22c1241717689176015
+File Name: C:\Downloaded Web Sites\react-demo.tailadmin.com\beacon.min.js\vcd15cbe7772f49c399c6a5babf22c1241717689176015
+Content Type: text/javascript
+
