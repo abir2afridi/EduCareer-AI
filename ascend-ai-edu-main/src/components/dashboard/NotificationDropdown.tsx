@@ -47,6 +47,58 @@ const itemVariants = {
   },
 };
 
+type NotificationListProps = {
+  notifications: NotificationItem[];
+  onSelect?: () => void;
+};
+
+export function NotificationList({ notifications, onSelect }: NotificationListProps) {
+  return (
+    <motion.ul className="max-h-80 space-y-2 overflow-y-auto pr-1 text-sm">
+      <AnimatePresence>
+        {notifications.map((notification, index) => (
+          <motion.li 
+            key={notification.id}
+            variants={itemVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            transition={{ delay: index * 0.05 }}
+          >
+            <motion.a
+              href={notification.href}
+              onClick={(event) => {
+                event.preventDefault();
+                onSelect?.();
+              }}
+              className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-left text-muted-foreground transition hover:border-border/60 hover:bg-slate-50 hover:text-foreground dark:hover:bg-slate-800"
+              whileHover={{ scale: 1.01 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <motion.span 
+                className="relative h-10 w-10 overflow-hidden rounded-full"
+                whileHover={{ scale: 1.05 }}
+              >
+                <img
+                  src={notification.avatar}
+                  alt={notification.name}
+                  className="h-full w-full object-cover"
+                />
+                <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full border border-white bg-emerald-500" />
+              </motion.span>
+              <span className="flex-1">
+                <span className="block text-sm font-medium text-foreground">{notification.name}</span>
+                <span className="block text-xs text-muted-foreground">{notification.message}</span>
+                <span className="mt-1 block text-[11px] text-muted-foreground">{notification.meta}</span>
+              </span>
+            </motion.a>
+          </motion.li>
+        ))}
+      </AnimatePresence>
+    </motion.ul>
+  );
+}
+
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const [hasUnread, setHasUnread] = useState(true);
@@ -147,50 +199,7 @@ export default function NotificationDropdown() {
               </motion.button>
             </motion.div>
             
-            <motion.ul className="max-h-80 space-y-2 overflow-y-auto pr-1 text-sm">
-              <AnimatePresence>
-                {sampleNotifications.map((notification, index) => (
-                  <motion.li 
-                    key={notification.id}
-                    variants={itemVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <motion.a
-                      href={notification.href}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        closeDropdown();
-                        // Handle navigation programmatically if needed
-                        // navigate(notification.href);
-                      }}
-                      className="flex w-full items-center gap-3 rounded-xl border border-transparent px-3 py-3 text-left text-muted-foreground transition hover:border-border/60 hover:bg-slate-50 hover:text-foreground dark:hover:bg-slate-800"
-                      whileHover={{ scale: 1.01 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      <motion.span 
-                        className="relative h-10 w-10 overflow-hidden rounded-full"
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <img
-                          src={notification.avatar}
-                          alt={notification.name}
-                          className="h-full w-full object-cover"
-                        />
-                        <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full border border-white bg-emerald-500" />
-                      </motion.span>
-                      <span className="flex-1">
-                        <span className="block text-sm font-medium text-foreground">{notification.name}</span>
-                        <span className="block text-xs text-muted-foreground">{notification.message}</span>
-                        <span className="mt-1 block text-[11px] text-muted-foreground">{notification.meta}</span>
-                      </span>
-                    </motion.a>
-                  </motion.li>
-                ))}
-              </AnimatePresence>
-            </motion.ul>
+            <NotificationList notifications={sampleNotifications} onSelect={closeDropdown} />
 
             <motion.div variants={itemVariants} className="mt-4">
               <Link
@@ -208,7 +217,16 @@ export default function NotificationDropdown() {
   );
 }
 
-const sampleNotifications = [
+export type NotificationItem = {
+  id: number;
+  name: string;
+  message: string;
+  meta: string;
+  avatar: string;
+  href: string;
+};
+
+export const sampleNotifications: NotificationItem[] = [
   {
     id: 1,
     name: "Terry Franci",
