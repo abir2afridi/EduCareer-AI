@@ -5,6 +5,7 @@ import { db } from "@/lib/firebaseClient";
 export type StudentProfile = {
   id: string;
   name?: string;
+  bio?: string;
   dob?: string;
   gender?: string;
   department?: string;

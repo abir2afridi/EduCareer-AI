@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Loader2, Brain, History, Timer, Award, RefreshCw } from "lucide-react";
+import { Sparkles, Loader2, Brain, History, Timer, Award, RefreshCw, Zap } from "lucide-react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/components/auth-provider";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import QuizTimerDisplay from "@/components/quiz/QuizTimerDisplay";
+import { useQuizTimer } from "@/hooks/useQuizTimer";
 import {
   addDoc,
   collection,
@@ -48,6 +51,13 @@ type QuizAttempt = {
   }[];
   email?: string | null;
   displayName?: string | null;
+  totalTimeSeconds?: number | null;
+  timeTakenSeconds?: number | null;
+  timeSavedSeconds?: number | null;
+  completionSpeed?: number | null;
+  totalTimeMinutes?: number | null;
+  timeTakenMinutes?: number | null;
+  timeSavedMinutes?: number | null;
 };
 
 const QUESTION_COUNTS = [20, 30, 40];
@@ -114,6 +124,65 @@ const formatDateTime = (value: Date | null) => {
   }
 };
 
+const formatDuration = (seconds: number | null | undefined) => {
+  if (!seconds || seconds <= 0) return "0min 00sec";
+  const totalSeconds = Math.round(seconds);
+  const minutes = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+  if (minutes >= 60) {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}hr ${remainingMinutes}min ${secs.toString().padStart(2, "0")}sec`;
+  }
+  return `${minutes}min ${secs.toString().padStart(2, "0")}sec`;
+};
+
+const formatMinutesLabel = (minutes: number | null | undefined) => {
+  if (minutes === null || minutes === undefined) return "0 mins";
+  const rounded = Math.round(minutes * 100) / 100;
+  return Number.isInteger(rounded) ? `${rounded} mins` : `${rounded.toFixed(2)} mins`;
+};
+
+const formatSpeed = (speed: number | null | undefined) => {
+  if (!speed || !Number.isFinite(speed)) return "0";
+  const rounded = Math.round(speed * 100) / 100;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(2);
+};
+
+const formatPercent = (value: number | null | undefined) => {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "0%";
+  const rounded = Math.round(value);
+  return `${rounded}%`;
+};
+
+const formatScoreOutOfHundred = (value: number | null | undefined) => {
+  if (value === null || value === undefined || !Number.isFinite(value)) return "0 / 100";
+  const clamped = Math.max(0, Math.min(100, Math.round(value)));
+  return `${clamped} / 100`;
+};
+
+const computeBaselineSpeed = (totalQuestions: number, totalTimeMinutes: number | null | undefined) => {
+  if (!totalTimeMinutes || totalTimeMinutes <= 0) return null;
+  if (totalQuestions <= 0) return null;
+  return totalQuestions / totalTimeMinutes;
+};
+
+const formatMultiplier = (value: number | null | undefined) => {
+  if (!value || !Number.isFinite(value)) return "×1.00";
+  const rounded = Math.round(value * 100) / 100;
+  return `×${rounded.toFixed(2)}`;
+};
+
+type QuizTimingSummary = {
+  totalTimeSeconds: number;
+  timeTakenSeconds: number;
+  timeSavedSeconds: number;
+  totalTimeMinutes: number;
+  timeTakenMinutes: number;
+  timeSavedMinutes: number;
+  completionSpeed: number;
+};
+
 export default function QuizPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -128,8 +197,36 @@ export default function QuizPage() {
   const [iqEarned, setIqEarned] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [history, setHistory] = useState<QuizAttempt[]>([]);
+  const [autoSubmitted, setAutoSubmitted] = useState(false);
+  const [autoSubmitRequested, setAutoSubmitRequested] = useState(false);
+  const [timingSummary, setTimingSummary] = useState<QuizTimingSummary | null>(null);
 
   const generateButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const storageKey = useMemo(() => (user?.uid ? `quiz-timer-${user.uid}` : "quiz-timer-guest"), [user?.uid]);
+
+  const { start: startTimer, reset: resetTimer, stop: stopTimer, remainingSeconds, totalSeconds: timerTotalSeconds, isExpired: isTimerExpired } =
+    useQuizTimer({
+      storageKey,
+      onExpire: () => setAutoSubmitRequested(true),
+    });
+
+  const timerTotal = useMemo(() => {
+    if (timerTotalSeconds > 0) return timerTotalSeconds;
+    return questions.length > 0 ? questions.length * 60 : 0;
+  }, [timerTotalSeconds, questions.length]);
+
+  const timerProgressColor = useMemo(() => {
+    if (!timerTotal || timerTotal <= 0) return "#2563eb";
+    if (isTimerExpired) return "#ef4444";
+    const ratio = remainingSeconds / timerTotal;
+    if (ratio <= 0.1) return "#ef4444";
+    if (ratio <= 0.25) return "#f97316";
+    if (ratio <= 0.5) return "#facc15";
+    return "#2563eb";
+  }, [timerTotal, isTimerExpired, remainingSeconds]);
+
+  const timerStyle = useMemo(() => ({ "--progress-color": timerProgressColor } as CSSProperties), [timerProgressColor]);
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -164,7 +261,14 @@ export default function QuizPage() {
               : [],
             email: typeof data.email === "string" ? data.email : null,
             displayName: typeof data.displayName === "string" ? data.displayName : null,
-          };
+            totalTimeSeconds: typeof data.totalTimeSeconds === "number" ? data.totalTimeSeconds : null,
+            timeTakenSeconds: typeof data.timeTakenSeconds === "number" ? data.timeTakenSeconds : null,
+            timeSavedSeconds: typeof data.timeSavedSeconds === "number" ? data.timeSavedSeconds : null,
+            completionSpeed: typeof data.completionSpeed === "number" ? data.completionSpeed : null,
+            totalTimeMinutes: typeof data.totalTimeMinutes === "number" ? data.totalTimeMinutes : null,
+            timeTakenMinutes: typeof data.timeTakenMinutes === "number" ? data.timeTakenMinutes : null,
+            timeSavedMinutes: typeof data.timeSavedMinutes === "number" ? data.timeSavedMinutes : null,
+          } satisfies QuizAttempt;
         });
         setHistory(nextHistory);
       },
@@ -182,6 +286,15 @@ export default function QuizPage() {
   }, [user?.uid]);
 
   const handleGenerateQuiz = async () => {
+    if (questions.length > 0 && !showResults) {
+      toast({
+        title: "Quiz in progress",
+        description: "Submit or reset the current quiz before generating a new one.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!user?.uid) {
       toast({ title: "Sign in required", description: "Please sign in to generate a quiz.", variant: "destructive" });
       return;
@@ -196,6 +309,10 @@ export default function QuizPage() {
     setShowResults(false);
     setAnswers({});
     setQuestions([]);
+    setAutoSubmitted(false);
+    setAutoSubmitRequested(false);
+    setTimingSummary(null);
+    resetTimer();
 
     try {
       const prompt = `Generate ${questionCount} multiple-choice questions about "${topic}" for undergraduate students. ` +
@@ -217,6 +334,7 @@ export default function QuizPage() {
       }
 
       setQuestions(parsed.slice(0, questionCount));
+      startTimer(questionCount * 60);
       toast({
         title: "Quiz ready",
         description: `Generated ${parsed.length} question${parsed.length === 1 ? "" : "s"}. Good luck!`,
@@ -236,6 +354,8 @@ export default function QuizPage() {
 
   const handleSelectAnswer = (index: number, option: string) => {
     if (showResults) return;
+    if (autoSubmitted) return;
+    if (isTimerExpired) return;
     setAnswers((prev) => ({ ...prev, [index]: option }));
   };
 
@@ -256,124 +376,183 @@ export default function QuizPage() {
     return { score: totalCorrect, iq, detailed };
   }, [answers, questions, showResults]);
 
-  const persistResults = async (totalCorrect: number, iq: number) => {
-    if (!user?.uid) return;
-    setIsSaving(true);
+  const persistResults = useCallback(
+    async (totalCorrect: number, iq: number, timing: QuizTimingSummary | null) => {
+      if (!user?.uid) return;
+      setIsSaving(true);
 
-    try {
-      const studentUid = user.uid;
-      const historyDocRef = doc(db, "quizAttempts", studentUid);
-      await setDoc(
-        historyDocRef,
-        {
-          uid: studentUid,
-          lastUpdatedAt: serverTimestamp(),
-        },
-        { merge: true },
-      );
+      try {
+        const studentUid = user.uid;
+        const historyDocRef = doc(db, "quizAttempts", studentUid);
+        await setDoc(
+          historyDocRef,
+          {
+            uid: studentUid,
+            lastUpdatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        );
 
-      const attemptsColRef = collection(historyDocRef, "attempts");
-      const payload = {
-        topic: topic.trim(),
-        score: totalCorrect,
-        total: questions.length,
-        IQPoints: iq,
-        submittedAt: serverTimestamp(),
-        questions: questions.map((question, index) => ({
-          question: question.question,
-          options: question.options,
-          correctAnswer: question.correctAnswer,
-          selectedAnswer: answers[index] ?? null,
-        })),
-        studentUid,
-        email: user.email || null,
-        displayName: user.displayName || null,
-      };
-
-      const userUid = user?.uid;
-      const payloadStudentUid = payload.studentUid;
-      if (!userUid) {
-        console.error("❌ User not authenticated! UID missing.");
-      } else if (!payloadStudentUid) {
-        console.error("❌ Quiz payload missing studentUid field!");
-      } else if (userUid !== payloadStudentUid) {
-        console.error(`❌ UID mismatch! auth.uid=${userUid}, payload.studentUid=${payloadStudentUid}`);
-      } else {
-        console.log("✅ UID match confirmed. Ready to submit quiz.");
-      }
-
-      console.log(
-        "[Quiz] Persisting attempt",
-        JSON.stringify({
-          studentUid,
-          path: `quizAttempts/${studentUid}/attempts`,
-          questionTotal: questions.length,
-        }),
-      );
-
-      const attemptDoc = await addDoc(attemptsColRef, payload);
-
-      setHistory((prev) => [
-        {
-          id: attemptDoc.id,
+        const attemptsColRef = collection(historyDocRef, "attempts");
+        const payload = {
           topic: topic.trim(),
           score: totalCorrect,
           total: questions.length,
           IQPoints: iq,
-          submittedAt: new Date(),
+          submittedAt: serverTimestamp(),
           questions: questions.map((question, index) => ({
             question: question.question,
             options: question.options,
             correctAnswer: question.correctAnswer,
             selectedAnswer: answers[index] ?? null,
           })),
+          studentUid,
           email: user.email || null,
           displayName: user.displayName || null,
-        },
-        ...prev,
-      ]);
+          totalTimeSeconds: timing?.totalTimeSeconds ?? null,
+          timeTakenSeconds: timing?.timeTakenSeconds ?? null,
+          timeSavedSeconds: timing?.timeSavedSeconds ?? null,
+          completionSpeed: timing?.completionSpeed ?? null,
+          totalTimeMinutes: timing?.totalTimeMinutes ?? null,
+          timeTakenMinutes: timing?.timeTakenMinutes ?? null,
+          timeSavedMinutes: timing?.timeSavedMinutes ?? null,
+        };
 
-      toast({
-        title: "Quiz submitted successfully",
-        description: "Your attempt has been recorded and IQ points added.",
-      });
+        const userUid = user?.uid;
+        const payloadStudentUid = payload.studentUid;
+        if (!userUid) {
+          console.error("❌ User not authenticated! UID missing.");
+        } else if (!payloadStudentUid) {
+          console.error("❌ Quiz payload missing studentUid field!");
+        } else if (userUid !== payloadStudentUid) {
+          console.error(`❌ UID mismatch! auth.uid=${userUid}, payload.studentUid=${payloadStudentUid}`);
+        } else {
+          console.log("✅ UID match confirmed. Ready to submit quiz.");
+        }
 
-      const studentRef = doc(db, "students", studentUid);
-      await updateDoc(studentRef, {
-        iqPoints: increment(iq),
-        iqPointsUpdatedAt: serverTimestamp(),
-      });
-    } catch (error) {
-      const authUid = user?.uid ?? null;
-      if (error instanceof FirebaseError) {
-        console.error("[Quiz] Firestore write failed", {
-          authUid,
-          studentUid: user?.uid ?? null,
-          code: error.code,
-          message: error.message,
+        console.log(
+          "[Quiz] Persisting attempt",
+          JSON.stringify({
+            studentUid,
+            path: `quizAttempts/${studentUid}/attempts`,
+            questionTotal: questions.length,
+          }),
+        );
+
+        const attemptDoc = await addDoc(attemptsColRef, payload);
+
+        setHistory((prev) => [
+          {
+            id: attemptDoc.id,
+            topic: topic.trim(),
+            score: totalCorrect,
+            total: questions.length,
+            IQPoints: iq,
+            submittedAt: new Date(),
+            questions: questions.map((question, index) => ({
+              question: question.question,
+              options: question.options,
+              correctAnswer: question.correctAnswer,
+              selectedAnswer: answers[index] ?? null,
+            })),
+            email: user.email || null,
+            displayName: user.displayName || null,
+            totalTimeSeconds: timing?.totalTimeSeconds ?? null,
+            timeTakenSeconds: timing?.timeTakenSeconds ?? null,
+            timeSavedSeconds: timing?.timeSavedSeconds ?? null,
+            completionSpeed: timing?.completionSpeed ?? null,
+            totalTimeMinutes: timing?.totalTimeMinutes ?? null,
+            timeTakenMinutes: timing?.timeTakenMinutes ?? null,
+            timeSavedMinutes: timing?.timeSavedMinutes ?? null,
+          },
+          ...prev,
+        ]);
+
+        toast({
+          title: "Quiz submitted successfully",
+          description: "Your attempt has been recorded and IQ points added.",
         });
-      } else {
-        console.error("[Quiz] Unexpected error while saving quiz results", {
-          authUid,
-          studentUid: user?.uid ?? null,
-          error,
+
+        const studentRef = doc(db, "students", studentUid);
+        await updateDoc(studentRef, {
+          iqPoints: increment(iq),
+          iqPointsUpdatedAt: serverTimestamp(),
         });
+      } catch (error) {
+        const authUid = user?.uid ?? null;
+        if (error instanceof FirebaseError) {
+          console.error("[Quiz] Firestore write failed", {
+            authUid,
+            studentUid: user?.uid ?? null,
+            code: error.code,
+            message: error.message,
+          });
+        } else {
+          console.error("[Quiz] Unexpected error while saving quiz results", {
+            authUid,
+            studentUid: user?.uid ?? null,
+            error,
+          });
+        }
+        toast({
+          title: "Save failed",
+          description: "Could not record your quiz results. They will not appear in history.",
+          variant: "destructive",
+        });
+      } finally {
+        setIsSaving(false);
       }
-      toast({
-        title: "Save failed",
-        description: "Could not record your quiz results. They will not appear in history.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSaving(false);
-    }
-  };
+    },
+    [answers, questions, topic, toast, user],
+  );
+
+  const finalizeQuiz = useCallback(
+    async (autoTriggered: boolean) => {
+      if (!questions.length || showResults) return;
+
+      const totalCorrect = questions.reduce((acc, question, index) => {
+        const selectedAnswer = answers[index] ?? "";
+        return selectedAnswer.toLowerCase() === question.correctAnswer.toLowerCase() ? acc + 1 : acc;
+      }, 0);
+
+      const iq = Math.round((totalCorrect / questions.length) * 100);
+      const remainingBeforeSubmit = Math.max(0, remainingSeconds);
+
+      stopTimer();
+
+      const totalTimeSeconds = questions.length * 60;
+      const timeTakenSeconds = Math.max(0, Math.min(totalTimeSeconds, totalTimeSeconds - remainingBeforeSubmit));
+      const timeSavedSeconds = Math.max(0, Math.min(totalTimeSeconds, remainingBeforeSubmit));
+      const completionSpeed = timeTakenSeconds > 0 ? totalCorrect / (timeTakenSeconds / 60) : totalCorrect;
+
+      const summary: QuizTimingSummary = {
+        totalTimeSeconds,
+        timeTakenSeconds,
+        timeSavedSeconds,
+        totalTimeMinutes: totalTimeSeconds / 60,
+        timeTakenMinutes: timeTakenSeconds / 60,
+        timeSavedMinutes: timeSavedSeconds / 60,
+        completionSpeed,
+      };
+
+      setScore(totalCorrect);
+      setIqEarned(iq);
+      setShowResults(true);
+      setTimingSummary(summary);
+      setAutoSubmitted(autoTriggered);
+      setAutoSubmitRequested(false);
+
+      await persistResults(totalCorrect, iq, summary);
+    },
+    [answers, persistResults, questions, remainingSeconds, showResults, stopTimer],
+  );
 
   const handleSubmitQuiz = async () => {
     if (!questions.length) return;
+    if (showResults) return;
 
     const totalAnswered = Object.keys(answers).length;
-    if (totalAnswered < questions.length) {
+    if (totalAnswered < questions.length && !autoSubmitRequested) {
       toast({
         title: "Incomplete quiz",
         description: "Answer all questions before submitting.",
@@ -382,17 +561,7 @@ export default function QuizPage() {
       return;
     }
 
-    const totalCorrect = questions.reduce((acc, question, index) => {
-      const selectedAnswer = answers[index] ?? "";
-      return selectedAnswer.toLowerCase() === question.correctAnswer.toLowerCase() ? acc + 1 : acc;
-    }, 0);
-
-    const iq = Math.round((totalCorrect / questions.length) * 100);
-    setScore(totalCorrect);
-    setIqEarned(iq);
-    setShowResults(true);
-
-    await persistResults(totalCorrect, iq);
+    await finalizeQuiz(false);
   };
 
   const handleReset = () => {
@@ -404,47 +573,80 @@ export default function QuizPage() {
     if (generateButtonRef.current) {
       generateButtonRef.current.focus();
     }
+    resetTimer();
+    setAutoSubmitted(false);
+    setAutoSubmitRequested(false);
+    setTimingSummary(null);
   };
 
   const selectedCount = Object.values(answers).filter(Boolean).length;
+  const hasActiveQuiz = questions.length > 0 && !showResults;
+
+  useEffect(() => {
+    if (!autoSubmitRequested) return;
+    if (!questions.length) return;
+    if (showResults) return;
+
+    (async () => {
+      await finalizeQuiz(true);
+      toast({
+        title: "Time's up",
+        description: "Your exam time is over! Answers have been auto-submitted.",
+      });
+    })();
+  }, [autoSubmitRequested, finalizeQuiz, questions.length, showResults, toast]);
 
   return (
     <Tabs defaultValue="quiz" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-        <TabsTrigger value="quiz" className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4" />
-          Take Quiz
-        </TabsTrigger>
-        <TabsTrigger value="history" className="flex items-center gap-2">
-          <History className="h-4 w-4" />
-          Previous Quizzes
-        </TabsTrigger>
-      </TabsList>
-
-      <TabsContent value="quiz" className="space-y-6">
-        <Card className="border-border/60 shadow-sm">
-          <CardHeader className="space-y-1">
-            <CardTitle className="flex items-center gap-2 text-2xl font-semibold">
+      <Card className="border-border/60 shadow-sm">
+        <CardHeader className="flex flex-col-reverse items-center gap-4 text-center md:flex-row md:items-center md:justify-between md:text-left">
+          <div className="space-y-2">
+            <CardTitle className="flex items-center justify-center gap-2 text-2xl font-semibold md:justify-start">
               <Brain className="h-6 w-6 text-primary" />
               AI Quiz Generator
             </CardTitle>
             <CardDescription>
               Create tailored multiple-choice quizzes powered by our AI assistant. Choose a topic, question count, and test your knowledge.
             </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4 md:grid-cols-[2fr,1fr,auto]">
+          </div>
+          <div className="w-36 shrink-0 md:w-48">
+            <DotLottieReact
+              src="https://lottie.host/276ac160-744b-4c2f-8c76-c0aa7e96717c/SSAStkGbEz.lottie"
+              loop
+              autoplay
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+            <TabsTrigger value="quiz" className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4" />
+              Take Quiz
+            </TabsTrigger>
+            <TabsTrigger value="history" className="flex items-center gap-2">
+              <History className="h-4 w-4" />
+              Previous Quizzes
+            </TabsTrigger>
+          </TabsList>
+        </CardContent>
+      </Card>
+
+      <TabsContent value="quiz" className="space-y-6">
+        <div className="rounded-2xl border border-border/60 bg-background/80 p-4 shadow-sm">
+          <div className="grid gap-4 md:grid-cols-[2fr,1fr,auto] md:items-center">
             <Input
               placeholder="Enter a topic (e.g., React hooks, Quantum mechanics, Financial literacy)"
               value={topic}
               onChange={(event) => setTopic(event.target.value)}
-              disabled={isGenerating}
+              disabled={isGenerating || hasActiveQuiz}
+              className="w-full"
             />
             <Select
               value={String(questionCount)}
               onValueChange={(value) => setQuestionCount(Number(value))}
-              disabled={isGenerating}
+              disabled={isGenerating || hasActiveQuiz}
             >
-              <SelectTrigger className="bg-input">
+              <SelectTrigger className="w-full bg-input">
                 <SelectValue placeholder="Select count" />
               </SelectTrigger>
               <SelectContent>
@@ -458,8 +660,8 @@ export default function QuizPage() {
             <Button
               ref={generateButtonRef}
               onClick={handleGenerateQuiz}
-              disabled={isGenerating}
-              className="bg-gradient-primary hover:brightness-110"
+              disabled={isGenerating || hasActiveQuiz}
+              className="w-full bg-gradient-primary hover:brightness-110 md:w-auto"
             >
               {isGenerating ? (
                 <>
@@ -473,8 +675,8 @@ export default function QuizPage() {
                 </>
               )}
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         <AnimatePresence>
           {questions.length > 0 ? (
@@ -484,31 +686,11 @@ export default function QuizPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}
-              className="space-y-6"
+              className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(240px,1fr)]"
             >
-              <Card className="border-border/60">
-                <CardHeader className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <CardTitle className="text-xl font-semibold">Quiz Progress</CardTitle>
-                    <CardDescription>
-                      {selectedCount} / {questions.length} questions answered
-                    </CardDescription>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="gap-1 text-sm">
-                      <Timer className="h-4 w-4" /> {questionCount} questions
-                    </Badge>
-                    {showResults && (
-                      <Badge variant="secondary" className="gap-1 text-sm">
-                        <Award className="h-4 w-4 text-emerald-500" /> IQ +{iqEarned}
-                      </Badge>
-                    )}
-                  </div>
-                </CardHeader>
-              </Card>
-
-              <div className="space-y-5">
-                {questions.map((question, index) => {
+              <div className="space-y-6">
+                <div className="space-y-5">
+                  {questions.map((question, index) => {
                   const selectedAnswer = answers[index] ?? null;
                   const isCorrect = showResults && selectedAnswer?.toLowerCase() === question.correctAnswer.toLowerCase();
                   const isWrong = showResults && !isCorrect;
@@ -559,7 +741,7 @@ export default function QuizPage() {
                                 type="button"
                                 className={`${baseStyles} ${stateStyles}`}
                                 onClick={() => handleSelectAnswer(index, option)}
-                                disabled={showResults}
+                                disabled={showResults || autoSubmitted}
                               >
                                 <span className="flex items-center gap-3">
                                   <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/60 font-semibold">
@@ -576,44 +758,139 @@ export default function QuizPage() {
                       </Card>
                     </motion.div>
                   );
-                })}
+                  })}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    onClick={handleSubmitQuiz}
+                    disabled={showResults || selectedCount !== questions.length || isSaving || isTimerExpired}
+                    className="bg-gradient-primary hover:brightness-110"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving results…
+                      </>
+                    ) : (
+                      "Submit quiz"
+                    )}
+                  </Button>
+                  <Button variant="outline" onClick={handleReset} disabled={isSaving}>
+                    <RefreshCw className="mr-2 h-4 w-4" />
+                    Start over
+                  </Button>
+                </div>
+
+                {showResults && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
+                    <div className="rounded-2xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-sm text-emerald-700 dark:text-emerald-200">
+                      <p className="font-semibold">Quiz submitted</p>
+                      <p>You answered {score} out of {questions.length} correctly. IQ points earned: {iqEarned}.</p>
+                      {autoSubmitted && (
+                        <p className="mt-1 font-medium text-rose-500 dark:text-rose-300">Your exam time is over! Answers have been auto-submitted.</p>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
               </div>
 
-              <div className="flex flex-wrap items-center gap-3">
-                <Button
-                  onClick={handleSubmitQuiz}
-                  disabled={showResults || selectedCount !== questions.length || isSaving}
-                  className="bg-gradient-primary hover:brightness-110"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving results…
-                    </>
-                  ) : (
-                    "Submit quiz"
+              <aside className="space-y-4">
+                <Card className="sticky top-24 w-full overflow-hidden rounded-2xl border-border/70 bg-muted/45 shadow-md text-sm">
+                  <CardHeader className="space-y-3 pb-4">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-base font-semibold">Quiz Summary</CardTitle>
+                      <Badge variant="outline" className="text-xs">
+                        <Timer className="mr-1 h-3.5 w-3.5" /> {questionCount} questions
+                      </Badge>
+                    </div>
+                    <QuizTimerDisplay
+                      totalSeconds={timerTotal}
+                      remainingSeconds={remainingSeconds}
+                      isExpired={isTimerExpired}
+                      style={timerStyle}
+                    />
+                    <div className="rounded-xl border border-dashed border-border/60 bg-background/75 p-3 shadow-inner">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">Progress</p>
+                      <p className="mt-1 text-xl font-semibold text-foreground">
+                        {selectedCount} / {questions.length}
+                      </p>
+                      <p className="text-xs text-muted-foreground">questions answered</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      {showResults ? (
+                        <Badge variant="secondary" className="gap-1 text-xs">
+                          <Award className="h-4 w-4 text-emerald-500" /> IQ +{iqEarned}
+                        </Badge>
+                      ) : (
+                        <Badge variant="outline" className="text-[11px] text-muted-foreground">
+                          Answer all questions to earn IQ points
+                        </Badge>
+                      )}
+                      {autoSubmitted && (
+                        <Badge variant="destructive" className="gap-1 text-[11px]">
+                          <Timer className="h-3.5 w-3.5" /> Auto-submitted
+                        </Badge>
+                      )}
+                    </div>
+                  </CardHeader>
+                  {showResults && timingSummary && (
+                    <CardContent className="space-y-3 border-t border-border/40 bg-background/70 p-3 text-[13px]">
+                      <div className="space-y-1 text-muted-foreground">
+                        <p className="font-semibold text-foreground">Quiz submitted</p>
+                        <p>You answered {score} out of {questions.length} correctly. IQ points earned: {iqEarned}.</p>
+                        {autoSubmitted && <p className="text-rose-500 dark:text-rose-300">Auto-submitted when time expired.</p>}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="rounded-lg border border-emerald-400/50 bg-emerald-500/10 p-2.5 text-emerald-700 dark:border-emerald-500/60 dark:bg-emerald-500/15 dark:text-emerald-200">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-600/80 dark:text-emerald-200/90">Total</p>
+                          <p className="text-sm font-semibold">{formatDuration(timingSummary.totalTimeSeconds)}</p>
+                        </div>
+                        <div className="rounded-lg border border-sky-400/50 bg-sky-500/10 p-2.5 text-sky-700 dark:border-sky-500/60 dark:bg-sky-500/15 dark:text-sky-200">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-600/80 dark:text-sky-200/90">Taken</p>
+                          <p className="text-sm font-semibold">{formatDuration(timingSummary.timeTakenSeconds)}</p>
+                        </div>
+                        <div className="rounded-lg border border-amber-400/50 bg-amber-500/10 p-2.5 text-amber-700 dark:border-amber-500/60 dark:bg-amber-500/15 dark:text-amber-200">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-600/80 dark:text-amber-200/90">Saved</p>
+                          <p className="text-sm font-semibold">{formatDuration(timingSummary.timeSavedSeconds)}</p>
+                        </div>
+                        <div className="rounded-lg border border-purple-400/50 bg-purple-500/10 p-2.5 text-purple-700 dark:border-purple-500/60 dark:bg-purple-500/15 dark:text-purple-200">
+                          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-purple-600/80 dark:text-purple-200/90">Speed</p>
+                          <p className="text-sm font-semibold">{formatSpeed(timingSummary.completionSpeed)}</p>
+                          <p className="text-[11px] text-purple-700/80 dark:text-purple-200/80">finished in {formatDuration(timingSummary.timeTakenSeconds)}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px] font-medium text-muted-foreground">
+                        <span className="rounded-lg border border-border/50 bg-background/80 px-2 py-1 text-center">
+                          Pace {formatSpeed(computeBaselineSpeed(questions.length, timingSummary.totalTimeMinutes))}
+                        </span>
+                        <span className="rounded-lg border border-border/50 bg-background/80 px-2 py-1 text-center">
+                          Perf {formatMultiplier(
+                            timingSummary.completionSpeed && computeBaselineSpeed(questions.length, timingSummary.totalTimeMinutes)
+                              ? timingSummary.completionSpeed /
+                                (computeBaselineSpeed(questions.length, timingSummary.totalTimeMinutes) ?? Number.POSITIVE_INFINITY)
+                              : null,
+                          )}
+                        </span>
+                        <span className="rounded-lg border border-border/50 bg-background/80 px-2 py-1 text-center">
+                          Eff {formatPercent(
+                            timingSummary.totalTimeSeconds
+                              ? (timingSummary.timeSavedSeconds / timingSummary.totalTimeSeconds) * 100
+                              : null,
+                          )}
+                        </span>
+                        <span className="rounded-lg border border-border/50 bg-background/80 px-2 py-1 text-center">
+                          Score {formatScoreOutOfHundred(
+                            timingSummary.totalTimeSeconds
+                              ? (timingSummary.timeSavedSeconds / timingSummary.totalTimeSeconds) * 100
+                              : null,
+                          )}
+                        </span>
+                      </div>
+                    </CardContent>
                   )}
-                </Button>
-                <Button variant="outline" onClick={handleReset}>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Start over
-                </Button>
-              </div>
-
-              {showResults && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }}>
-                  <Card className="border-emerald-500/50 bg-emerald-500/5">
-                    <CardHeader>
-                      <CardTitle className="flex items-center gap-2 text-xl font-semibold text-emerald-600 dark:text-emerald-300">
-                        <Award className="h-5 w-5" /> Quiz Results
-                      </CardTitle>
-                      <CardDescription className="text-foreground">
-                        You answered {score} out of {questions.length} correctly. IQ points earned: {iqEarned}.
-                      </CardDescription>
-                    </CardHeader>
-                  </Card>
-                </motion.div>
-              )}
+                </Card>
+              </aside>
             </motion.div>
           ) : (
             <motion.div
@@ -643,8 +920,8 @@ export default function QuizPage() {
             </CardHeader>
           </Card>
         ) : (
-          <ScrollArea className="max-h-[460px] rounded-2xl border border-border/60 bg-muted/30 p-4">
-            <div className="space-y-4">
+          <ScrollArea className="h-[460px] rounded-2xl border border-border/60 bg-muted/30">
+            <div className="space-y-4 p-4 pr-6">
               {history.map((attempt) => (
                 <motion.div key={attempt.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}>
                   <Card className="border-border/60">
@@ -655,7 +932,35 @@ export default function QuizPage() {
                           {formatDateTime(attempt.submittedAt)} • {attempt.questions.length} questions
                         </CardDescription>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge variant="outline" className="gap-1 text-xs md:text-sm">
+                          <Zap className="h-4 w-4 text-primary" /> Speed · {formatSpeed(attempt.completionSpeed)} correct/min
+                        </Badge>
+                        <Badge variant="outline" className="gap-1 text-xs md:text-sm">
+                          {formatMultiplier(
+                            attempt.completionSpeed && computeBaselineSpeed(attempt.total, attempt.totalTimeMinutes)
+                              ? attempt.completionSpeed /
+                                (computeBaselineSpeed(attempt.total, attempt.totalTimeMinutes) ?? 1)
+                              : null,
+                          )} pace
+                        </Badge>
+                        <Badge variant="outline" className="gap-1 text-xs md:text-sm">
+                          {formatPercent(
+                            attempt.totalTimeSeconds
+                              ? ((attempt.timeSavedSeconds ?? 0) / attempt.totalTimeSeconds) * 100
+                              : null,
+                          )} speed
+                        </Badge>
+                        <Badge variant="outline" className="gap-1 text-xs md:text-sm">
+                          {formatScoreOutOfHundred(
+                            attempt.totalTimeSeconds
+                              ? ((attempt.timeSavedSeconds ?? 0) / attempt.totalTimeSeconds) * 100
+                              : null,
+                          )}
+                        </Badge>
+                        <Badge variant="outline" className="gap-1 text-xs md:text-sm">
+                          Finished in {formatDuration(attempt.timeTakenSeconds ?? null)}
+                        </Badge>
                         <Badge variant="secondary" className="gap-1 text-sm">
                           <Award className="h-4 w-4 text-emerald-500" /> IQ {attempt.IQPoints}
                         </Badge>

@@ -1,6 +1,27 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type PropsWithChildren, type ReactNode } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Search, LogOut, Sparkles, Briefcase as BriefcaseIcon, Settings, ChevronDown, ChevronLeft, Bell, Info, BarChart3, BrainCircuit, BarChart2, Users2, FileText } from "lucide-react";
+import {
+  Search,
+  LogOut,
+  Sparkles,
+  Briefcase as BriefcaseIcon,
+  Settings,
+  ChevronDown,
+  ChevronLeft,
+  Bell,
+  ArrowUpRight,
+  Info,
+  BarChart3,
+  BrainCircuit,
+  BarChart2,
+  Users2,
+  FileText,
+  Sunrise,
+  Sun,
+  Sunset,
+  MoonStar,
+  Trophy,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { SidebarProvider, useSidebar } from "./SidebarContext";
@@ -116,22 +137,22 @@ type ProfileMenuProps = {
 const wrapperVariants = {
   open: {
     opacity: 1,
-    y: 0,
+    scaleY: 1,
     transition: {
-      duration: 0.16,
+      duration: 0.18,
       ease: "easeOut",
       when: "beforeChildren",
-      staggerChildren: 0.02,
+      staggerChildren: 0.06,
     },
   },
   closed: {
     opacity: 0,
-    y: 6,
+    scaleY: 0.92,
     transition: {
       duration: 0.14,
       ease: "easeIn",
       when: "afterChildren",
-      staggerChildren: 0.02,
+      staggerChildren: 0.05,
       staggerDirection: -1,
     },
   },
@@ -145,8 +166,39 @@ const itemVariants = {
   },
   closed: {
     opacity: 0,
-    y: 6,
+    y: -10,
     transition: { duration: 0.12, ease: "easeIn" },
+  },
+};
+
+const listVariants = {
+  open: {
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.04,
+    },
+  },
+  closed: {
+    transition: {
+      staggerChildren: 0.06,
+      staggerDirection: -1,
+    },
+  },
+};
+
+const actionIconVariants = {
+  open: { scale: 1, y: 0, opacity: 1, transition: { duration: 0.18, ease: "easeOut" } },
+  closed: { scale: 0.7, y: -6, opacity: 0, transition: { duration: 0.12, ease: "easeIn" } },
+};
+
+const chevronVariants = {
+  open: {
+    rotate: 180,
+    transition: { duration: 0.2, ease: "easeOut" },
+  },
+  closed: {
+    rotate: 0,
+    transition: { duration: 0.18, ease: "easeIn" },
   },
 };
 
@@ -277,7 +329,7 @@ function ProfileMenu({
             return next;
           });
         }}
-        className="flex h-11 items-center gap-2 rounded-2xl border border-border/60 bg-white px-2 text-left text-foreground shadow-theme-xs transition hover:border-border/50 hover:bg-white dark:bg-slate-900 sm:gap-3 sm:px-3"
+        className="flex h-11 items-center gap-2 rounded-lg border border-border/60 bg-white px-2 text-left text-foreground shadow-theme-xs transition hover:border-border/50 hover:bg-white dark:bg-slate-900 sm:gap-3 sm:px-3"
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.98 }}
       >
@@ -290,8 +342,8 @@ function ProfileMenu({
           {secondaryEmail && <span className="truncate text-xs text-muted-foreground">{secondaryEmail}</span>}
         </div>
         <motion.span
-          animate={{ rotate: open ? 180 : 0 }}
-          transition={{ duration: 0.2 }}
+          animate={open ? "open" : "closed"}
+          variants={chevronVariants}
           className="h-4 w-4 text-muted-foreground"
         >
           <ChevronDown className="h-4 w-4" />
@@ -301,19 +353,20 @@ function ProfileMenu({
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95, transition: { duration: 0.15 } }}
-            transition={{ type: "spring", damping: 20, stiffness: 300 }}
-            className="absolute right-0 z-50 mt-3 w-72 origin-top-right rounded-2xl border border-border/60 bg-white p-2 shadow-2xl dark:border-slate-800 dark:bg-slate-900"
+            exit={{ opacity: 0, y: 6, scale: 0.95, transition: { duration: 0.18 } }}
+            transition={{ type: "spring", damping: 18, stiffness: 260 }}
+            className="absolute right-0 z-50 mt-3 w-72 origin-top-right overflow-hidden rounded-xl border border-border/60 bg-white p-2 shadow-2xl backdrop-blur-md dark:border-slate-800 dark:bg-slate-900"
           >
             <motion.div
               initial="closed"
               animate="open"
               exit="closed"
               variants={wrapperVariants}
+              style={{ originY: "top" }}
             >
-              <motion.div 
+              <motion.div
                 className="flex items-center gap-3 rounded-xl bg-muted/20 p-3"
                 variants={itemVariants}
               >
@@ -327,10 +380,7 @@ function ProfileMenu({
                 </div>
               </motion.div>
 
-              <motion.div 
-                className="my-3 h-px bg-border/60"
-                variants={itemVariants}
-              />
+              <motion.div className="my-3 h-px bg-border/60" variants={itemVariants} />
 
               {!isDesktop && mobileView === "notifications" && (
                 <motion.div className="space-y-3" variants={itemVariants}>
@@ -409,7 +459,7 @@ function ProfileMenu({
                 </>
               )}
 
-              <motion.ul className="space-y-1">
+              <motion.ul className="space-y-1" variants={listVariants}>
                 {!isDesktop && mobileView === "menu" && (
                   <>
                     <motion.li variants={itemVariants}>
@@ -434,10 +484,7 @@ function ProfileMenu({
                 )}
                 {(isDesktop || mobileView === "menu") &&
                   actions.map((action) => (
-                    <motion.li
-                      key={action.label}
-                      variants={itemVariants}
-                    >
+                    <motion.li key={action.label} variants={itemVariants}>
                       <motion.button
                         type="button"
                         onClick={() => {
@@ -446,21 +493,21 @@ function ProfileMenu({
                             console.error("Profile action failed", error),
                           );
                         }}
-                        className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-muted-foreground transition hover:bg-muted/30 hover:text-foreground"
+                        className="flex w-full items-center gap-3 rounded-xl bg-transparent px-3 py-2 text-left text-muted-foreground transition hover:bg-primary/5 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.98 }}
                       >
                         <motion.span
-                          className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary"
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                          className="flex h-9 w-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-primary"
+                          variants={actionIconVariants}
                         >
                           <action.icon className="h-4 w-4" />
                         </motion.span>
                         <div className="flex-1">
-                          <div className="text-sm font-medium text-foreground">{action.label}</div>
+                          <div className="text-sm font-semibold text-foreground">{action.label}</div>
                           <div className="text-xs text-muted-foreground">{action.description}</div>
                         </div>
+                        <ArrowUpRight className="h-4 w-4 text-muted-foreground/60" />
                       </motion.button>
                     </motion.li>
                   ))}
@@ -512,7 +559,57 @@ function DashboardHeader({
   onLogout,
   now,
 }: HeaderProps) {
-  const { isMobileOpen, toggleMobileSidebar, toggleSidebar, isExpanded } = useSidebar();
+  const { isMobileOpen, toggleMobileSidebar, toggleSidebar, isExpanded, isHovered } = useSidebar();
+  const isSidebarWide = isExpanded || isHovered;
+
+  const greeting = useMemo(() => {
+    const hour = now.getHours();
+    if (hour < 5) return { text: "Good night", tone: "night", icon: MoonStar };
+    if (hour < 12) return { text: "Good morning", tone: "morning", icon: Sunrise };
+    if (hour < 17) return { text: "Good afternoon", tone: "day", icon: Sun };
+    if (hour < 20) return { text: "Good evening", tone: "evening", icon: Sunset };
+    return { text: "Good night", tone: "night", icon: MoonStar };
+  }, [now]);
+
+  const toneTokens: Record<string, { badge: string; accent: string }> = {
+    morning: {
+      badge: "bg-amber-50 text-amber-600 dark:bg-amber-500/15 dark:text-amber-200",
+      accent: "text-amber-600 dark:text-amber-200",
+    },
+    day: {
+      badge: "bg-sky-50 text-sky-600 dark:bg-sky-500/15 dark:text-sky-200",
+      accent: "text-sky-600 dark:text-sky-200",
+    },
+    evening: {
+      badge: "bg-purple-50 text-purple-600 dark:bg-purple-500/15 dark:text-purple-200",
+      accent: "text-purple-600 dark:text-purple-200",
+    },
+    night: {
+      badge: "bg-slate-900/80 text-slate-100 dark:bg-slate-900/60 dark:text-slate-100",
+      accent: "text-slate-800 dark:text-slate-100",
+    },
+  };
+
+  const toneBadgeClasses = toneTokens[greeting.tone]?.badge ?? toneTokens.day.badge;
+  const toneAccentClasses = toneTokens[greeting.tone]?.accent ?? toneTokens.day.accent;
+  const GreetingIcon = greeting.icon;
+
+  const timeParts = useMemo(() => {
+    const formatter = new Intl.DateTimeFormat(undefined, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    });
+    const parts = formatter.formatToParts(now);
+    const getPart = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value ?? "";
+    return {
+      hour: getPart("hour"),
+      minute: getPart("minute"),
+      second: getPart("second"),
+      dayPeriod: getPart("dayPeriod"),
+    };
+  }, [now]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-white/95 backdrop-blur-xl dark:bg-slate-950/90">
@@ -546,14 +643,28 @@ function DashboardHeader({
           </div>
         </div>
 
-        <div className={cn("flex items-center gap-2 sm:gap-3", isMobileOpen ? "hidden lg:flex" : "")}>
-          <div className="hidden min-w-[140px] flex-col text-right md:flex">
-            <span className="text-sm font-semibold text-foreground">
-              {now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {now.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
-            </span>
+        <div className={cn("flex items-center gap-2 sm:gap-3", isMobileOpen ? "hidden lg:flex" : "")}> 
+          <div className="hidden items-center gap-3 md:flex">
+            <div className="flex items-center gap-2">
+              <span className={cn("flex h-9 w-9 items-center justify-center rounded-full border border-border/50", toneBadgeClasses)}>
+                <GreetingIcon className="h-4 w-4" />
+              </span>
+              <div className="flex flex-col text-left">
+                <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Status</span>
+                <span className={cn("text-sm font-semibold leading-tight", toneAccentClasses)}>{greeting.text}</span>
+              </div>
+            </div>
+            <div className="hidden h-8 w-px bg-border/60 lg:block" />
+            <div className="flex flex-col text-right text-foreground">
+              <span className="whitespace-nowrap text-sm font-semibold leading-tight">
+                {timeParts.hour}:{timeParts.minute}:
+                <span className="text-red-500 dark:text-red-500">{timeParts.second}</span>
+                {timeParts.dayPeriod ? ` ${timeParts.dayPeriod}` : ""}
+              </span>
+              <span className="whitespace-nowrap text-[11px] text-muted-foreground">
+                {now.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric", year: "numeric" })}
+              </span>
+            </div>
           </div>
           <div className="relative hidden lg:block">
             <form onSubmit={onSearchSubmit}>
@@ -567,7 +678,10 @@ function DashboardHeader({
                     setSearchOpen(value.trim().length > 0);
                   }}
                   placeholder="Search the workspace..."
-                  className="w-80 rounded-2xl border border-border/60 bg-white pl-10 text-sm shadow-theme-xs dark:bg-slate-900"
+                  className={cn(
+                    "rounded-2xl border border-border/60 bg-white pl-10 text-sm shadow-theme-xs transition-[width] duration-200 ease-in-out dark:bg-slate-900",
+                    isSidebarWide ? "w-52" : "w-80",
+                  )}
                   onFocus={() => setSearchOpen(searchQuery.trim().length > 0)}
                   onBlur={() => setTimeout(() => setSearchOpen(false), 120)}
                 />
@@ -585,7 +699,10 @@ function DashboardHeader({
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 4 }}
                   transition={{ duration: 0.15, ease: "easeOut" }}
-                  className="absolute right-0 top-full z-40 mt-2 w-[320px] overflow-hidden rounded-2xl border border-border/60 bg-white/95 shadow-xl backdrop-blur dark:border-slate-800 dark:bg-slate-900/95"
+                  className={cn(
+                    "absolute right-0 top-full z-40 mt-2 overflow-hidden rounded-2xl border border-border/60 bg-white/95 shadow-xl backdrop-blur dark:border-slate-800 dark:bg-slate-900/95",
+                    isSidebarWide ? "w-[240px]" : "w-[320px]",
+                  )}
                   onMouseDown={(event) => event.preventDefault()}
                 >
                   <SearchResultsList
@@ -687,6 +804,7 @@ function ShellContent({ children }: PropsWithChildren) {
           { label: "AI Assistant", path: "/assistant" },
         ],
       },
+      { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
       { label: "AI Learning Insights", path: "/insights", icon: BarChart3 },
       { label: "Upcoming Tasks", path: "/tasks", icon: CalenderIcon },
       { label: "My Courses", path: "/courses", icon: PageIcon },
@@ -700,8 +818,14 @@ function ShellContent({ children }: PropsWithChildren) {
       { label: "Assessments", path: "/assessments", icon: DocsIcon },
       { label: "Career Guidance", path: "/career", icon: BriefcaseIcon },
       { label: "Learning Reports", path: "/reports", icon: FileText },
-      { label: "Contact", path: "/contact", icon: MailIcon },
-      { label: "About", path: "/about", icon: Info },
+      {
+        label: "About & Support",
+        icon: Info,
+        subItems: [
+          { label: "About", path: "/about" },
+          { label: "Contact", path: "/contact" },
+        ],
+      },
     ],
     [isPremium],
   );

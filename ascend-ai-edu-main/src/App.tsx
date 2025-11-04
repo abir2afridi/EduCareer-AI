@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Students from "./pages/Students";
 import Quiz from "./pages/student/Quiz";
 import Courses from "./pages/Courses";
+import LeaderboardPage from "./pages/Leaderboard";
 import Insights from "./pages/Insights";
 import Tasks from "./pages/Tasks";
 import Learning from "./pages/Learning";
@@ -85,6 +86,16 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Quiz />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/leaderboard"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <LeaderboardPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

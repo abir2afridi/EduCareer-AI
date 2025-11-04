@@ -36,14 +36,7 @@ export default function AboutPage() {
     <div className="space-y-8 p-4 md:p-6">
       <div className="space-y-6 text-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="max-w-[360px] overflow-hidden rounded-3xl border border-border/40 bg-muted/30 p-4 shadow-sm">
-            <DotLottieReact
-              src="https://lottie.host/50165e74-16b6-4bf9-afc7-63c4b1439cb2/O6WmCfMIAP.lottie"
-              loop
-              autoplay
-              style={{ width: "100%" }}
-            />
-          </div>
+          <DotLottieReact src="https://lottie.host/6d8dcd6b-e6cc-4e60-8b27-712b49f0b3f6/QZkjUXZ6nq.lottie" loop autoplay style={{ width: "520px", maxWidth: "100%" }} />
           <h1 className="text-4xl font-bold text-foreground">About EduCareer AI</h1>
         </div>
         <div className="flex items-center justify-center gap-2">
