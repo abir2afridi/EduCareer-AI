@@ -16,12 +16,9 @@ import {
   BarChart2,
   Users2,
   FileText,
-  Sunrise,
-  Sun,
-  Sunset,
-  MoonStar,
   Trophy,
 } from "lucide-react";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { SidebarProvider, useSidebar } from "./SidebarContext";
@@ -564,11 +561,11 @@ function DashboardHeader({
 
   const greeting = useMemo(() => {
     const hour = now.getHours();
-    if (hour < 5) return { text: "Good night", tone: "night", icon: MoonStar };
-    if (hour < 12) return { text: "Good morning", tone: "morning", icon: Sunrise };
-    if (hour < 17) return { text: "Good afternoon", tone: "day", icon: Sun };
-    if (hour < 20) return { text: "Good evening", tone: "evening", icon: Sunset };
-    return { text: "Good night", tone: "night", icon: MoonStar };
+    if (hour < 5) return { text: "Good night", tone: "night" };
+    if (hour < 12) return { text: "Good morning", tone: "morning" };
+    if (hour < 17) return { text: "Good afternoon", tone: "day" };
+    if (hour < 20) return { text: "Good evening", tone: "evening" };
+    return { text: "Good night", tone: "night" };
   }, [now]);
 
   const toneTokens: Record<string, { badge: string; accent: string }> = {
@@ -592,7 +589,13 @@ function DashboardHeader({
 
   const toneBadgeClasses = toneTokens[greeting.tone]?.badge ?? toneTokens.day.badge;
   const toneAccentClasses = toneTokens[greeting.tone]?.accent ?? toneTokens.day.accent;
-  const GreetingIcon = greeting.icon;
+  const statusAnimations: Record<string, string> = {
+    morning: "https://lottie.host/e9ce012c-b585-436a-b86e-b6e5c0c3d5be/UL0zc5sL2l.lottie",
+    day: "https://lottie.host/d37d2925-3fb2-40cb-a0be-98dc9c993973/kQU6HSKQNs.lottie",
+    evening: "https://lottie.host/038c42e0-b889-44bc-bfda-0b8d504107e3/q2148hrt6Z.lottie",
+    night: "https://lottie.host/76b7665b-4947-4863-8f49-672c85bac10f/lAhTmtUjp1.lottie",
+  };
+  const statusAnimationSrc = statusAnimations[greeting.tone];
 
   const timeParts = useMemo(() => {
     const formatter = new Intl.DateTimeFormat(undefined, {
@@ -645,9 +648,11 @@ function DashboardHeader({
 
         <div className={cn("flex items-center gap-2 sm:gap-3", isMobileOpen ? "hidden lg:flex" : "")}> 
           <div className="hidden items-center gap-3 md:flex">
-            <div className="flex items-center gap-2">
-              <span className={cn("flex h-9 w-9 items-center justify-center rounded-full border border-border/50", toneBadgeClasses)}>
-                <GreetingIcon className="h-4 w-4" />
+            <div className="flex items-center gap-3">
+              <span className={cn("flex h-12 w-12 items-center justify-center rounded-full border border-border/50 p-1", toneBadgeClasses)}>
+                {statusAnimationSrc ? (
+                  <DotLottieReact src={statusAnimationSrc} loop autoplay style={{ height: "100%", width: "100%" }} />
+                ) : null}
               </span>
               <div className="flex flex-col text-left">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.3em] text-muted-foreground">Status</span>
