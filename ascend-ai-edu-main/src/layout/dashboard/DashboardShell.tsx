@@ -582,7 +582,7 @@ function DashboardHeader({
       accent: "text-purple-600 dark:text-purple-200",
     },
     night: {
-      badge: "bg-slate-900/80 text-slate-100 dark:bg-slate-900/60 dark:text-slate-100",
+      badge: "bg-white text-slate-800 dark:bg-slate-900/60 dark:text-slate-100",
       accent: "text-slate-800 dark:text-slate-100",
     },
   };
@@ -593,7 +593,7 @@ function DashboardHeader({
     morning: "https://lottie.host/e9ce012c-b585-436a-b86e-b6e5c0c3d5be/UL0zc5sL2l.lottie",
     day: "https://lottie.host/d37d2925-3fb2-40cb-a0be-98dc9c993973/kQU6HSKQNs.lottie",
     evening: "https://lottie.host/038c42e0-b889-44bc-bfda-0b8d504107e3/q2148hrt6Z.lottie",
-    night: "https://lottie.host/76b7665b-4947-4863-8f49-672c85bac10f/lAhTmtUjp1.lottie",
+    night: "https://lottie.host/639a1af4-33fd-4ad8-8fe7-668034d4a73b/Hy5DRNvZCP.lottie",
   };
   const statusAnimationSrc = statusAnimations[greeting.tone];
 
