@@ -1,3 +1,4 @@
+// @ts-ignore - Remote imports are resolved by Deno when deploying Supabase Edge Functions.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -5,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-serve(async (req) => {
+serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -17,7 +18,10 @@ serve(async (req) => {
       throw new Error("Message is required");
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const denoEnv = (globalThis as { Deno?: { env: { get: (key: string) => string | undefined } } }).Deno?.env;
+    const LOVABLE_API_KEY =
+      denoEnv?.get("LOVABLE_API_KEY") ??
+      (typeof process !== "undefined" ? process.env?.LOVABLE_API_KEY : undefined);
     if (!LOVABLE_API_KEY) {
       throw new Error("LOVABLE_API_KEY not configured");
     }

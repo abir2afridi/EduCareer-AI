@@ -3,10 +3,36 @@ service cloud.firestore {
   match /databases/{database}/documents {
     match /students/{studentId} {
       allow read: if request.auth != null && (request.auth.uid == studentId || request.auth.token.role == "admin");
+      allow write: if request.auth != null && (request.auth.uid == studentId || request.auth.token.role == "admin");
+    }
+    match /profileChangeRequests/{requestId} {
+      allow read: if request.auth != null && (
+        request.auth.token.role == "admin" || request.auth.uid == resource.data.uid
+      );
+
+      allow create: if request.auth != null && request.auth.uid == request.resource.data.uid;
+
+      allow update: if request.auth != null && request.auth.token.role == "admin";
+
+      allow delete: if false;
+    }
+    match /quizAttempts/{studentId} {
+      allow read: if request.auth != null && (request.auth.uid == studentId || request.auth.token.role == "admin");
       allow write: if request.auth != null && request.auth.uid == studentId;
+
+      match /attempts/{attemptId} {
+        allow read: if request.auth != null && (request.auth.uid == studentId || request.auth.token.role == "admin");
+        allow create: if request.auth != null && request.auth.uid == studentId;
+        allow update, delete: if false;
+      }
     }
     match /adminNotifications/{docId} {
       allow read, write: if request.auth != null && request.auth.token.role == "admin";
+    }
+    match /studentNotifications/{studentId}/messages/{messageId} {
+      allow read: if request.auth != null && (request.auth.uid == studentId || request.auth.token.role == "admin");
+      allow create: if request.auth != null && (request.auth.uid == studentId || request.auth.token.role == "admin");
+      allow update, delete: if false;
     }
     match /{document=**} {
       allow read: if request.auth != null;

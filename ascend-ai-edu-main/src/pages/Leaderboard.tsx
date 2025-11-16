@@ -256,6 +256,9 @@ export default function LeaderboardPage() {
 
         snapshot.docs.forEach((docSnapshot) => {
           const data = docSnapshot.data() as DocumentData;
+          if (data.source === "careerGuidance") {
+            return;
+          }
           const uid = typeof data.studentUid === "string" ? data.studentUid : null;
           if (!uid) return;
 

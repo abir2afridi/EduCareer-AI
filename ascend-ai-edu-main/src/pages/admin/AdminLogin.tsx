@@ -23,25 +23,33 @@ export default function AdminLogin() {
     async (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
       setIsSubmitting(true);
-      const success = await login({ email, password });
+
+      const result = await login({ email, password });
+
       setIsSubmitting(false);
 
-      if (!success) {
+      if (result.success) {
+        toast({
+          title: "Welcome back, Admin!",
+          description: "Redirecting to the admin dashboard...",
+        });
+
+        const redirectTo = (location.state as { from?: { pathname: string } })?.from?.pathname ?? "/admin/dashboard";
+        navigate(redirectTo, { replace: true });
+      } else {
+        const missingAdminClaim = "missingAdminClaim" in result && result.missingAdminClaim === true;
+        const errorMessage = "errorMessage" in result ? result.errorMessage : undefined;
+
+        const description = missingAdminClaim
+          ? "This account signed in successfully but does not have the required admin role claim. Please contact support to provision admin access."
+          : errorMessage ?? "Please verify your credentials and try again.";
+
         toast({
           variant: "destructive",
-          title: "Invalid credentials",
-          description: "Please verify your email and password and try again.",
+          title: missingAdminClaim ? "Insufficient privileges" : "Unable to authenticate",
+          description,
         });
-        return;
       }
-
-      toast({
-        title: "Welcome back, Admin!",
-        description: "Redirecting to the admin dashboard...",
-      });
-
-      const redirectTo = (location.state as { from?: { pathname: string } })?.from?.pathname ?? "/admin/dashboard";
-      navigate(redirectTo, { replace: true });
     },
     [email, password, login, toast, navigate, location.state],
   );

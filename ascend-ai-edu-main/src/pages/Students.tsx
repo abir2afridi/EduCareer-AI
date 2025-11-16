@@ -1,14 +1,23 @@
+import { useAuth } from "@/components/auth-provider";
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import {
   Card,
   CardHeader,
   CardContent,
   CardTitle,
   CardDescription,
-  CardFooter,
 } from "@/components/ui/card";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { useStudentProfile } from "@/hooks/useStudentProfile";
+import { useCareerSurvey } from "@/hooks/useCareerSurvey";
+import OverviewMetrics from "@/components/dashboard/OverviewMetrics";
+import MonthlySalesChart from "@/components/dashboard/MonthlySalesChart";
+import MonthlyTargetCard from "@/components/dashboard/MonthlyTargetCard";
+import PerformanceAreaChart from "@/components/dashboard/PerformanceAreaChart";
+import GeoDistributionCard from "@/components/dashboard/GeoDistributionCard";
+import RecentActivityTable from "@/components/dashboard/RecentActivityTable";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +45,10 @@ import {
   BookOpen,
   Trophy,
   ShieldCheck,
+  Activity,
+  Compass,
+  Clock4,
+  Users2,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -50,6 +63,9 @@ import {
   PieChart,
   Pie,
   Cell,
+  AreaChart,
+  Area,
+  Legend,
 } from "recharts";
 
 type ChatMessage = {
@@ -223,6 +239,56 @@ const statusEmoji: Record<UpcomingStatus, string> = {
 
 const pieColors = ["#6366F1", "#0EA5E9", "#10B981", "#F97316"];
 
+const habitProgress = [
+  {
+    title: "Focus blocks completed",
+    value: "8 / 10",
+    progress: 80,
+    insight: "Two more sessions to beat last week’s streak.",
+  },
+  {
+    title: "Practice quizzes taken",
+    value: "4 / 6",
+    progress: 66,
+    insight: "Target one stats quiz to lift accuracy by 5%.",
+  },
+  {
+    title: "Reflection entries logged",
+    value: "5 / 5",
+    progress: 100,
+    insight: "AI tagged two insights as high impact—review them Friday.",
+  },
+];
+
+const mentorSupport = {
+  mentorName: "Ayesha Rahman",
+  sessionTime: "Thursday · 4:00 PM",
+  meetingType: "Virtual meet",
+  agenda: [
+    "Review updated capstone slides",
+    "Lock internship shortlist",
+    "Plan weekend practice session",
+  ],
+};
+
+const pinnedResources = [
+  {
+    title: "Scholarship tracker",
+    description: "3 applications ready for submission. Add supporting docs before Monday.",
+    action: "Open tracker",
+  },
+  {
+    title: "AI mentor notes",
+    description: "Summary of last feedback cycle and action items agreed with Ayesha.",
+    action: "Review notes",
+  },
+  {
+    title: "Portfolio polish kit",
+    description: "UI checklist and code snippets to tighten accessibility before demo day.",
+    action: "Launch kit",
+  },
+];
+
 const initialChatMessages: ChatMessage[] = [
   {
     id: 1,
@@ -232,7 +298,10 @@ const initialChatMessages: ChatMessage[] = [
   },
 ];
 
-export default function Students() {
+export default function StudentDashboard() {
+  const { user } = useAuth();
+  const { profile } = useStudentProfile(user?.uid);
+  const { survey } = useCareerSurvey(user?.uid);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>(initialChatMessages);
   const [chatInput, setChatInput] = useState("");
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -335,37 +404,276 @@ export default function Students() {
     setChatInput("");
   };
 
+  const displayName = profile?.name ?? user?.displayName ?? "Sarah Johnson";
+  const primaryGoal = survey?.careerGoals?.[0] ?? "Finish ML Capstone";
+  const primaryTrack = survey?.studyTracks?.[0] ?? "AI Engineering";
+
+  const latestActivity = [
+    {
+      label: "Weekly Reflection",
+      value: "Complete today",
+      icon: Activity,
+    },
+    {
+      label: "Career Track",
+      value: primaryTrack,
+      icon: Compass,
+    },
+    {
+      label: "Next Milestone",
+      value: primaryGoal,
+      icon: Target,
+    },
+    {
+      label: "Mentor Sync",
+      value: "Book now",
+      icon: Users2,
+    },
+  ];
+
+  const learningPace = 12;
+
   return (
-    <div className="relative space-y-8 pb-24">
-      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
-        <div className="space-y-4">
-          <Badge variant="outline" className="w-fit uppercase tracking-widest">Student Intelligence</Badge>
-          <h2 className="text-3xl font-bold tracking-tight">Personalized Student Intelligence Hub</h2>
-          <p className="text-muted-foreground">
-            Monitor AI-guided mastery, upcoming nudges, and cohort health signals at a glance. Every data point refreshes in
-            real time so you can intervene before momentum dips.
-          </p>
-          <div className="grid gap-3 text-sm md:grid-cols-2">
-            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Focus Signal</p>
-              <p className="text-base font-semibold text-primary">ML labs flagged for review</p>
+    <div className="relative space-y-10 pb-24">
+      <section className="overflow-hidden rounded-4xl border border-border/40 bg-gradient-to-br from-primary/10 via-background to-background p-8 shadow-lg transition-all">
+        <div className="grid gap-8 lg:grid-cols-[1.6fr,1fr]">
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">Student Dashboard</Badge>
+              <span className="rounded-full bg-white/60 px-3 py-1 text-xs uppercase tracking-[0.35em] text-muted-foreground backdrop-blur">
+                Live · AI Powered
+              </span>
             </div>
-            <div className="rounded-2xl border border-border/60 bg-white/70 p-3 dark:bg-slate-950/60">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Cohort Pulse</p>
-              <p className="text-base font-semibold text-foreground">87% mastery trending upward</p>
+            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h1 className="text-4xl font-bold tracking-tight sm:text-4xl">Hey {displayName.split(" ")[0]}, here’s your focus for today</h1>
+                <p className="mt-3 max-w-2xl text-base text-muted-foreground">
+                  Your AI mentor lined up study blocks, tracked your progress, and surfaced the next best actions. Keep your streak alive by completing one focus area and checking in with your mentor.
+                </p>
+              </div>
+              <div className="flex items-center gap-4 rounded-3xl border border-border/50 bg-white/80 p-4 shadow-sm backdrop-blur dark:bg-slate-950/70">
+                <Avatar className="h-14 w-14 border border-white/70 shadow-md">
+                  <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
+                    {displayName
+                      .split(" ")
+                      .map((part) => part[0])
+                      .join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">This week’s momentum</p>
+                  <p className="text-2xl font-semibold text-foreground">{learningPace} hrs focused</p>
+                </div>
+              </div>
             </div>
+
+            <Tabs defaultValue="overview" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 rounded-3xl border border-border/50 bg-background/30 p-1">
+                <TabsTrigger value="overview" className="rounded-2xl text-xs uppercase tracking-widest">
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger value="wellbeing" className="rounded-2xl text-xs uppercase tracking-widest">
+                  Wellbeing
+                </TabsTrigger>
+                <TabsTrigger value="journey" className="rounded-2xl text-xs uppercase tracking-widest">
+                  Career Journey
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="overview" className="mt-6">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                  {latestActivity.map((item) => (
+                    <div
+                      key={item.label}
+                      className="flex items-start gap-4 rounded-3xl border border-border/50 bg-white/80 p-4 shadow-sm backdrop-blur transition hover:border-primary/40 dark:bg-slate-950/70"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
+                        <item.icon className="h-5 w-5 text-primary" />
+                      </span>
+                      <div>
+                        <p className="text-xs uppercase tracking-widest text-muted-foreground">{item.label}</p>
+                        <p className="mt-1 text-base font-semibold text-foreground">{item.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+              <TabsContent value="wellbeing" className="mt-6">
+                <div className="grid gap-4 md:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+                  <Card className="border-border/60 bg-white/85 backdrop-blur-md dark:bg-slate-950/70">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                      <div>
+                        <CardTitle className="text-base">Energy vs Focus</CardTitle>
+                        <CardDescription>See where your study energy peaks.</CardDescription>
+                      </div>
+                      <Clock4 className="h-5 w-5 text-primary" />
+                    </CardHeader>
+                    <CardContent className="h-[220px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart
+                          data={[
+                            { day: "Mon", energy: 68, focus: 62 },
+                            { day: "Tue", energy: 74, focus: 70 },
+                            { day: "Wed", energy: 80, focus: 78 },
+                            { day: "Thu", energy: 72, focus: 66 },
+                            { day: "Fri", energy: 64, focus: 60 },
+                            { day: "Sat", energy: 58, focus: 55 },
+                            { day: "Sun", energy: 62, focus: 59 },
+                          ]}
+                        >
+                          <defs>
+                            <linearGradient id="energyGradient" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="4 4" stroke="rgba(148, 163, 184, 0.25)" />
+                          <XAxis dataKey="day" stroke="currentColor" className="text-xs text-muted-foreground" />
+                          <YAxis stroke="currentColor" className="text-xs text-muted-foreground" domain={[40, 90]} />
+                          <Tooltip cursor={{ fill: "rgba(148, 163, 184, 0.12)" }} />
+                          <Legend verticalAlign="top" height={24} />
+                          <Area
+                            type="monotone"
+                            dataKey="energy"
+                            stroke="hsl(var(--primary))"
+                            fill="url(#energyGradient)"
+                            strokeWidth={2.5}
+                          />
+                          <Area type="monotone" dataKey="focus" stroke="#0EA5E9" fill="#0EA5E915" strokeWidth={2} />
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/60 bg-gradient-to-br from-primary/10 via-primary/5 to-white/60 backdrop-blur-md dark:from-primary/20 dark:via-primary/10 dark:to-slate-950/70">
+                    <CardHeader>
+                      <CardTitle className="text-base">Mindful Wins</CardTitle>
+                      <CardDescription>Celebrate small victories to stay energized.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm text-muted-foreground">
+                      <p>• Completed 3 focused Pomodoros yesterday.</p>
+                      <p>• Logged gratitude entry about team hackathon.</p>
+                      <p>• Took a 20-minute outdoor walk after study block.</p>
+                      <Button className="mt-3 w-full gap-2" variant="secondary">
+                        Log a mindful habit
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+              <TabsContent value="journey" className="mt-6">
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+                  <Card className="border-border/60 bg-white/85 backdrop-blur-md dark:bg-slate-950/70">
+                    <CardHeader>
+                      <CardTitle className="text-base">Career GPS</CardTitle>
+                      <CardDescription>AI tracks how close you are to your target role.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-3xl border border-border/50 p-4">
+                          <p className="text-xs uppercase tracking-widest text-muted-foreground">Desired role</p>
+                          <p className="mt-1 text-lg font-semibold text-foreground">{primaryGoal}</p>
+                        </div>
+                        <div className="rounded-3xl border border-border/50 p-4">
+                          <p className="text-xs uppercase tracking-widest text-muted-foreground">Readiness</p>
+                          <p className="mt-1 text-lg font-semibold text-foreground">70%</p>
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-muted-foreground">Milestone roadmap</p>
+                        <div className="mt-3 grid gap-3 text-sm">
+                          {["Polish portfolio", "Complete AI quiz", "Prepare mentor questions"].map((action, index) => (
+                            <div key={action + index} className="flex items-start gap-3 rounded-2xl border border-border/50 p-3">
+                              <span className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs text-primary">
+                                {index + 1}
+                              </span>
+                              <div>
+                                <p className="font-medium text-foreground">{action}</p>
+                                <p className="text-muted-foreground">Auto-generated milestone from your AI mentor.</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="border-border/60 bg-white/85 backdrop-blur-md dark:bg-slate-950/70">
+                    <CardHeader>
+                      <CardTitle className="text-base">Momentum Log</CardTitle>
+                      <CardDescription>Last 7 days of notable actions.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <ScrollArea className="h-[220px] pr-2">
+                        <div className="space-y-3 text-sm text-muted-foreground">
+                          {["Submitted AI ethics case study (97%)", "Booked mentor session for Thursday", "Completed adaptive quiz: Neural Networks", "Shared capstone draft in cohort channel"].map((event, index) => (
+                            <div key={event + index} className="flex items-start gap-3 rounded-2xl border border-border/50 p-3">
+                              <span className="mt-1 text-lg">•</span>
+                              <p>{event}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+          <div className="relative">
+            <div className="absolute -left-16 top-16 hidden h-56 w-56 rounded-full bg-primary/20 blur-3xl md:block" />
+            <div className="absolute -right-12 bottom-12 hidden h-64 w-64 rounded-full bg-primary/25 blur-3xl md:block" />
+            <Card className="relative z-10 border-none bg-gradient-to-br from-primary/90 via-primary to-primary/80 p-6 text-primary-foreground shadow-xl">
+              <CardHeader className="space-y-4">
+                <CardTitle className="text-xl font-semibold">Today’s suggested focus stack</CardTitle>
+                <CardDescription className="text-primary-foreground/80">
+                  AI curated these three micro-actions to keep your streak alive.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3">
+                    <span className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">1</span>
+                    <div>
+                      <p className="font-semibold">Review ML Lab highlights</p>
+                      <p className="text-primary-foreground/70">10-minute walkthrough of flagged lab exercises.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3">
+                    <span className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">2</span>
+                    <div>
+                      <p className="font-semibold">Apply mentor feedback</p>
+                      <p className="text-primary-foreground/70">Ship updates to your capstone slides before Thursday.</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-2xl bg-white/10 p-3">
+                    <span className="mt-1 flex h-5 w-5 items-center justify-center rounded-full bg-white/20 text-xs">3</span>
+                    <div>
+                      <p className="font-semibold">Log a reflection</p>
+                      <p className="text-primary-foreground/70">Capture one aha moment from today’s study block.</p>
+                    </div>
+                  </div>
+                </div>
+                <Button variant="secondary" className="w-full justify-center gap-2 bg-white/15 text-primary-foreground hover:bg-white/25">
+                  Start focus timer
+                  <Clock4 className="h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
-        <div className="relative flex items-center justify-center">
-          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
-          <DotLottieReact
-            src="https://lottie.host/8ab1d4c1-450c-4bb8-be4b-0fd1a9621598/knuLlkbhd3.lottie"
-            autoplay
-            loop
-            className="relative h-48 w-48 md:h-56 md:w-56"
-          />
+      </section>
+
+      <section className="space-y-6">
+        <OverviewMetrics />
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,2fr)_minmax(0,1.1fr)]">
+          <MonthlySalesChart />
+          <MonthlyTargetCard />
         </div>
-      </div>
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,1fr)]">
+          <PerformanceAreaChart />
+          <GeoDistributionCard />
+        </div>
+        <RecentActivityTable />
+      </section>
 
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1.5">
@@ -421,38 +729,50 @@ export default function Students() {
               </Card>
             );
           })}
-          <Card className="col-span-full overflow-hidden border-border/60 bg-gradient-to-br from-slate-50 via-white to-primary/5 p-6 backdrop-blur-md dark:from-slate-950/80 dark:via-slate-950/70 dark:to-primary/10">
-            <div className="grid gap-6 lg:grid-cols-[1fr,1fr]">
-              <div className="space-y-3">
-                <Badge variant="outline" className="uppercase tracking-widest">Manage Cohorts</Badge>
-                <h3 className="text-2xl font-semibold text-foreground">Student Intelligence Snapshot</h3>
+          <Card className="col-span-full overflow-hidden border-border/60 bg-gradient-to-br from-primary/5 via-white to-emerald-50 p-6 backdrop-blur-md dark:from-slate-950/80 dark:via-slate-950/70 dark:to-primary/10">
+            <div className="grid gap-6 lg:grid-cols-[1fr,1.2fr]">
+              <div className="space-y-4">
+                <Badge variant="outline" className="border-primary/40 bg-primary/10 text-primary">Progress Digest</Badge>
+                <h3 className="text-2xl font-semibold text-foreground">Where you shined this week</h3>
                 <p className="text-muted-foreground">
-                  Personalized analytics, AI nudges, and next actions surface for every cohort member. Sarahs profile
-                  updates in real time when she completes milestones or needs attention.
+                  Your GPA momentum stayed strong, attendance improved, and AI found two new focus areas worth exploring. Keep this pace to unlock the Scholarship milestone waiting for you.
                 </p>
                 <div className="grid gap-3 text-sm sm:grid-cols-3">
-                  <div className="rounded-2xl border border-border/60 bg-white/70 p-3 text-center dark:bg-slate-950/60">
-                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Mastery</p>
-                    <p className="text-xl font-semibold text-primary">87%</p>
+                  <div className="rounded-2xl border border-border/60 bg-white/75 p-3 text-center backdrop-blur-sm dark:bg-slate-950/60">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">GPA Trend</p>
+                    <p className="text-xl font-semibold text-primary">+0.12</p>
                   </div>
-                  <div className="rounded-2xl border border-border/60 bg-white/70 p-3 text-center dark:bg-slate-950/60">
-                    <p className="text-xs uppercase tracking-widest text-muted-foreground">AI Guidance</p>
-                    <p className="text-sm font-semibold text-secondary">Review ML labs</p>
+                  <div className="rounded-2xl border border-border/60 bg-white/75 p-3 text-center backdrop-blur-sm dark:bg-slate-950/60">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Attendance</p>
+                    <p className="text-xl font-semibold text-primary">94%</p>
                   </div>
-                  <div className="rounded-2xl border border-border/60 bg-white/70 p-3 text-center dark:bg-slate-950/60">
-                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Next Action</p>
-                    <p className="text-sm font-semibold text-accent">Mentor sync Thu</p>
+                  <div className="rounded-2xl border border-border/60 bg-white/75 p-3 text-center backdrop-blur-sm dark:bg-slate-950/60">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">New Focus</p>
+                    <p className="text-xl font-semibold text-primary">2 areas</p>
                   </div>
                 </div>
               </div>
-              <div className="relative flex items-center justify-center">
-                <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
-                <DotLottieReact
-                  src="https://lottie.host/8ab1d4c1-450c-4bb8-be4b-0fd1a9621598/knuLlkbhd3.lottie"
-                  autoplay
-                  loop
-                  className="relative h-48 w-48"
-                />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-slate-950/70">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Reflection streak</p>
+                  <p className="mt-2 text-3xl font-semibold text-foreground">5 days</p>
+                  <p className="mt-1 text-sm text-muted-foreground">AI has logged meaningful reflections every day this week.</p>
+                </div>
+                <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-slate-950/70">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Scholarship readiness</p>
+                  <p className="mt-2 text-3xl font-semibold text-foreground">78%</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Complete one more capstone milestone to cross 80%.</p>
+                </div>
+                <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-slate-950/70">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Mentor sentiment</p>
+                  <p className="mt-2 text-3xl font-semibold text-foreground">Positive</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Your mentor noted great progress on UI polish.</p>
+                </div>
+                <div className="rounded-3xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-slate-950/70">
+                  <p className="text-xs uppercase tracking-widest text-muted-foreground">Weekly focus</p>
+                  <p className="mt-2 text-3xl font-semibold text-foreground">Design systems</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Stay in flow and submit the design critique by Friday.</p>
+                </div>
               </div>
             </div>
           </Card>

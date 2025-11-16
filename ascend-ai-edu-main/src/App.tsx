@@ -5,8 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import Dashboard from "./pages/Dashboard";
-import Students from "@/pages/Students";
+import StudentDashboardPage from "@/pages/Students";
 import StudentProfilePage from "@/pages/StudentProfile";
 import Quiz from "./pages/student/Quiz";
 import Courses from "./pages/Courses";
@@ -18,10 +17,15 @@ import Analytics from "./pages/Analytics";
 import Teachers from "./pages/Teachers";
 import Assessments from "./pages/Assessments";
 import Career from "./pages/Career";
+import CareerSurveyPage from "./pages/career-guidance/CareerSurveyPage";
+import CareerDocumentsPage from "./pages/career-guidance/CareerDocumentsPage";
+import CareerAssessmentPage from "./pages/career-guidance/CareerAssessmentPage";
+import CareerResultsPage from "./pages/career-guidance/CareerResultsPage";
 import Reports from "./pages/Reports";
 import Research from "./pages/Research";
 import Assistant from "./pages/Assistant";
 import Chat from "./pages/FriendsAndMessages";
+import DiscoverFriends from "./pages/DiscoverFriends";
 import EmailInbox from "./pages/EmailInbox";
 import EmailDetails from "./pages/EmailDetails";
 import Settings from "./pages/Settings";
@@ -66,7 +70,7 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <Dashboard />
+                  <StudentDashboardPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -77,6 +81,16 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Chat />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/discover-friends"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <DiscoverFriends />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -106,7 +120,7 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <Students />
+                  <StudentDashboardPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -197,6 +211,46 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Career />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/career-guidance/survey"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <CareerSurveyPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/career-guidance/documents"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <CareerDocumentsPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/career-guidance/assessment"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <CareerAssessmentPage />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/career-guidance/results"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <CareerResultsPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }

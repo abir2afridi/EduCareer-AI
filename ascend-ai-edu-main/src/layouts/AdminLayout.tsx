@@ -228,9 +228,12 @@ export function AdminLayout() {
     setSearchQuery("");
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate("/admin/login", { replace: true });
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } finally {
+      navigate("/admin/login", { replace: true });
+    }
   };
 
   const renderNavItem = (item: NavItem, { collapsed, onNavigate }: { collapsed?: boolean; onNavigate?: () => void } = {}) => {

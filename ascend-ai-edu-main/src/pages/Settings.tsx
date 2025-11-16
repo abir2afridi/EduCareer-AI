@@ -4,14 +4,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { User, Bell, Lock, Palette, Database, Shield } from "lucide-react";
+import { User, Bell, Lock, Palette, Database, Shield, Mail, CalendarCheck, GraduationCap, Megaphone, Briefcase, MonitorCog, Sparkles, Activity } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/components/auth-provider";
 import { useStudentProfile } from "@/hooks/useStudentProfile";
-import { submitProfileChangeRequest, addAdminNotification, addStudentNotification, markProfileChangePending, PROFILE_CHANGE_COOLDOWN_MS } from "@/lib/firebaseHelpers";
+import { submitProfileChangeRequest, addAdminNotification, addStudentNotification, markProfileChangePending, PROFILE_CHANGE_COOLDOWN_MS, getUserSettings, saveUserSettings, type UserSettingsDocument } from "@/lib/firebaseHelpers";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -39,6 +42,38 @@ const defaultPasswordForm = () => ({
   confirmPassword: "",
 });
 
+const SettingRow = ({
+  icon: Icon,
+  title,
+  description,
+  action,
+  disabled,
+}: {
+  icon: LucideIcon;
+  title: string;
+  description: string;
+  action: React.ReactNode;
+  disabled?: boolean;
+}) => (
+  <div
+    className={cn(
+      "flex items-center justify-between gap-4 rounded-2xl border border-border/40 bg-muted/10 p-4",
+      disabled && "opacity-70"
+    )}
+  >
+    <div className="flex items-start gap-3">
+      <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <p className="font-medium text-sm leading-tight text-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground">{description}</p>
+      </div>
+    </div>
+    <div className="flex items-center gap-3">{action}</div>
+  </div>
+);
+
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -52,6 +87,9 @@ export default function Settings() {
   const [passwordForm, setPasswordForm] = useState(defaultPasswordForm);
   const [passwordErrors, setPasswordErrors] = useState<Partial<Record<keyof ReturnType<typeof defaultPasswordForm>, string>>>({});
   const [isPasswordUpdating, setIsPasswordUpdating] = useState(false);
+  const [userSettings, setUserSettings] = useState<UserSettingsDocument | null>(null);
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
+  const [isSettingsSaving, setIsSettingsSaving] = useState(false);
 
   const cooldownRemainingMs = useMemo(() => {
     if (!cooldownUntil) return 0;
@@ -118,6 +156,37 @@ export default function Settings() {
     }, 1000);
     return () => window.clearInterval(interval);
   }, [cooldownUntil]);
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    setIsSettingsLoading(true);
+    void getUserSettings(user.uid)
+      .then((data) => setUserSettings(data))
+      .finally(() => setIsSettingsLoading(false));
+  }, [user?.uid]);
+
+  const updateAndSave = useCallback(
+    async (updates: Partial<UserSettingsDocument>) => {
+      if (!user?.uid) return;
+      setIsSettingsSaving(true);
+      setUserSettings((prev) => {
+        const next: UserSettingsDocument = {
+          ...(prev ?? {}),
+          ...updates,
+          notifications: updates.notifications ? { ...(prev?.notifications ?? {}), ...updates.notifications } : prev?.notifications,
+          display: updates.display ? { ...(prev?.display ?? {}), ...updates.display } : prev?.display,
+          ai: updates.ai ? { ...(prev?.ai ?? {}), ...updates.ai } : prev?.ai,
+        };
+        return next;
+      });
+      try {
+        await saveUserSettings(user.uid, updates);
+      } finally {
+        setIsSettingsSaving(false);
+      }
+    },
+    [user?.uid],
+  );
 
   const handleChange = useCallback((field: keyof PersonalInfoForm, value: string) => {
     setFormState((prev) => ({ ...prev, [field]: value }));
@@ -284,26 +353,27 @@ export default function Settings() {
   }, [passwordForm, toast, user]);
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col-reverse items-start gap-6 rounded-3xl bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="mb-2 text-3xl font-bold gradient-text">Settings</h2>
-          <p className="max-w-xl text-muted-foreground">Manage your account details, security preferences, and notification settings from one place.</p>
+    <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] animate-fade-in">
+      <div className="space-y-6">
+        <div className="flex flex-col-reverse items-start gap-6 rounded-3xl bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="mb-2 text-3xl font-bold gradient-text">Settings</h2>
+            <p className="max-w-xl text-muted-foreground">Manage your account details, preferences, and security in one place.</p>
+          </div>
+          <div className="mx-auto w-full max-w-[220px] md:mx-0 md:w-auto">
+            <DotLottieReact src="https://lottie.host/b9f251c8-9f9e-46f3-9d33-1256953d8f52/vEvLUQtvpL.lottie" loop autoplay style={{ width: "100%", height: "100%" }} />
+          </div>
         </div>
-        <div className="mx-auto w-full max-w-[220px] md:mx-0 md:w-auto">
-          <DotLottieReact src="https://lottie.host/b9f251c8-9f9e-46f3-9d33-1256953d8f52/vEvLUQtvpL.lottie" loop autoplay style={{ width: "100%", height: "100%" }} />
-        </div>
-      </div>
 
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="glass">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="preferences">Preferences</TabsTrigger>
-        </TabsList>
+        <Tabs defaultValue="profile" className="space-y-6">
+          <TabsList className="glass">
+            <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="notifications">Notifications</TabsTrigger>
+            <TabsTrigger value="security">Security</TabsTrigger>
+            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="profile" className="space-y-6">
+          <TabsContent value="profile" className="space-y-6">
           <Card className="glass p-6">
             <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
               <User className="h-5 w-5 text-primary" />
@@ -439,48 +509,92 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="notifications" className="space-y-6">
-          <Card className="glass p-6">
-            <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
-              <Bell className="h-5 w-5 text-primary" />
-              Notification Preferences
-            </h3>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Email Notifications</p>
-                  <p className="text-sm text-muted-foreground">Receive updates via email</p>
-                </div>
-                <Switch defaultChecked />
+          <Card className="glass p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Bell className="h-5 w-5 text-primary" />
+                <h3 className="text-xl font-semibold">Notification Preferences</h3>
               </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Assignment Reminders</p>
-                  <p className="text-sm text-muted-foreground">Get notified about upcoming deadlines</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Grade Updates</p>
-                  <p className="text-sm text-muted-foreground">Alert when new grades are posted</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Course Announcements</p>
-                  <p className="text-sm text-muted-foreground">Important updates from instructors</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Career Opportunities</p>
-                  <p className="text-sm text-muted-foreground">Job matches and recommendations</p>
-                </div>
-                <Switch />
-              </div>
+              {isSettingsSaving ? (
+                <Badge variant="outline" className="rounded-full border-dashed">
+                  <Loader2 className="mr-1 h-3 w-3 animate-spin" /> Saving
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="rounded-full">
+                  Synced
+                </Badge>
+              )}
             </div>
+            {isSettingsLoading ? (
+              <div className="space-y-4">
+                {[0, 1, 2, 3].map((item) => (
+                  <Skeleton key={item} className="h-16 w-full rounded-2xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <SettingRow
+                  icon={Mail}
+                  title="Email Notifications"
+                  description="Receive important updates directly to your inbox."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch
+                      checked={Boolean(userSettings?.notifications?.email)}
+                      onCheckedChange={(v) => updateAndSave({ notifications: { email: v } })}
+                    />
+                  }
+                />
+                <SettingRow
+                  icon={CalendarCheck}
+                  title="Assignment Reminders"
+                  description="Never miss a deadline with timely reminders."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch
+                      checked={Boolean(userSettings?.notifications?.assignments)}
+                      onCheckedChange={(v) => updateAndSave({ notifications: { assignments: v } })}
+                    />
+                  }
+                />
+                <SettingRow
+                  icon={GraduationCap}
+                  title="Grade Alerts"
+                  description="Be informed when instructors publish new grades."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch
+                      checked={Boolean(userSettings?.notifications?.grades)}
+                      onCheckedChange={(v) => updateAndSave({ notifications: { grades: v } })}
+                    />
+                  }
+                />
+                <SettingRow
+                  icon={Megaphone}
+                  title="Course Announcements"
+                  description="Get notified about important course changes."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch
+                      checked={Boolean(userSettings?.notifications?.courseAnnouncements)}
+                      onCheckedChange={(v) => updateAndSave({ notifications: { courseAnnouncements: v } })}
+                    />
+                  }
+                />
+                <SettingRow
+                  icon={Briefcase}
+                  title="Career Opportunities"
+                  description="Discover internships and job openings curated for you."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch
+                      checked={Boolean(userSettings?.notifications?.career)}
+                      onCheckedChange={(v) => updateAndSave({ notifications: { career: v } })}
+                    />
+                  }
+                />
+              </div>
+            )}
           </Card>
         </TabsContent>
 
@@ -570,61 +684,92 @@ export default function Settings() {
         </TabsContent>
 
         <TabsContent value="preferences" className="space-y-6">
-          <Card className="glass p-6">
-            <h3 className="text-xl font-semibold mb-6 flex items-center gap-2">
+          <Card className="glass p-6 space-y-6">
+            <div className="flex items-center gap-2">
               <Palette className="h-5 w-5 text-primary" />
-              Display & Accessibility
-            </h3>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Compact Mode</p>
-                  <p className="text-sm text-muted-foreground">Reduce spacing and UI elements</p>
-                </div>
-                <Switch />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Show Animations</p>
-                  <p className="text-sm text-muted-foreground">Enable smooth transitions</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">High Contrast</p>
-                  <p className="text-sm text-muted-foreground">Improve text visibility</p>
-                </div>
-                <Switch />
-              </div>
+              <h3 className="text-xl font-semibold">Display & Accessibility</h3>
             </div>
+            {isSettingsLoading ? (
+              <div className="space-y-4">
+                {[0, 1, 2].map((item) => (
+                  <Skeleton key={item} className="h-16 w-full rounded-2xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <SettingRow
+                  icon={MonitorCog}
+                  title="Compact Mode"
+                  description="Reduce spacing to see more content on screen."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch checked={Boolean(userSettings?.display?.compact)} onCheckedChange={(v) => updateAndSave({ display: { compact: v } })} />
+                  }
+                />
+                <SettingRow
+                  icon={Sparkles}
+                  title="Show Animations"
+                  description="Enable smooth transitions and motion effects."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch checked={Boolean(userSettings?.display?.animations)} onCheckedChange={(v) => updateAndSave({ display: { animations: v } })} />
+                  }
+                />
+                <SettingRow
+                  icon={Activity}
+                  title="High Contrast"
+                  description="Boost accessibility with stronger color contrast."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch checked={Boolean(userSettings?.display?.highContrast)} onCheckedChange={(v) => updateAndSave({ display: { highContrast: v } })} />
+                  }
+                />
+              </div>
+            )}
           </Card>
 
-          <Card className="glass p-6">
-            <h3 className="text-xl font-semibold mb-6">AI Assistant Preferences</h3>
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Proactive Suggestions</p>
-                  <p className="text-sm text-muted-foreground">AI recommends actions automatically</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Learning Style Adaptation</p>
-                  <p className="text-sm text-muted-foreground">Personalize content delivery</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between p-4 rounded-lg bg-muted/20">
-                <div>
-                  <p className="font-medium">Performance Tracking</p>
-                  <p className="text-sm text-muted-foreground">Allow AI to track study patterns</p>
-                </div>
-                <Switch defaultChecked />
-              </div>
+          <Card className="glass p-6 space-y-6">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h3 className="text-xl font-semibold">AI Assistant Preferences</h3>
             </div>
+            {isSettingsLoading ? (
+              <div className="space-y-4">
+                {[0, 1, 2].map((item) => (
+                  <Skeleton key={item} className="h-16 w-full rounded-2xl" />
+                ))}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <SettingRow
+                  icon={Sparkles}
+                  title="Proactive Suggestions"
+                  description="Let the assistant surface tips and shortcuts automatically."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch checked={Boolean(userSettings?.ai?.proactiveSuggestions)} onCheckedChange={(v) => updateAndSave({ ai: { proactiveSuggestions: v } })} />
+                  }
+                />
+                <SettingRow
+                  icon={MonitorCog}
+                  title="Learning Style Adaptation"
+                  description="Have guidance tailored to your preferred learning style."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch checked={Boolean(userSettings?.ai?.learningStyleAdaptation)} onCheckedChange={(v) => updateAndSave({ ai: { learningStyleAdaptation: v } })} />
+                  }
+                />
+                <SettingRow
+                  icon={Activity}
+                  title="Performance Tracking"
+                  description="Allow AI to analyze your study progress for smarter insights."
+                  disabled={isSettingsLoading}
+                  action={
+                    <Switch checked={Boolean(userSettings?.ai?.performanceTracking)} onCheckedChange={(v) => updateAndSave({ ai: { performanceTracking: v } })} />
+                  }
+                />
+              </div>
+            )}
           </Card>
 
           <Card className="glass p-6">
@@ -642,7 +787,89 @@ export default function Settings() {
             </div>
           </Card>
         </TabsContent>
-      </Tabs>
+        </Tabs>
+      </div>
+
+      <div className="space-y-6">
+        <Card className="glass p-6">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16">
+              <AvatarImage src={profile?.photoUrl ?? undefined} alt={profile?.name ?? user?.displayName ?? "User"} />
+              <AvatarFallback>{(profile?.name ?? user?.displayName ?? "?").slice(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-semibold text-foreground">{profile?.name ?? user?.displayName ?? "Your profile"}</h3>
+                <Badge variant="secondary" className="rounded-full">
+                  {profile?.department ?? "Student"}
+                </Badge>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {profile?.bio?.slice(0, 120) || "Keep your profile up to date to unlock personalized recommendations."}
+              </p>
+            </div>
+          </div>
+          <div className="mt-6 grid gap-3 text-xs text-muted-foreground">
+            <div className="flex items-center justify-between rounded-2xl bg-muted/10 px-3 py-2">
+              <span>Email</span>
+              <span className="font-medium text-foreground">{profile?.email ?? user?.email ?? "N/A"}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-2xl bg-muted/10 px-3 py-2">
+              <span>Phone</span>
+              <span className="font-medium text-foreground">{profile?.contactNumber || "Not provided"}</span>
+            </div>
+            <div className="flex items-center justify-between rounded-2xl bg-muted/10 px-3 py-2">
+              <span>Last updated</span>
+              <span className="font-medium text-foreground">{profile?.updatedAt ? "Recently" : "Pending"}</span>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="glass p-6 space-y-4">
+          <h3 className="text-base font-semibold text-foreground">Recent Account Activity</h3>
+          <ul className="space-y-3 text-xs text-muted-foreground">
+            <li className="flex items-start gap-3 rounded-2xl bg-muted/10 p-3">
+              <span className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
+              <div>
+                <p className="font-medium text-foreground">Profile information synced</p>
+                <p>We keep your profile in sync with admin approvals.</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3 rounded-2xl bg-muted/10 p-3">
+              <span className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
+              <div>
+                <p className="font-medium text-foreground">Security status</p>
+                <p>Password last updated when you ran the update password action.</p>
+              </div>
+            </li>
+            <li className="flex items-start gap-3 rounded-2xl bg-muted/10 p-3">
+              <span className="mt-0.5 h-2 w-2 rounded-full bg-primary" />
+              <div>
+                <p className="font-medium text-foreground">Notification preferences</p>
+                <p>Preferences are saved instantly to all devices.</p>
+              </div>
+            </li>
+          </ul>
+        </Card>
+
+        <Card className="glass p-6 space-y-4">
+          <h3 className="text-base font-semibold text-foreground">Need support?</h3>
+          <p className="text-sm text-muted-foreground">
+            Having trouble with your account or settings? Reach out and the EduCareer AI support team will assist you.
+          </p>
+          <div className="grid gap-3 text-sm">
+            <Button variant="default" className="rounded-2xl">
+              Contact Support
+            </Button>
+            <Button variant="secondary" className="rounded-2xl">
+              View Help Center
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Response time is typically under 24 hours.
+          </p>
+        </Card>
+      </div>
     </div>
   );
 }

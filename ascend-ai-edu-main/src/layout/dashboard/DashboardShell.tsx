@@ -799,8 +799,7 @@ function ShellContent({ children }: PropsWithChildren) {
 
   const navMain = useMemo<SidebarSection["items"]>(
     () => [
-      { label: "Dashboard", path: "/dashboard", icon: GridIcon },
-      { label: "Students", path: "/students", icon: GroupIcon },
+      { label: "Student Dashboard", path: "/dashboard", icon: GridIcon },
       {
         label: "AI Workspace",
         icon: Sparkles,
@@ -851,6 +850,11 @@ function ShellContent({ children }: PropsWithChildren) {
         label: "Chat",
         path: "/dashboard/chat",
         icon: ChatIcon,
+      },
+      {
+        label: "Discover Friends",
+        path: "/dashboard/discover-friends",
+        icon: GroupIcon,
       },
       { label: "Tasks", path: "/tasks", icon: TaskIcon },
       { label: "Settings", path: "/settings", icon: Settings },

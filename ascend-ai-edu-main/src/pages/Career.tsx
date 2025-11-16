@@ -1,6 +1,7 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { formatDistanceToNow } from "date-fns";
 import {
   Card,
   CardHeader,
@@ -12,555 +13,677 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  TrendingUp,
-  Target,
-  Upload,
-  ExternalLink,
-  Award,
+  ArrowRight,
   Sparkles,
-  Search,
+  FileText,
+  ClipboardList,
   Brain,
-  MessageCircle,
-  LineChart as LineChartIcon,
-  Layers,
-  Rocket,
+  CheckCircle2,
+  Circle,
+  CircleDashed,
+  Upload,
+  History,
+  ListChecks,
+  BookOpen,
+  ShieldCheck,
+  Target,
+  AlertTriangle,
+  GraduationCap,
+  Lock,
+  type LucideIcon,
 } from "lucide-react";
-import {
-  ResponsiveContainer,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  Tooltip,
-  Legend,
-  RadialBarChart,
-  RadialBar,
-  LineChart,
-  Line,
-  CartesianGrid,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useAuth } from "@/components/auth-provider";
+import { useCareerSurvey } from "@/hooks/useCareerSurvey";
+import { useCareerDocuments } from "@/hooks/useCareerDocuments";
+import { useCareerResults } from "@/hooks/useCareerResults";
+import { cn } from "@/lib/utils";
 
-type CareerMatch = {
-  id: string;
+type StepState = "complete" | "current" | "upcoming";
+
+type StepDefinition = {
+  key: string;
   title: string;
-  score: number;
-  demand: "High" | "Very High" | "Moderate";
-  salary: string;
-  growth: string;
-  skills: string[];
-  trend: { period: string; score: number }[];
-  readiness: number;
+  description: string;
+  href: string;
+  completed: boolean;
+  meta: string | null;
+  state: StepState;
+  order: number;
+  locked: boolean;
 };
 
-type SkillGap = {
-  skill: string;
-  current: number;
-  target: number;
-};
-
-type ResumeInsight = {
-  id: string;
+type QuickAction = {
+  key: string;
   label: string;
-  detail: string;
-  priority: "High" | "Medium" | "Low";
+  href: string;
+  icon: LucideIcon;
+  locked: boolean;
+  disabledMessage: string;
 };
 
-const careerMatches: CareerMatch[] = [
-  {
-    id: "match-1",
-    title: "AI Product Strategist",
-    score: 91,
-    demand: "Very High",
-    salary: "$120k - $178k",
-    growth: "+34%",
-    skills: ["Applied AI", "Product Vision", "Stakeholder Alignment", "Experimentation"],
-    trend: [
-      { period: "Apr", score: 62 },
-      { period: "May", score: 68 },
-      { period: "Jun", score: 72 },
-      { period: "Jul", score: 81 },
-      { period: "Aug", score: 87 },
-      { period: "Sep", score: 91 },
-    ],
-    readiness: 0.78,
-  },
-  {
-    id: "match-2",
-    title: "Data Science Consultant",
-    score: 86,
-    demand: "High",
-    salary: "$108k - $156k",
-    growth: "+29%",
-    skills: ["Statistical Modelling", "Client Advisory", "SQL", "Storytelling"],
-    trend: [
-      { period: "Apr", score: 58 },
-      { period: "May", score: 64 },
-      { period: "Jun", score: 70 },
-      { period: "Jul", score: 74 },
-      { period: "Aug", score: 82 },
-      { period: "Sep", score: 86 },
-    ],
-    readiness: 0.73,
-  },
-  {
-    id: "match-3",
-    title: "Innovation Engineer",
-    score: 82,
-    demand: "High",
-    salary: "$95k - $142k",
-    growth: "+26%",
-    skills: ["Prototyping", "Cloud Services", "ML Ops", "Design Thinking"],
-    trend: [
-      { period: "Apr", score: 55 },
-      { period: "May", score: 60 },
-      { period: "Jun", score: 66 },
-      { period: "Jul", score: 70 },
-      { period: "Aug", score: 78 },
-      { period: "Sep", score: 82 },
-    ],
-    readiness: 0.69,
-  },
-];
-
-const skillRadar = [
-  { skill: "Data Analysis", current: 86, required: 90 },
-  { skill: "ML Engineering", current: 73, required: 88 },
-  { skill: "Cloud Architecture", current: 58, required: 82 },
-  { skill: "Product Strategy", current: 81, required: 85 },
-  { skill: "Communication", current: 76, required: 84 },
-];
-
-const skillPath: SkillGap[] = [
-  { skill: "Advanced MLOps", current: 52, target: 80 },
-  { skill: "Generative AI", current: 64, target: 88 },
-  { skill: "Business Storytelling", current: 70, target: 90 },
-];
-
-const resumeHighlights: ResumeInsight[] = [
-  {
-    id: "resume-1",
-    label: "Project Portfolio",
-    detail: "Add quantified impact for the Responsible AI audit project to boost recruiter visibility.",
-    priority: "High",
-  },
-  {
-    id: "resume-2",
-    label: "Keyword Density",
-    detail: "Include terms like 'retrieval augmented generation' and 'governance policy' for ATS alignment.",
-    priority: "Medium",
-  },
-  {
-    id: "resume-3",
-    label: "Leadership Snapshot",
-    detail: "Add a mini case study demonstrating cross-functional mentorship and hackathon facilitation.",
-    priority: "Low",
-  },
-];
-
-const trainingInventory = [
-  {
-    id: "train-1",
-    title: "Generative AI Product Strategy",
-    provider: "DeepLearning.AI",
-    format: "Course",
-    impact: "Closes strategy & communication gap",
-    link: "https://www.deeplearning.ai/",
-  },
-  {
-    id: "train-2",
-    title: "MLOps with Vertex AI Hands-on Lab",
-    provider: "Google Cloud",
-    format: "Lab",
-    impact: "Improves MLOps proficiency by 20%",
-    link: "https://cloud.google.com/",
-  },
-  {
-    id: "train-3",
-    title: "Executive Storytelling for Analysts",
-    provider: "Coursera",
-    format: "Workshop",
-    impact: "Elevates stakeholder alignment skills",
-    link: "https://www.coursera.org/",
-  },
-];
+const formatRelativeTime = (value: unknown): string | null => {
+  if (!value || typeof value !== "object" || !("toDate" in value) || typeof value.toDate !== "function") {
+    return null;
+  }
+  try {
+    return formatDistanceToNow(value.toDate(), { addSuffix: true });
+  } catch (error) {
+    console.warn("formatRelativeTime failed", error);
+    return null;
+  }
+};
 
 export default function Career() {
-  const [careerQuery, setCareerQuery] = useState("");
+  const { user } = useAuth();
+  const uid = user?.uid ?? null;
 
-  const readinessAverage = useMemo(() => {
-    const total = careerMatches.reduce((sum, match) => sum + match.readiness, 0);
-    return Math.round((total / careerMatches.length) * 100);
-  }, []);
+  const { survey, isLoading: surveyLoading } = useCareerSurvey(uid);
+  const { documents, isLoading: documentsLoading } = useCareerDocuments(uid);
+  const {
+    assessments,
+    attempts,
+    recommendations,
+    latestAssessment,
+    latestAttempt,
+    latestRecommendation,
+    isLoading: resultsLoading,
+  } = useCareerResults(uid);
 
-  const filteredMatches = useMemo(() => {
-    if (!careerQuery.trim()) return careerMatches;
-    return careerMatches.filter((match) => match.title.toLowerCase().includes(careerQuery.toLowerCase()));
-  }, [careerQuery]);
+  const surveyCompleted = Boolean(survey?.choices?.length === 3);
+  const documentsUploaded = documents.length > 0;
+  const assessmentAttempted = Boolean(latestAttempt);
+  const recommendationReady = Boolean(latestRecommendation);
+
+  const steps = useMemo<StepDefinition[]>(() => {
+    const base = [
+      {
+        key: "survey",
+        title: "Interest survey",
+        description: "Select and rank the top three careers you want to explore.",
+        href: "/career-guidance/survey",
+        completed: surveyCompleted,
+        meta: formatRelativeTime(survey?.updatedAt ?? survey?.createdAt),
+      },
+      {
+        key: "documents",
+        title: "Upload documents",
+        description: "Add transcripts or certificates for better AI context.",
+        href: "/career-guidance/documents",
+        completed: documentsUploaded,
+        meta: documents.length ? `${documents.length} uploaded` : null,
+      },
+      {
+        key: "assessment",
+        title: "40-question assessment",
+        description: "Run the tailored MCQ quiz and record your score.",
+        href: "/career-guidance/assessment",
+        completed: assessmentAttempted,
+        meta: latestAttempt?.submittedAt ? formatRelativeTime(latestAttempt.submittedAt) : null,
+      },
+      {
+        key: "results",
+        title: "AI recommendations",
+        description: "Review personalised career matches and study plan.",
+        href: "/career-guidance/results",
+        completed: recommendationReady,
+        meta: recommendations.length ? `${recommendations.length} saved` : null,
+      },
+    ];
+
+    const firstPendingIndex = base.findIndex((step) => !step.completed);
+    return base.map((step, index) => {
+      let state: StepState = "upcoming";
+      if (step.completed) {
+        state = "complete";
+      } else if (index === firstPendingIndex || firstPendingIndex === -1) {
+        state = "current";
+      }
+      const locked = state === "upcoming" && firstPendingIndex !== -1;
+      return { ...step, state, order: index + 1, locked };
+    });
+  }, [surveyCompleted, documentsUploaded, assessmentAttempted, recommendationReady, survey, documents, latestAttempt, recommendations]);
+
+  const surveyChoices = survey?.choices ?? [];
+  const hasSurveyChoices = surveyChoices.length > 0;
+  const primaryRecommendation = latestRecommendation?.recommendations?.[0] ?? null;
+  const additionalRecommendations = useMemo(
+    () => (latestRecommendation?.recommendations ?? []).slice(1, 4),
+    [latestRecommendation],
+  );
+  const recommendationFlags = useMemo(() => {
+    const flagsCandidate = latestRecommendation?.flags;
+    if (!Array.isArray(flagsCandidate)) return [];
+    return flagsCandidate
+      .map((flag) => (typeof flag === "string" ? flag.trim() : ""))
+      .filter((flag): flag is string => flag.length > 0);
+  }, [latestRecommendation]);
+  const mostRecentDocument = documents[0] ?? null;
+
+  const quickActions = useMemo<QuickAction[]>(
+    () => [
+      {
+        key: "survey",
+        label: "Update interest survey",
+        href: "/career-guidance/survey",
+        icon: ClipboardList,
+        locked: false,
+        disabledMessage: "Always available so you can adjust your top three goals.",
+      },
+      {
+        key: "documents",
+        label: "Review uploaded documents",
+        href: "/career-guidance/documents",
+        icon: FileText,
+        locked: !surveyCompleted,
+        disabledMessage: "Complete the survey first so the AI knows what to look for in your documents.",
+      },
+      {
+        key: "assessment",
+        label: "Retake AI assessment",
+        href: "/career-guidance/assessment",
+        icon: History,
+        locked: !surveyCompleted || !documentsUploaded,
+        disabledMessage: "Finish the survey and upload documents before attempting the AI quiz.",
+      },
+      {
+        key: "results",
+        label: "Browse recommendation archive",
+        href: "/career-guidance/results",
+        icon: Brain,
+        locked: !assessmentAttempted,
+        disabledMessage: "Complete at least one AI assessment attempt to unlock recommendations.",
+      },
+    ], [surveyCompleted, documentsUploaded, assessmentAttempted],
+  );
+
+  const completedSteps = steps.filter((step) => step.state === "complete").length;
+  const completionPercent = Math.round((completedSteps / steps.length) * 100);
+  const nextStep = steps.find((step) => step.state === "current") ?? steps[steps.length - 1];
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-6 rounded-3xl border border-border/50 bg-white/85 p-6 shadow-sm backdrop-blur-md dark:bg-slate-950/75 lg:grid-cols-[1.5fr,1fr]">
-        <div className="space-y-4">
-          <div className="space-y-1.5">
-            <h1 className="text-3xl font-bold tracking-tight">Career Guidance &amp; Recommendations</h1>
-            <p className="text-muted-foreground">
-              AI synthesizes your academic trajectory, portfolio strength, and market signals to curate next-step career journeys.
-              Stay aligned with market demand while your assistant refreshes guidance in real time.
-            </p>
-          </div>
-          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
-            <div className="relative sm:w-[280px]">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={careerQuery}
-                onChange={(event) => setCareerQuery(event.target.value)}
-                placeholder="Explore careers (e.g. AI Engineer)"
-                className="rounded-2xl border-border/60 pl-9"
-              />
+      <Card className="border-border/60 bg-white/90 shadow-lg backdrop-blur-md dark:bg-slate-950/80">
+        <CardHeader className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-primary">
+              <Sparkles className="h-4 w-4" /> Career guidance assistant
             </div>
-            <Button className="rounded-2xl bg-gradient-to-r from-primary to-primary/80">
-              <Upload className="h-4 w-4" />
-              <span className="ml-2">Upload Resume</span>
+            <div className="space-y-1">
+              <CardTitle className="text-3xl">Map your best-fit career in four guided steps</CardTitle>
+              <CardDescription className="max-w-3xl">
+                Complete the survey, upload supporting documents, finish the AI-generated assessment, and unlock tailored
+                recommendations with study plans.
+              </CardDescription>
+            </div>
+          </div>
+          <div className="w-full max-w-xs rounded-2xl border border-border/60 bg-background/80 p-4">
+            <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+              Completion
+              <span>{completionPercent}%</span>
+            </div>
+            <Progress value={completionPercent} className="mt-2 h-2" />
+            <p className="mt-3 text-sm text-muted-foreground">
+              {surveyLoading || documentsLoading || resultsLoading
+                ? "Checking your latest progress…"
+                : (
+                    <>
+                      Next up: <span className="font-medium text-foreground">{nextStep.title}</span>
+                    </>
+                  )}
+            </p>
+            <Button asChild size="sm" className="mt-3 w-full" variant="default" disabled={surveyLoading || documentsLoading || resultsLoading}>
+              <Link to={nextStep.href} className="flex items-center justify-center gap-2">
+                Continue <ArrowRight className="h-4 w-4" />
+              </Link>
             </Button>
           </div>
-        </div>
-        <div className="relative flex items-center justify-center">
-          <div className="absolute inset-0 rounded-3xl bg-primary/10 blur-3xl" />
-          <DotLottieReact
-            src="https://lottie.host/f266a8d8-866c-46b8-90da-90174eabe28b/zDXHtDOKAm.lottie"
-            autoplay
-            loop
-            className="relative h-48 w-48 md:h-56 md:w-56"
-          />
-        </div>
-      </div>
-
-      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24 }}>
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Card className="border-border/60 bg-white/85 backdrop-blur-md dark:bg-slate-950/75">
-            <CardContent className="flex flex-col gap-2 p-5">
-              <span className="text-sm text-muted-foreground">Current Skill Level (AI)</span>
-              <p className="text-3xl font-semibold text-foreground">Level 4</p>
-              <Badge variant="secondary" className="w-fit bg-primary/15 text-primary">
-                Benchmark: Advanced
-              </Badge>
-            </CardContent>
-          </Card>
-          <Card className="border-border/60 bg-white/85 backdrop-blur-md dark:bg-slate-950/75">
-            <CardContent className="flex flex-col gap-2 p-5">
-              <span className="text-sm text-muted-foreground">Matching Career Fields</span>
-              <p className="text-lg font-semibold text-foreground">AI Strategy • Data Science • Innovation</p>
-              <Badge variant="secondary" className="w-fit bg-sky-500/15 text-sky-500">
-                3 prime domains
-              </Badge>
-            </CardContent>
-          </Card>
-          <Card className="border-border/60 bg-white/85 backdrop-blur-md dark:bg-slate-950/75">
-            <CardContent className="flex flex-col gap-2 p-5">
-              <span className="text-sm text-muted-foreground">AI Confidence Score</span>
-              <p className="text-3xl font-semibold text-primary">88%</p>
-              <Badge variant="secondary" className="w-fit bg-emerald-500/15 text-emerald-500">
-                Calibrated weekly
-              </Badge>
-            </CardContent>
-          </Card>
-          <Card className="border-border/60 bg-white/85 backdrop-blur-md dark:bg-slate-950/75">
-            <CardContent className="flex flex-col gap-2 p-5">
-              <span className="text-sm text-muted-foreground">Job Readiness Index</span>
-              <div className="flex items-center gap-3">
-                <Progress value={readinessAverage} className="h-2 flex-1" />
-                <span className="text-lg font-semibold text-foreground">{readinessAverage}%</span>
-              </div>
-              <Badge variant="secondary" className="w-fit bg-amber-500/15 text-amber-500">
-                Based on AI readiness engine
-              </Badge>
-            </CardContent>
-          </Card>
-        </div>
-      </motion.section>
-
-      <motion.section initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.26, delay: 0.05 }}>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold">AI Career Match Recommendations</h2>
-            <Badge variant="secondary" className="bg-primary/10 text-primary">
-              {/* careerMatchAPI placeholder */}
-              AI curated list
-            </Badge>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            {filteredMatches.map((match) => (
-              <Card key={match.id} className="border-border/60 bg-white/90 backdrop-blur-md dark:bg-slate-950/75">
-                <CardHeader className="flex flex-col gap-2">
-                  <div className="flex flex-wrap items-center gap-3">
-                    <CardTitle className="text-xl">{match.title}</CardTitle>
-                    <Badge className="rounded-full bg-primary/15 text-primary">
-                      {match.score}% match
-                    </Badge>
-                  </div>
-                  <CardDescription className="flex flex-wrap items-center gap-3 text-sm">
-                    <span className="flex items-center gap-1 text-muted-foreground">
-                      <TrendingUp className="h-4 w-4 text-primary" /> {match.growth} growth
-                    </span>
-                    <span className="text-muted-foreground">Demand: {match.demand}</span>
-                    <span className="text-muted-foreground">Salary: {match.salary}</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4 lg:grid-cols-[2fr,1fr]">
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">Readiness</span>
-                        <span className="font-semibold text-foreground">{Math.round(match.readiness * 100)}%</span>
+        </CardHeader>
+        <CardContent className="grid gap-4 pt-0 md:grid-cols-2 xl:grid-cols-4">
+          {steps.map((step) => {
+            const Icon = step.state === "complete" ? CheckCircle2 : step.state === "current" ? CircleDashed : Circle;
+            const badgeText = step.state === "complete" ? "Completed" : step.state === "current" ? "In progress" : "Pending";
+            const orderClasses = cn(
+              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-semibold",
+              step.state === "complete"
+                ? "border-emerald-400 bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10"
+                : step.state === "current"
+                  ? "border-primary/70 bg-primary/10 text-primary"
+                  : "border-muted-foreground/30 text-muted-foreground",
+            );
+            return (
+              <Card key={step.key} className="border-border/60 bg-white/90 backdrop-blur-md dark:bg-slate-950/75">
+                <CardContent className="flex h-full flex-col gap-4 p-5">
+                  <div className="flex items-start gap-3">
+                    <div className={orderClasses}>{step.order}</div>
+                    <div className="flex flex-1 items-start gap-3">
+                      <Icon
+                        className={cn(
+                          "mt-0.5 h-5 w-5",
+                          step.state === "complete" ? "text-emerald-500" : step.state === "current" ? "text-primary" : "text-muted-foreground",
+                        )}
+                      />
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <h3 className="text-base font-semibold text-foreground">{step.title}</h3>
+                          <Badge
+                            variant={step.state === "complete" ? "secondary" : "outline"}
+                            className={cn("text-xs", step.state === "complete" ? "bg-emerald-500/15 text-emerald-600" : undefined)}
+                          >
+                            {badgeText}
+                          </Badge>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{step.description}</p>
+                        {step.meta ? <p className="text-xs text-muted-foreground">{step.meta}</p> : null}
                       </div>
-                      <Progress value={match.readiness * 100} className="h-2" />
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {match.skills.map((skill) => (
-                        <Badge key={skill} variant="secondary" className="rounded-2xl">
-                          {skill}
-                        </Badge>
-                      ))}
                     </div>
                   </div>
-                  <div className="h-32 rounded-2xl border border-border/60 p-2">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={match.trend}>
-                        <CartesianGrid strokeDasharray="4 4" stroke="rgba(148,163,184,0.25)" />
-                        <XAxis dataKey="period" hide />
-                        <YAxis domain={[40, 100]} hide />
-                        <Tooltip />
-                        <Line type="monotone" dataKey="score" stroke="hsl(var(--primary))" strokeWidth={3} dot={false} />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
+                  <div className="flex-1" />
+                  {step.locked ? (
+                    <Button variant="outline" size="sm" className="justify-between" disabled title="Complete the previous step to unlock this stage">
+                      <span>Locked until earlier steps finish</span>
+                      <Lock className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      asChild
+                      variant={step.state === "complete" ? "outline" : "default"}
+                      size="sm"
+                      className="justify-between"
+                    >
+                      <Link to={step.href} className="flex w-full items-center justify-between gap-2">
+                        <span>{step.state === "complete" ? "Review" : "Go to step"}</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  )}
                 </CardContent>
-                <CardFooter className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="text-xs text-muted-foreground">
-                    {/* upcoming careerMatchAPI metadata */}
-                    AI ranks this role high due to your portfolio momentum and mentor endorsements.
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <ExternalLink className="h-4 w-4" /> Learn more
-                    </Button>
-                    <Button size="sm" className="gap-2">
-                      <Sparkles className="h-4 w-4" /> View roadmap
-                    </Button>
-                  </div>
-                </CardFooter>
               </Card>
-            ))}
-          </div>
-        </div>
-      </motion.section>
+            );
+          })}
+        </CardContent>
+      </Card>
 
-      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.28, delay: 0.08 }}>
-        <div className="grid gap-4 xl:grid-cols-[1.6fr,1fr]">
-          <Card className="border-border/60 bg-white/90 backdrop-blur-md dark:bg-slate-950/75">
-            <CardHeader className="flex flex-col gap-1">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Target className="h-5 w-5 text-primary" /> Skill Gap Analysis
-              </CardTitle>
-              <CardDescription>AI compares proficiency against target roles. Radar chart highlights focus zones.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 lg:grid-cols-[1.3fr,1fr]">
-              <div className="h-[280px] rounded-2xl border border-border/60 p-4">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={skillRadar} outerRadius="80%">
-                    <PolarGrid stroke="rgba(148,163,184,0.35)" />
-                    <PolarAngleAxis dataKey="skill" stroke="currentColor" />
-                    <PolarRadiusAxis stroke="currentColor" angle={30} domain={[0, 100]} tickFormatter={(value) => `${value}%`} />
-                    <Tooltip formatter={(value: number) => [`${value}%`, "Competency"]} />
-                    <Legend />
-                    <Radar name="Current" dataKey="current" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.35} />
-                    <Radar name="Target" dataKey="required" stroke="#38bdf8" fill="#38bdf8" fillOpacity={0.15} />
-                  </RadarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-foreground">Suggested Skill Path</h4>
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  {skillPath.map((gap) => (
-                    <div key={gap.skill} className="rounded-2xl border border-border/60 bg-white/80 p-4 shadow-sm dark:bg-slate-950/70">
-                      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-primary">
-                        {gap.skill}
-                        <Badge variant="secondary" className="bg-amber-500/15 text-amber-500">
-                          Priority
-                        </Badge>
-                      </div>
-                      <div className="mt-3 flex items-center justify-between text-xs">
-                        <span className="text-muted-foreground">Current {gap.current}%</span>
-                        <span className="text-muted-foreground">Target {gap.target}%</span>
-                      </div>
-                      <Progress value={(gap.current / gap.target) * 100} className="mt-2 h-2" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 bg-gradient-to-br from-primary/10 via-primary/5 to-white/70 backdrop-blur-md dark:from-primary/20 dark:via-primary/10 dark:to-slate-950/70">
-            <CardHeader className="space-y-1">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Layers className="h-5 w-5 text-primary" /> Career Progress Tracker
-              </CardTitle>
-              <CardDescription>Progress towards top recommended roles. Updated nightly via careerMatchAPI.</CardDescription>
-            </CardHeader>
-            <CardContent className="flex h-[260px] flex-col items-center justify-center">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart innerRadius="55%" outerRadius="100%" data={[{ name: "Ready", value: readinessAverage, fill: "hsl(var(--primary))" }]}> 
-                  <RadialBar dataKey="value" cornerRadius={12} isAnimationActive />
-                  <Tooltip formatter={(value: number) => [`${value}%`, "Readiness"]} />
-                </RadialBarChart>
-              </ResponsiveContainer>
-              <div className="mt-[-120px] text-center">
-                <p className="text-3xl font-semibold text-foreground">{readinessAverage}%</p>
-                <p className="text-sm text-muted-foreground">Composite readiness across AI priority roles</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </motion.section>
-
-      <motion.section initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
-        <div className="grid gap-4 lg:grid-cols-[1.4fr,1fr]">
-          <Card className="border-border/60 bg-white/90 backdrop-blur-md dark:bg-slate-950/75">
-            <CardHeader className="flex flex-col gap-1">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Brain className="h-5 w-5 text-primary" /> Resume &amp; Profile Feedback
-              </CardTitle>
-              <CardDescription>AI resume coach highlights quick wins. Integrate with resumeAnalysisAPI when ready.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4 lg:grid-cols-[1fr,1fr]">
-              <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/20 p-4 dark:bg-slate-900/60">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Resume Strength</span>
-                  <Badge className="bg-primary/15 text-primary">78 / 100</Badge>
-                </div>
-                <Progress value={78} className="h-2" />
-                <div className="flex items-center gap-2 rounded-xl bg-white/80 p-3 text-sm text-muted-foreground dark:bg-slate-950/70">
-                  <Rocket className="h-4 w-4 text-primary" />
-                  Highlight cross-functional leadership to unlock senior track opportunities.
-                </div>
-              </div>
-              <ScrollArea className="h-[160px] rounded-2xl border border-border/60 bg-white/80 p-3 dark:bg-slate-950/70">
-                <div className="space-y-3 text-sm text-muted-foreground">
-                  {resumeHighlights.map((insight) => (
-                    <div key={insight.id} className="rounded-xl border border-border/60 bg-white/90 p-3 dark:bg-slate-950/75">
-                      <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-foreground">
-                        {insight.label}
-                        <Badge variant="secondary" className="bg-amber-500/15 text-amber-500">
-                          {insight.priority}
-                        </Badge>
-                      </div>
-                      <p className="mt-2 leading-relaxed">{insight.detail}</p>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/60 bg-white/90 backdrop-blur-md dark:bg-slate-950/75">
+      <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.02 }}>
+        <div className="grid gap-4 lg:grid-cols-[1.1fr,1fr]">
+          <Card className="border-border/60 bg-white/95 backdrop-blur-md dark:bg-slate-950/75">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <MessageCircle className="h-5 w-5 text-primary" /> AI Career Chat Assistant
-              </CardTitle>
-              <CardDescription>Coming soon: in-line NLP assistant for career Q&A.</CardDescription>
+              <CardTitle className="text-lg">How the AI builds your roadmap</CardTitle>
+              <CardDescription>Each stage narrows the focus so recommendations stay realistic and aligned with you.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <div className="flex items-start gap-3">
+                <Target className="mt-0.5 h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-foreground">Lock in your top three career goals</p>
+                  <p>Start with the survey so the AI knows your 1st, 2nd, and 3rd preference. It will not recommend paths outside those guardrails.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <FileText className="mt-0.5 h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-foreground">Showcase academic proof</p>
+                  <p>Upload official mark sheets, transcripts, and certificates. The AI analyses subjects, grades, and remarks to verify your strengths.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <ListChecks className="mt-0.5 h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-foreground">Tackle the 40-question assessment</p>
+                  <p>The mixed-topic MCQ quiz checks aptitude beyond documents so the system can confirm your readiness.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-foreground">Cross-check before recommending</p>
+                  <p>Only when all three signals agree will the AI propose fields and study tracks—preventing mismatches like forcing a BBA student into medicine.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-border/60 bg-white/95 backdrop-blur-md dark:bg-slate-950/75">
+            <CardHeader>
+              <CardTitle className="text-lg">Document quality & subject signals</CardTitle>
+              <CardDescription>Give the AI the clearest view of your academics to unlock precise study advice.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <div className="rounded-2xl border border-border/60 bg-muted/20 p-4 dark:bg-slate-900/60">
-                <p className="text-sm text-foreground font-medium">Ask AI</p>
-                <p className="mt-1">“Which portfolio project should I complete next to boost my AI Strategist readiness?”</p>
+              <div className="flex items-start gap-3">
+                <ShieldCheck className="mt-0.5 h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-foreground">Upload clear, official records</p>
+                  <p>Use PDFs or scans of transcripts, report cards, certificates, or competition results. Avoid selfies or unrelated images—the AI will request replacements.</p>
+                </div>
               </div>
-              <div className="rounded-2xl border border-dashed border-border/60 bg-white/80 p-4 text-xs uppercase tracking-wide text-muted-foreground dark:bg-slate-950/70">
-                {/* Future AI chat integration hook */}
-                Connect to careerChatAPI for conversational guidance.
+              <div className="flex items-start gap-3">
+                <AlertTriangle className="mt-0.5 h-5 w-5 text-amber-500" />
+                <div>
+                  <p className="font-semibold text-foreground">Flagged files lower confidence</p>
+                  <p>Unreadable or off-topic documents reduce accuracy. Re-upload clean copies so your recommendations aren’t held back.</p>
+                </div>
               </div>
-              <Button variant="outline" className="w-full gap-2" disabled>
-                <Sparkles className="h-4 w-4" /> Launch beta soon
-              </Button>
+              <div className="flex items-start gap-3">
+                <GraduationCap className="mt-0.5 h-5 w-5 text-primary" />
+                <div>
+                  <p className="font-semibold text-foreground">Subjects drive study prompts</p>
+                  <p>The AI maps your strong subjects (e.g., biology, mathematics, business) to degree tracks like MBBS, EEE, or BBA and suggests supporting coursework.</p>
+                </div>
+              </div>
+              <div className="rounded-2xl border border-border/60 bg-background/70 p-4 text-xs text-muted-foreground dark:bg-slate-950/70">
+                {mostRecentDocument ? (
+                  <div className="space-y-1">
+                    <div className="flex flex-wrap items-center gap-2 text-foreground">
+                      <FileText className="h-4 w-4 text-primary" />
+                      <span className="font-medium">{mostRecentDocument.filename}</span>
+                      {mostRecentDocument.metadataClassification ? (
+                        <Badge variant="secondary" className="bg-primary/10 text-primary">
+                          {mostRecentDocument.metadataClassification}
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <p>
+                      Uploaded {formatRelativeTime(mostRecentDocument.uploadedAt) ?? "recently"}
+                      {typeof mostRecentDocument.docConfidence === "number"
+                        ? ` • Confidence ${mostRecentDocument.docConfidence}%`
+                        : ""}
+                    </p>
+                  </div>
+                ) : (
+                  <p>No documents uploaded yet. Start with your latest marksheet so the AI can understand your baseline.</p>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
       </motion.section>
 
-      <motion.section initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.32, delay: 0.12 }}>
-        <Card className="border-border/60 bg-white/90 backdrop-blur-md dark:bg-slate-950/75">
-          <CardHeader className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-            <div className="space-y-1">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Award className="h-5 w-5 text-primary" /> Training &amp; Course Recommendations
-              </CardTitle>
-              <CardDescription>Selected to close priority skills. Swap with your mentor or save for later.</CardDescription>
-            </div>
-            <Button variant="outline" className="gap-2">
-              <ExternalLink className="h-4 w-4" /> Export plan
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 lg:grid-cols-3">
-              {trainingInventory.map((item) => (
-                <div key={item.id} className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 transition hover:border-primary/60 hover:shadow-md dark:bg-slate-900/60">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="bg-primary/15 text-primary">
-                      {item.format}
-                    </Badge>
-                    <Button variant="ghost" size="sm" className="gap-1 text-xs">
-                      Save for later
-                    </Button>
+      <motion.section initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.22, delay: 0.04 }}>
+        <div className="grid gap-4 lg:grid-cols-[1.4fr,1fr]">
+          <Card className="border-border/60 bg-white/95 backdrop-blur-md dark:bg-slate-950/75">
+            <CardHeader className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Recent documents</CardTitle>
+                <CardDescription>Upload clear transcripts or certificates to improve AI accuracy.</CardDescription>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {documentsLoading ? "Loading" : `${documents.length} item${documents.length === 1 ? "" : "s"}`}
+              </Badge>
+            </CardHeader>
+            <CardContent className="p-0">
+              {documentsLoading ? (
+                <div className="p-6 text-sm text-muted-foreground">Fetching your documents…</div>
+              ) : documents.length ? (
+                <ScrollArea className="h-[220px]">
+                  <div className="space-y-3 p-4 pr-6">
+                    {documents.slice(0, 6).map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm shadow-sm dark:bg-slate-950/70"
+                      >
+                        <div className="flex flex-wrap items-center gap-2 text-foreground">
+                          <FileText className="h-4 w-4 text-primary" />
+                          <span className="font-medium">{doc.filename}</span>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary">
+                            {doc.contentType?.split("/")[1] ?? "file"}
+                          </Badge>
+                        </div>
+                        <div className="mt-2 text-xs text-muted-foreground">
+                          Uploaded {formatRelativeTime(doc.uploadedAt) ?? "recently"}
+                          {typeof doc.docConfidence === "number" ? ` • Confidence ${doc.docConfidence}%` : null}
+                        </div>
+                        {doc.extractedTextSnippet ? (
+                          <p className="mt-2 line-clamp-2 text-xs text-muted-foreground">{doc.extractedTextSnippet}</p>
+                        ) : null}
+                        {doc.warnings?.length ? (
+                          <p className="mt-2 text-xs text-amber-600">{doc.warnings[0]}</p>
+                        ) : null}
+                      </div>
+                    ))}
                   </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">{item.provider}</p>
-                  </div>
-                  <p className="text-sm text-muted-foreground">{item.impact}</p>
-                  <div className="mt-auto flex gap-2">
-                    <Button size="sm" className="flex-1 gap-2">
-                      <Rocket className="h-4 w-4" /> Enroll now
-                    </Button>
-                    <Button size="sm" variant="outline" className="gap-2">
-                      <ExternalLink className="h-4 w-4" /> Visit
-                    </Button>
-                  </div>
+                </ScrollArea>
+              ) : (
+                <div className="p-6 text-sm text-muted-foreground">
+                  No documents uploaded yet. Add at least one transcript or certificate to unlock richer AI insights.
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+              )}
+            </CardContent>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-background/60 px-5 py-3 text-sm text-muted-foreground">
+              <span>{documentsUploaded ? "Update or replace documents anytime." : "Add documents to boost recommendation accuracy."}</span>
+              <Button asChild size="sm" variant="outline" className="gap-2">
+                <Link to="/career-guidance/documents">
+                  <Upload className="h-4 w-4" /> Manage uploads
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Card className="border-border/60 bg-white/95 backdrop-blur-md dark:bg-slate-950/75">
+            <CardHeader>
+              <CardTitle className="text-lg">Assessment history</CardTitle>
+              <CardDescription>Track quiz attempts and performance over time.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {resultsLoading ? (
+                <p className="text-sm text-muted-foreground">Loading assessment data…</p>
+              ) : assessmentAttempted ? (
+                <div className="space-y-3 text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between rounded-2xl border border-border/60 bg-background/70 p-4">
+                    <div>
+                      <div className="text-xs uppercase tracking-wide text-primary">Latest attempt</div>
+                      <div className="mt-1 text-sm text-foreground">Score {latestAttempt?.score ?? 0}%</div>
+                      <div className="text-xs">Submitted {formatRelativeTime(latestAttempt?.submittedAt) ?? "recently"}</div>
+                    </div>
+                    <Badge variant="secondary" className="bg-emerald-500/15 text-emerald-600">
+                      {latestAttempt?.correctCount ?? 0}/{latestAttempt?.questions.length ?? 0} correct
+                    </Badge>
+                  </div>
+                  <div className="rounded-2xl border border-border/60 bg-background/70 p-4">
+                    <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-primary">
+                      <History className="h-4 w-4" /> Attempts recorded
+                    </div>
+                    <p className="mt-2 text-xs">
+                      {attempts.length} assessment attempt{attempts.length === 1 ? "" : "s"} saved. You can retake the quiz to update your
+                      recommendation.
+                    </p>
+                  </div>
+                  {additionalRecommendations.length ? (
+                    <div className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm shadow-sm dark:bg-slate-950/70">
+                      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-primary">
+                        <Target className="h-4 w-4" /> Other strong matches
+                      </div>
+                      <ul className="mt-3 space-y-2 text-xs">
+                        {additionalRecommendations.map((item, index) => (
+                          <li
+                            key={`${item.careerName ?? "career"}-${index}`}
+                            className="flex flex-wrap items-center justify-between gap-2 text-foreground"
+                          >
+                            <span>{item.careerName}</span>
+                            {typeof item.confidenceScore === "number" ? (
+                              <Badge variant="outline" className="border-primary/40 text-xs text-primary">
+                                {item.confidenceScore}% confidence
+                              </Badge>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                  {recommendationFlags.length ? (
+                    <div className="rounded-2xl border border-amber-400/60 bg-amber-100/40 p-4 text-xs text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-100">
+                      <div className="flex items-center gap-2 font-semibold uppercase tracking-wide">
+                        <AlertTriangle className="h-4 w-4" /> Review notes from the AI
+                      </div>
+                      <ul className="mt-2 space-y-1 list-disc pl-5">
+                        {recommendationFlags.map((flag, index) => (
+                          <li key={`${flag}-${index}`}>{flag}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  You have not taken the AI-generated assessment yet. Complete the survey and upload your documents to unlock the quiz.
+                </p>
+              )}
+            </CardContent>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-background/60 px-5 py-3 text-sm text-muted-foreground">
+              <span>{assessments.length ? `${assessments.length} assessment version${assessments.length === 1 ? "" : "s"} found.` : "Create your first assessment to begin."}</span>
+              <Button asChild size="sm" variant="outline" className="gap-2">
+                <Link to="/career-guidance/assessment">
+                  <ClipboardList className="h-4 w-4" /> Start quiz
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
       </motion.section>
 
-      <motion.section initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.34, delay: 0.14 }}>
-        <Card className="border-border/60 bg-gradient-to-br from-primary/10 via-primary/5 to-white/70 backdrop-blur-md dark:from-primary/20 dark:via-primary/10 dark:to-slate-950/70">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <LineChartIcon className="h-5 w-5 text-primary" /> Job Market Insights
-            </CardTitle>
-            <CardDescription>Macro indicators refreshed weekly to align expectations.</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 text-center sm:grid-cols-3">
-            <div className="space-y-1">
-              <p className="text-4xl font-semibold text-primary">2,840</p>
-              <p className="text-sm text-muted-foreground">Open roles aligned to your profile</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-4xl font-semibold text-emerald-500">+42%</p>
-              <p className="text-sm text-muted-foreground">Projected growth for AI strategy careers</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-4xl font-semibold text-amber-500">$135k</p>
-              <p className="text-sm text-muted-foreground">Median salary for your readiness percentile</p>
-            </div>
-          </CardContent>
-        </Card>
+      <motion.section initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.24, delay: 0.08 }}>
+        <div className="grid gap-4 xl:grid-cols-[1.35fr,1fr]">
+          <Card className="border-border/60 bg-white/95 backdrop-blur-md dark:bg-slate-950/80">
+            <CardHeader className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">Latest AI recommendation</CardTitle>
+                <CardDescription>Review the personalised path suggested by the guidance engine.</CardDescription>
+              </div>
+              <Badge variant="outline" className="text-xs">
+                {recommendationReady ? "Available" : "Pending"}
+              </Badge>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {recommendationReady && primaryRecommendation ? (
+                <div className="space-y-4">
+                  <div className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm shadow-sm dark:bg-slate-950/70">
+                    <div className="flex flex-wrap items-center gap-2 text-foreground">
+                      <Brain className="h-4 w-4 text-primary" />
+                      <span className="text-base font-semibold">{primaryRecommendation.careerName ?? "Career match"}</span>
+                      {typeof primaryRecommendation.confidenceScore === "number" ? (
+                        <Badge variant="secondary" className="bg-primary/10 text-primary">
+                          {primaryRecommendation.confidenceScore}% confidence
+                        </Badge>
+                      ) : null}
+                    </div>
+                    <p className="mt-3 text-sm text-muted-foreground">
+                      {primaryRecommendation.why ?? "Your assessment results unlocked a tailored recommendation."}
+                    </p>
+                  </div>
+                  <div className="grid gap-3 lg:grid-cols-2">
+                    <div className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm shadow-sm dark:bg-slate-950/70">
+                      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-primary">
+                        <ListChecks className="h-4 w-4" /> Study focus
+                      </div>
+                      <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+                        {primaryRecommendation.recommendedSubjectsToStudy?.length ? (
+                          primaryRecommendation.recommendedSubjectsToStudy.slice(0, 4).map((subject) => (
+                            <li key={subject}>{subject}</li>
+                          ))
+                        ) : (
+                          <li>Review foundational subjects and schedule a counselling session.</li>
+                        )}
+                      </ul>
+                    </div>
+                    <div className="rounded-2xl border border-border/60 bg-background/70 p-4 text-sm shadow-sm dark:bg-slate-950/70">
+                      <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-primary">
+                        <BookOpen className="h-4 w-4" /> Action plan
+                      </div>
+                      <ul className="mt-2 list-decimal space-y-1 pl-4 text-xs text-muted-foreground">
+                        {primaryRecommendation.actionPlan?.length ? (
+                          primaryRecommendation.actionPlan.slice(0, 3).map((step, index) => (
+                            <li key={`${step}-${index}`}>{step}</li>
+                          ))
+                        ) : (
+                          <li>Meet your mentor to plan the next set of learning sprints.</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Complete the survey, document upload, and assessment steps to generate your personalised recommendation.
+                </p>
+              )}
+            </CardContent>
+            <CardFooter className="flex items-center justify-between border-t border-border/60 bg-background/60 px-5 py-3 text-sm text-muted-foreground">
+              <span>
+                {recommendationReady
+                  ? `Generated ${formatRelativeTime(latestRecommendation?.generatedAt) ?? "recently"}.`
+                  : "Finish prior steps to unlock your recommendation."}
+              </span>
+              <Button asChild size="sm" variant="outline" className="gap-2">
+                <Link to="/career-guidance/results">
+                  <Brain className="h-4 w-4" /> View full results
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+
+          <Card className="border-border/60 bg-white/95 backdrop-blur-md dark:bg-slate-950/80">
+            <CardHeader>
+              <CardTitle className="text-lg">Quick actions</CardTitle>
+              <CardDescription>Jump directly to a task or revisit saved recommendations.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm text-muted-foreground">
+              <div className="rounded-2xl border border-border/60 bg-background/60 p-4 dark:bg-slate-950/70">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wide text-primary">
+                  <ClipboardList className="h-4 w-4" /> Current priorities
+                </div>
+                {hasSurveyChoices ? (
+                  <ol className="mt-3 space-y-2 text-xs text-muted-foreground">
+                    {surveyChoices.map((choice, index) => (
+                      <li key={`${choice}-${index}`} className="flex items-center gap-2 text-foreground">
+                        <Badge variant="outline" className="h-5 min-w-[1.75rem] justify-center rounded-full border-primary/40 text-[11px] font-semibold text-primary">
+                          {index + 1}
+                        </Badge>
+                        <span className="text-sm">{choice}</span>
+                      </li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p className="mt-2 text-xs">
+                    Select three career goals in the survey so the AI keeps recommendations within your preferred fields.
+                  </p>
+                )}
+              </div>
+              <div className="grid gap-3">
+                {quickActions.map((action) => {
+                  const Icon = action.icon;
+                  if (action.locked) {
+                    return (
+                      <Button
+                        key={action.key}
+                        variant="outline"
+                        className="h-auto justify-between gap-3 rounded-2xl border-border/60 bg-background/60 py-4 text-left"
+                        disabled
+                        title={action.disabledMessage}
+                      >
+                        <span className="flex items-center gap-3">
+                          <Icon className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">{action.label}</span>
+                        </span>
+                        <Lock className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    );
+                  }
+                  return (
+                    <Button
+                      key={action.key}
+                      asChild
+                      variant="outline"
+                      className="h-auto justify-start gap-3 rounded-2xl border-border/60 bg-background/60 py-4"
+                    >
+                      <Link to={action.href}>
+                        <Icon className="h-4 w-4 text-primary" /> {action.label}
+                      </Link>
+                    </Button>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </motion.section>
     </div>
   );
