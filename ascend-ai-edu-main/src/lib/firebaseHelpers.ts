@@ -11,17 +11,38 @@ import {
   getDoc,
   query,
   orderBy,
+  arrayUnion,
+  Timestamp,
   type DocumentData,
   type QuerySnapshot,
   type FirestoreError,
-  type Timestamp,
   type Unsubscribe,
 } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { app, db, storage } from "@/lib/firebaseClient";
 import { getDownloadURL, ref, uploadBytes, deleteObject } from "firebase/storage";
+import type {
+  TeacherPayload,
+  TeacherRecord,
+  TeacherPaymentPayload,
+  TeacherPaymentRecord,
+  TeacherPaymentStatus,
+  TeacherHireRequestPayload,
+  TeacherHireRequestRecord,
+  TeacherHireRequestStatus,
+  TeacherReviewPayload,
+  TeacherReviewRecord,
+} from "@/data/teachers";
+import type { NewUserEventInput, UserEventRecord } from "@/data/events";
+import { normalizeTeacherRecord, sanitizeTeacherWritePayload } from "@/lib/teacherNormalizer";
 
 const studentsCollection = collection(db, "students");
+const teachersCollection = collection(db, "teachers");
+const paymentsCollection = collection(db, "payments");
+const hireRequestsCollection = collection(db, "hireRequests");
+const teacherReviewsCollection = (teacherId: string) => collection(db, "teachers", teacherId, "reviews");
+const teacherReviewDoc = (teacherId: string, studentId: string) => doc(teacherReviewsCollection(teacherId), studentId);
+const studentHireDoc = (studentId: string, teacherId: string) => doc(studentHiresCollection(studentId), teacherId);
 const notificationsCollection = collection(db, "adminNotifications");
 const profileChangeRequestsCollection = collection(db, "profileChangeRequests");
 const careerDocsMetaCollection = (uid: string) => collection(db, "careerDocsMeta", uid, "documents");
@@ -30,8 +51,499 @@ const quizAttemptsCollection = (uid: string) => collection(db, "quizAttempts", u
 const careerRecommendationsCollection = (uid: string) => collection(db, "careerRecommendations", uid, "items");
 const userSettingsDocRef = (uid: string) => doc(db, "users", uid, "settings", "app");
 const careerGuidancePreferencesDoc = (uid: string) => doc(db, "users", uid, "careerGuidance", "preferences");
+const studentHiresCollection = (uid: string) => collection(db, "students", uid, "hiredTeachers");
+const userEventsCollection = (uid: string) => collection(db, "users", uid, "events");
+const userEventDoc = (uid: string, eventId: string) => doc(userEventsCollection(uid), eventId);
 
 export const PROFILE_CHANGE_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
+
+const getCurrentUserOrThrow = () => {
+  const auth = getAuth(app);
+  const currentUser = auth.currentUser;
+  if (!currentUser) {
+    throw new Error("Operation requires an authenticated user.");
+  }
+  return currentUser;
+};
+
+const normalizeTeacherReviewRecord = (reviewId: string, data: Partial<TeacherReviewRecord> & DocumentData): TeacherReviewRecord => {
+  const ratingValue = Number(data.rating);
+  const rating = Number.isFinite(ratingValue) ? Math.min(Math.max(Math.round(ratingValue), 1), 5) : 1;
+
+  return {
+    id: reviewId,
+    studentId: typeof data.studentId === "string" ? data.studentId : "",
+    studentName: typeof data.studentName === "string" ? data.studentName : undefined,
+    rating,
+    review: typeof data.review === "string" ? data.review : "",
+    createdAt: data.createdAt as Timestamp | undefined,
+    updatedAt: data.updatedAt as Timestamp | undefined,
+  } satisfies TeacherReviewRecord;
+};
+
+const normalizeUserEventRecord = (eventId: string, data: Partial<UserEventRecord> & DocumentData): UserEventRecord => {
+  const date = data.date instanceof Timestamp ? data.date : Timestamp.fromDate(new Date());
+  const createdAt = data.createdAt instanceof Timestamp ? data.createdAt : Timestamp.fromDate(new Date());
+  const updatedAt = data.updatedAt instanceof Timestamp ? data.updatedAt : undefined;
+
+  return {
+    id: eventId,
+    title: typeof data.title === "string" ? data.title : "Untitled Event",
+    description: typeof data.description === "string" ? data.description : undefined,
+    date,
+    time: typeof data.time === "string" ? data.time : undefined,
+    category: typeof data.category === "string" ? data.category : undefined,
+    createdAt,
+    updatedAt,
+  } satisfies UserEventRecord;
+};
+
+export type UserEventUpdateInput = Partial<Omit<NewUserEventInput, "date">> & {
+  date?: Date;
+};
+
+const sanitizeUserEventWritePayload = (input: NewUserEventInput | UserEventUpdateInput) => {
+  const payload: Record<string, unknown> = {};
+
+  if ("title" in input && typeof input.title === "string") {
+    payload.title = input.title.trim();
+  }
+
+  if ("description" in input) {
+    const value = typeof input.description === "string" ? input.description.trim() : undefined;
+    if (value) {
+      payload.description = value;
+    } else {
+      payload.description = null;
+    }
+  }
+
+  if ("date" in input && input.date instanceof Date && !Number.isNaN(input.date.getTime())) {
+    payload.date = Timestamp.fromDate(input.date);
+  }
+
+  if ("time" in input) {
+    payload.time = input.time ?? null;
+  }
+
+  if ("category" in input) {
+    payload.category = input.category ?? null;
+  }
+
+  return payload;
+};
+
+export const createUserEvent = async (uid: string, input: NewUserEventInput): Promise<string> => {
+  const payload = sanitizeUserEventWritePayload(input);
+  const timestamp = serverTimestamp();
+
+  const docRef = await addDoc(userEventsCollection(uid), {
+    ...payload,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+
+  return docRef.id;
+};
+
+export const updateUserEvent = async (uid: string, eventId: string, updates: UserEventUpdateInput): Promise<void> => {
+  const payload = sanitizeUserEventWritePayload(updates);
+
+  await updateDoc(userEventDoc(uid, eventId), {
+    ...payload,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const deleteUserEvent = async (uid: string, eventId: string): Promise<void> => {
+  await deleteDoc(userEventDoc(uid, eventId));
+};
+
+export const listenToUserEvents = (
+  uid: string,
+  onNext: (events: UserEventRecord[]) => void,
+  onError?: (error: FirestoreError) => void,
+): Unsubscribe => {
+  const eventsQuery = query(userEventsCollection(uid), orderBy("date", "asc"));
+
+  return onSnapshot(
+    eventsQuery,
+    (snapshot) => {
+      const records = snapshot.docs.map((docSnapshot) =>
+        normalizeUserEventRecord(docSnapshot.id, docSnapshot.data() as Partial<UserEventRecord> & DocumentData),
+      );
+      onNext(records);
+    },
+    (error) => {
+      console.error("Error listening to user events:", error);
+      onError?.(error);
+    },
+  );
+};
+
+const assertAdminRole = async () => {
+  const currentUser = getCurrentUserOrThrow();
+  const tokenResult = await currentUser.getIdTokenResult();
+  const role = typeof tokenResult.claims.role === "string" ? (tokenResult.claims.role as string) : undefined;
+
+  if (role !== "admin") {
+    throw new Error("Operation requires admin privileges.");
+  }
+};
+
+const normalizePaymentRecord = (paymentId: string, data: Partial<TeacherPaymentRecord> & DocumentData): TeacherPaymentRecord => {
+  const months = Number.isFinite(data.months) ? Math.max(1, Number(data.months)) : 1;
+  const monthlyFee = Number.isFinite(data.monthlyFee) ? Number(data.monthlyFee) : 0;
+  const totalAmount = Number.isFinite(data.totalAmount) ? Number(data.totalAmount) : months * monthlyFee;
+
+  return {
+    id: paymentId,
+    studentId: typeof data.studentId === "string" ? data.studentId : "",
+    studentName: typeof data.studentName === "string" ? data.studentName : undefined,
+    teacherId: typeof data.teacherId === "string" ? data.teacherId : "",
+    teacherName: typeof data.teacherName === "string" ? data.teacherName : undefined,
+    months,
+    monthlyFee,
+    totalAmount,
+    transactionId: typeof data.transactionId === "string" ? data.transactionId : "",
+    status: (data.status as TeacherPaymentStatus) ?? "pending",
+    notes: typeof data.notes === "string" ? data.notes : undefined,
+    submittedAt: data.submittedAt as Timestamp | undefined,
+    updatedAt: data.updatedAt as Timestamp | undefined,
+    resolvedAt: data.resolvedAt as Timestamp | undefined,
+    approvedAt: data.approvedAt as Timestamp | undefined,
+    expiresAt: data.expiresAt as Timestamp | undefined,
+  } satisfies TeacherPaymentRecord;
+};
+
+export const createTeacherDoc = async (payload: TeacherPayload): Promise<string> => {
+  await assertAdminRole();
+  const timestamp = serverTimestamp();
+  const sanitizedPayload = sanitizeTeacherWritePayload(payload);
+  const docRef = await addDoc(teachersCollection, {
+    ...sanitizedPayload,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+  return docRef.id;
+};
+
+export const updateTeacherDoc = async (teacherId: string, updates: Partial<TeacherPayload>) => {
+  await assertAdminRole();
+  const teacherRef = doc(teachersCollection, teacherId);
+  const sanitizedUpdates = sanitizeTeacherWritePayload(updates);
+  await updateDoc(teacherRef, {
+    ...sanitizedUpdates,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const deleteTeacherDoc = async (teacherId: string) => {
+  await assertAdminRole();
+  await deleteDoc(doc(teachersCollection, teacherId));
+};
+
+export const getTeacherDoc = async (teacherId: string): Promise<TeacherRecord | null> => {
+  if (!teacherId) return null;
+  const teacherRef = doc(teachersCollection, teacherId);
+  const snapshot = await getDoc(teacherRef);
+  if (!snapshot.exists()) return null;
+  const data = snapshot.data() as Partial<TeacherRecord> & Record<string, unknown>;
+  return normalizeTeacherRecord(snapshot.id, data);
+};
+
+const sanitizePaymentPayload = (payload: TeacherPaymentPayload) => {
+  const monthsValue = Number.isFinite(payload.months) ? Number(payload.months) : 1;
+  const months = Math.max(1, Math.round(monthsValue));
+  const monthlyFeeValue = Number.isFinite(payload.monthlyFee) ? Number(payload.monthlyFee) : 0;
+  const monthlyFee = Math.max(0, Math.round(monthlyFeeValue * 100) / 100);
+  const totalAmountValue = Number.isFinite(payload.totalAmount) ? Number(payload.totalAmount) : months * monthlyFee;
+  const totalAmount = Math.max(0, Math.round(totalAmountValue * 100) / 100);
+
+  return {
+    studentId: payload.studentId,
+    studentUid: payload.studentUid ?? payload.studentId,
+    studentName: payload.studentName ?? null,
+    teacherId: payload.teacherId,
+    teacherName: payload.teacherName ?? null,
+    months,
+    monthlyFee,
+    totalAmount,
+    transactionId: payload.transactionId,
+    status: payload.status ?? "pending",
+    notes: payload.notes ?? null,
+    expiresAt: payload.expiresAt ?? null,
+    approvedAt: payload.approvedAt ?? null,
+    hireRequestId: payload.hireRequestId ?? null,
+  } satisfies TeacherPaymentPayload & { notes: string | null };
+};
+
+const sanitizeHireRequestPayload = (payload: TeacherHireRequestPayload) => {
+  const monthsValue = Number.isFinite(payload.months) ? Number(payload.months) : 1;
+  const months = Math.max(1, Math.round(monthsValue));
+  const monthlyFeeValue = Number.isFinite(payload.monthlyFee) ? Number(payload.monthlyFee) : 0;
+  const monthlyFee = Math.max(0, Math.round(monthlyFeeValue * 100) / 100);
+  const totalAmountValue = Number.isFinite(payload.totalAmount) ? Number(payload.totalAmount) : months * monthlyFee;
+  const totalAmount = Math.max(0, Math.round(totalAmountValue * 100) / 100);
+
+  return {
+    studentUid: payload.studentUid,
+    studentName: payload.studentName ?? null,
+    teacherId: payload.teacherId,
+    teacherName: payload.teacherName ?? null,
+    months,
+    monthlyFee,
+    totalAmount,
+    transactionId: payload.transactionId,
+    paymentId: payload.paymentId ?? null,
+    status: payload.status ?? "pending",
+    notes: payload.notes ?? null,
+  } satisfies TeacherHireRequestPayload & { notes: string | null; paymentId: string | null };
+};
+
+const normalizeHireRequestRecord = (
+  requestId: string,
+  data: Partial<TeacherHireRequestRecord> & DocumentData,
+): TeacherHireRequestRecord => {
+  const months = Number.isFinite(data.months) ? Number(data.months) : 1;
+  const monthlyFee = Number.isFinite(data.monthlyFee) ? Number(data.monthlyFee) : 0;
+  const totalAmount = Number.isFinite(data.totalAmount) ? Number(data.totalAmount) : months * monthlyFee;
+
+  return {
+    id: requestId,
+    studentUid: typeof data.studentUid === "string" ? data.studentUid : "",
+    studentName: typeof data.studentName === "string" ? data.studentName : undefined,
+    teacherId: typeof data.teacherId === "string" ? data.teacherId : "",
+    teacherName: typeof data.teacherName === "string" ? data.teacherName : undefined,
+    months,
+    monthlyFee,
+    totalAmount,
+    transactionId: typeof data.transactionId === "string" ? data.transactionId : "",
+    paymentId: typeof data.paymentId === "string" ? data.paymentId : undefined,
+    status: (data.status as TeacherHireRequestStatus) ?? "pending",
+    notes: typeof data.notes === "string" ? data.notes : undefined,
+    submittedAt: data.submittedAt as Timestamp | undefined,
+    updatedAt: data.updatedAt as Timestamp | undefined,
+    resolvedAt: data.resolvedAt as Timestamp | undefined,
+  } satisfies TeacherHireRequestRecord;
+};
+
+export const submitTeacherHireRequest = async (payload: TeacherHireRequestPayload): Promise<string> => {
+  const currentUser = getCurrentUserOrThrow();
+
+  if (currentUser.uid !== payload.studentUid) {
+    throw new Error("You can only submit hire requests for your own account.");
+  }
+
+  const sanitized = sanitizeHireRequestPayload(payload);
+  const timestamp = serverTimestamp();
+
+  const docRef = await addDoc(hireRequestsCollection, {
+    ...sanitized,
+    submittedAt: timestamp,
+    updatedAt: timestamp,
+  });
+
+  return docRef.id;
+};
+
+export const submitTeacherPayment = async (payload: TeacherPaymentPayload): Promise<string> => {
+  const currentUser = getCurrentUserOrThrow();
+  const tokenResult = await currentUser.getIdTokenResult();
+  const isAdmin = tokenResult.claims.role === "admin";
+
+  if (!isAdmin && currentUser.uid !== payload.studentId) {
+    throw new Error("You can only submit payments for your own account.");
+  }
+
+  const sanitized = sanitizePaymentPayload(payload);
+  const timestamp = serverTimestamp();
+
+  const docRef = await addDoc(paymentsCollection, {
+    ...sanitized,
+    submittedAt: timestamp,
+    updatedAt: timestamp,
+  });
+
+  return docRef.id;
+};
+
+export const listenToTeacherPayments = (
+  onNext: (payments: TeacherPaymentRecord[]) => void,
+  onError?: (error: FirestoreError) => void,
+): Unsubscribe => {
+  const paymentsQuery = query(paymentsCollection, orderBy("submittedAt", "desc"));
+  return onSnapshot(
+    paymentsQuery,
+    (snapshot) => {
+      const records = snapshot.docs.map((docSnapshot) =>
+        normalizePaymentRecord(docSnapshot.id, docSnapshot.data() as Partial<TeacherPaymentRecord> & DocumentData),
+      );
+      onNext(records);
+    },
+    onError,
+  );
+};
+
+const getTeacherPaymentOrThrow = async (paymentId: string): Promise<TeacherPaymentRecord> => {
+  if (!paymentId) {
+    throw new Error("Missing payment id");
+  }
+
+  const paymentRef = doc(paymentsCollection, paymentId);
+  const snapshot = await getDoc(paymentRef);
+  if (!snapshot.exists()) {
+    throw new Error("Teacher payment not found");
+  }
+
+  return normalizePaymentRecord(paymentId, snapshot.data() as Partial<TeacherPaymentRecord> & DocumentData);
+};
+
+export const approveTeacherPayment = async (paymentId: string, options?: { notes?: string }) => {
+  await assertAdminRole();
+  const payment = await getTeacherPaymentOrThrow(paymentId);
+
+  if (!payment.studentId || !payment.teacherId) {
+    throw new Error("Payment is missing the student or teacher reference");
+  }
+
+  if (payment.status === "approved") {
+    throw new Error("Payment has already been approved");
+  }
+
+  if (payment.status !== "pending" && payment.status !== "rejected") {
+    throw new Error("Payment cannot be approved from its current state");
+  }
+
+  const paymentRef = doc(paymentsCollection, paymentId);
+  const months = Math.max(1, payment.months);
+  const approvalDate = new Date();
+  const expiryDate = new Date(approvalDate);
+  expiryDate.setMonth(expiryDate.getMonth() + months);
+  const expiresAt = Timestamp.fromDate(expiryDate);
+  const trimmedNotes = typeof options?.notes === "string" ? options.notes.trim() : undefined;
+  const paymentUpdate: Record<string, unknown> = {
+    status: "approved",
+    updatedAt: serverTimestamp(),
+    resolvedAt: serverTimestamp(),
+    approvedAt: serverTimestamp(),
+    expiresAt,
+    notes: trimmedNotes ?? null,
+  };
+  await updateDoc(paymentRef, paymentUpdate);
+
+  await updateDoc(doc(teachersCollection, payment.teacherId), {
+    hiredStudents: arrayUnion(payment.studentId),
+    updatedAt: serverTimestamp(),
+  });
+
+  await setDoc(
+    doc(studentHiresCollection(payment.studentId), payment.teacherId),
+    {
+      teacherId: payment.teacherId,
+      teacherName: payment.teacherName ?? null,
+      paymentId,
+      months: payment.months,
+      monthlyFee: payment.monthlyFee,
+      totalAmount: payment.totalAmount,
+      transactionId: payment.transactionId,
+      status: "active",
+      approvedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      expiresAt,
+    },
+    { merge: true },
+  );
+};
+
+export const rejectTeacherPayment = async (paymentId: string, options?: { notes?: string }) => {
+  await assertAdminRole();
+  const payment = await getTeacherPaymentOrThrow(paymentId);
+
+  if (payment.status !== "pending") {
+    throw new Error("Payment has already been resolved");
+  }
+
+  const paymentRef = doc(paymentsCollection, paymentId);
+  const trimmedNotes = typeof options?.notes === "string" ? options.notes.trim() : undefined;
+  const paymentUpdate: Record<string, unknown> = {
+    status: "rejected",
+    updatedAt: serverTimestamp(),
+    resolvedAt: serverTimestamp(),
+    notes: trimmedNotes ?? null,
+  };
+  await updateDoc(paymentRef, paymentUpdate);
+};
+
+const sanitizeReviewRating = (value: unknown): number => {
+  const numeric = typeof value === "number" ? value : Number(value);
+  if (!Number.isFinite(numeric)) return 1;
+  return Math.min(Math.max(Math.round(numeric), 1), 5);
+};
+
+export const submitTeacherReview = async (
+  teacherId: string,
+  payload: Omit<TeacherReviewPayload, "rating"> & { rating: number },
+) => {
+  if (!teacherId) throw new Error("Missing teacher id");
+
+  const currentUser = getCurrentUserOrThrow();
+  if (currentUser.uid !== payload.studentId) {
+    throw new Error("You can only submit reviews for your own account.");
+  }
+
+  const trimmedReview = payload.review.trim();
+  if (!trimmedReview) {
+    throw new Error("Review text cannot be empty.");
+  }
+
+  const [hireSnap, existingReviewSnap] = await Promise.all([
+    getDoc(studentHireDoc(payload.studentId, teacherId)),
+    getDoc(teacherReviewDoc(teacherId, payload.studentId)),
+  ]);
+
+  if (!hireSnap.exists()) {
+    throw new Error("Only hired students can submit reviews for this teacher.");
+  }
+
+  const reviewRef = teacherReviewDoc(teacherId, payload.studentId);
+  const sanitizedRating = sanitizeReviewRating(payload.rating);
+  const reviewData: Record<string, unknown> = {
+    studentId: payload.studentId,
+    studentName: payload.studentName ?? null,
+    rating: sanitizedRating,
+    review: trimmedReview,
+    updatedAt: serverTimestamp(),
+  };
+
+  if (!existingReviewSnap.exists()) {
+    reviewData.createdAt = serverTimestamp();
+  }
+
+  await setDoc(reviewRef, reviewData, { merge: true });
+};
+
+export const listenToTeacherReviews = (
+  teacherId: string,
+  onNext: (reviews: TeacherReviewRecord[]) => void,
+  onError?: (error: FirestoreError) => void,
+): Unsubscribe => {
+  if (!teacherId) {
+    throw new Error("Missing teacher id for reviews listener.");
+  }
+
+  const reviewsQuery = query(teacherReviewsCollection(teacherId), orderBy("createdAt", "desc"));
+  return onSnapshot(
+    reviewsQuery,
+    (snapshot) => {
+      const records = snapshot.docs.map((docSnapshot) =>
+        normalizeTeacherReviewRecord(docSnapshot.id, docSnapshot.data() as Partial<TeacherReviewRecord> & DocumentData),
+      );
+      onNext(records);
+    },
+    onError,
+  );
+};
 
 export type AdminNotificationType = "newStudent" | "updateStudent" | "deleteStudent" | "profileChangeRequest";
 

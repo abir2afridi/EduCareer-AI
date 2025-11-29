@@ -15,6 +15,7 @@ import Tasks from "./pages/Tasks";
 import Learning from "./pages/Learning";
 import Analytics from "./pages/Analytics";
 import Teachers from "./pages/Teachers";
+import TeacherProfile from "./pages/TeacherProfile";
 import Assessments from "./pages/Assessments";
 import Career from "./pages/Career";
 import CareerSurveyPage from "./pages/career-guidance/CareerSurveyPage";
@@ -40,6 +41,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import StudentQuizResultsPage from "./pages/admin/StudentQuizResults";
 import StudentManagementPage from "./pages/admin/StudentManagement";
 import TeacherManagementPage from "./pages/admin/TeacherManagement";
+import PaymentsManagementPage from "./pages/admin/PaymentsManagement";
 import CourseManagementPage from "./pages/admin/CourseManagement";
 import AssessmentsGradingPage from "./pages/admin/AssessmentsGrading";
 import CareerEmployabilityPage from "./pages/admin/CareerEmployability";
@@ -191,6 +193,16 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Teachers />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/teachers/:id"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <TeacherProfile />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -359,6 +371,7 @@ const App = () => (
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="students" element={<StudentManagementPage />} />
             <Route path="teachers" element={<TeacherManagementPage />} />
+            <Route path="payments" element={<PaymentsManagementPage />} />
             <Route path="courses" element={<CourseManagementPage />} />
             <Route path="assessments" element={<AssessmentsGradingPage />} />
             <Route path="career" element={<CareerEmployabilityPage />} />

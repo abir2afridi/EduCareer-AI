@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  DollarSign,
   FileText,
   GraduationCap,
   Home,
@@ -108,6 +109,13 @@ export function AdminLayout() {
         icon: Home,
         description: "Executive analytics",
         gradient: "from-emerald-100 via-emerald-50 to-white dark:from-emerald-900/40 dark:via-emerald-950/40 dark:to-transparent",
+      },
+      {
+        title: "Payment Management",
+        url: "/admin/payments",
+        icon: DollarSign,
+        description: "Teacher payments & approvals",
+        gradient: "from-green-100 via-emerald-50 to-white dark:from-green-900/40 dark:via-emerald-950/40 dark:to-transparent",
       },
       {
         title: "Student Management",
