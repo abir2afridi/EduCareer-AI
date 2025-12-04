@@ -10,6 +10,14 @@ service cloud.firestore {
       allow read, write: if request.auth != null &&
         (request.auth.uid == studentId || request.auth.token.role == "admin");
 
+      match /completedCourses/{courseId} {
+        allow read: if request.auth != null &&
+          (request.auth.uid == studentId || request.auth.token.role == "admin");
+
+        allow create, update, delete: if request.auth != null &&
+          request.auth.uid == studentId;
+      }
+
       // HIRED TEACHERS
       // Admin approves → this collection auto-updates
       match /hiredTeachers/{teacherId} {
@@ -23,6 +31,19 @@ service cloud.firestore {
 
         allow delete: if false;
       }
+    }
+
+    // ======================
+    // UNIVERSITY COURSE BUILDER & PUBLISHED DATA
+    // ======================
+    match /courseBuilder/{universityId}/{documentPath=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.role == "admin";
+    }
+
+    match /universityCourses/{universityId}/{documentPath=**} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.token.role == "admin";
     }
 
     // ======================

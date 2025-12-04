@@ -8,7 +8,7 @@ import NotFound from "./pages/NotFound";
 import StudentDashboardPage from "@/pages/Students";
 import StudentProfilePage from "@/pages/StudentProfile";
 import Quiz from "./pages/student/Quiz";
-import Courses from "./pages/Courses";
+import MyCourses from "./pages/MyCourses";
 import LeaderboardPage from "./pages/Leaderboard";
 import Insights from "./pages/Insights";
 import Tasks from "./pages/Tasks";
@@ -142,7 +142,7 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <DashboardLayout>
-                  <Courses />
+                  <MyCourses />
                 </DashboardLayout>
               </ProtectedRoute>
             }
