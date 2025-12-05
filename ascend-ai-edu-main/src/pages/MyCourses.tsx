@@ -654,11 +654,11 @@ export default function MyCoursesPage() {
         </CardHeader>
         <CardContent className="relative z-10 space-y-8 pb-8">
           <section className="space-y-5">
-            <div className="group relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-5 shadow-xl transition-all duration-500 hover:shadow-2xl hover:shadow-indigo-500/20">
+            <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-5 shadow-xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_70%)] opacity-80 transition-opacity duration-500 group-hover:opacity-100" aria-hidden="true" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(255,255,255,0.1),transparent_60%)]" aria-hidden="true" />
-              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-pink-500/20 blur-2xl" />
-              <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-indigo-500/20 blur-2xl" />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(0,0,0,0.1),transparent_60%)]" aria-hidden="true" />
+              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+              <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-foreground/10 blur-2xl" />
               <div className="relative grid grid-cols-1 gap-4 lg:grid-cols-[auto,1fr,auto] lg:items-center">
                 {/* Lottie Animation - Left */}
                 <div className="flex items-center justify-center lg:mr-4">

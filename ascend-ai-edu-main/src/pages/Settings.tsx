@@ -355,13 +355,31 @@ export default function Settings() {
   return (
     <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] animate-fade-in">
       <div className="space-y-6">
-        <div className="flex flex-col-reverse items-start gap-6 rounded-3xl bg-gradient-to-br from-primary/5 via-background to-secondary/5 p-6 shadow-sm md:flex-row md:items-center md:justify-between">
-          <div>
-            <h2 className="mb-2 text-3xl font-bold gradient-text">Settings</h2>
-            <p className="max-w-xl text-muted-foreground">Manage your account details, preferences, and security in one place.</p>
-          </div>
-          <div className="mx-auto w-full max-w-[220px] md:mx-0 md:w-auto">
-            <DotLottieReact src="https://lottie.host/b9f251c8-9f9e-46f3-9d33-1256953d8f52/vEvLUQtvpL.lottie" loop autoplay style={{ width: "100%", height: "100%" }} />
+        <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 shadow-xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_70%)] opacity-80 transition-opacity duration-500 group-hover:opacity-100" aria-hidden="true" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(0,0,0,0.1),transparent_60%)]" aria-hidden="true" />
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-foreground/10 blur-2xl" />
+          
+          <div className="relative z-10 flex flex-col items-start gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="space-y-2">
+              <div className="flex w-fit items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs font-medium uppercase tracking-wider text-white backdrop-blur-sm">
+                <User className="h-3.5 w-3.5" /> Account Settings
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-white lg:text-3xl">Settings</h2>
+              <p className="max-w-xl text-white/90">Manage your account details, preferences, and security in one place.</p>
+            </div>
+            <div className="mx-auto w-full max-w-[180px] md:mx-0 md:w-auto">
+              <div className="relative h-full w-full">
+                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10 backdrop-blur-sm" />
+                <DotLottieReact 
+                  src="https://lottie.host/b9f251c8-9f9e-46f3-9d33-1256953d8f52/vEvLUQtvpL.lottie" 
+                  loop 
+                  autoplay 
+                  className="relative z-10 h-full w-full"
+                />
+              </div>
+            </div>
           </div>
         </div>
 

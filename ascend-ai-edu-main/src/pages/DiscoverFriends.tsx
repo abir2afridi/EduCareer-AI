@@ -940,16 +940,22 @@ const DiscoverFriends = () => {
   return (
     <div className="h-full w-full bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
       <div className="mx-auto flex h-full max-w-7xl flex-col gap-6 p-6">
-        <div className="relative overflow-hidden rounded-4xl border border-border/60 bg-white/95 p-6 shadow-theme-lg dark:bg-slate-950/80 md:p-10">
-          <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-blue-100/60 blur-3xl dark:bg-blue-500/10" aria-hidden />
+        <div className="group relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-6 shadow-xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_70%)] opacity-80 transition-opacity duration-500 group-hover:opacity-100" aria-hidden="true" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(0,0,0,0.1),transparent_60%)]" aria-hidden="true" />
+          <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-foreground/10 blur-2xl" />
           <div className="relative z-10 flex flex-col gap-8 lg:flex-row lg:items-center">
             <div className="flex-1 space-y-4">
-              <Badge variant="outline" className="rounded-full border-blue-200 px-3 py-1 text-[11px] uppercase tracking-wider text-blue-700 dark:border-blue-500/60 dark:text-blue-200">
-                Discover friends
-              </Badge>
-              <div className="space-y-2">
-                <h1 className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">Grow your campus network</h1>
-                <p className="max-w-2xl text-sm text-muted-foreground md:text-base">
+              <div className="flex w-fit items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs font-medium uppercase tracking-wider text-white backdrop-blur-sm">
+                <Users className="h-3.5 w-3.5" /> Campus Network
+              </div>
+              <div className="space-y-3">
+                <div className="flex w-fit items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs font-medium uppercase tracking-wider text-white backdrop-blur-sm">
+                  <Users className="h-3.5 w-3.5" /> Campus Network
+                </div>
+                <h1 className="text-3xl font-bold tracking-tight text-white md:text-4xl">Grow your campus network</h1>
+                <p className="max-w-2xl text-white/90 md:text-base">
                   Get tailored suggestions, manage requests, and spotlight the classmates you want in your inbox.
                 </p>
               </div>
@@ -980,23 +986,48 @@ const DiscoverFriends = () => {
               </div>
             </div>
             <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
-              {stats.map((item) => {
+              {stats.map((item, index) => {
                 const Icon = item.icon;
+                const bgGradients = [
+                  'from-blue-500/10 to-blue-600/10',
+                  'from-purple-500/10 to-purple-600/10',
+                  'from-emerald-500/10 to-emerald-600/10'
+                ];
+                const borderColors = [
+                  'border-blue-500/30',
+                  'border-purple-500/30',
+                  'border-emerald-500/30'
+                ];
+                const textColors = [
+                  'text-blue-700 dark:text-blue-300',
+                  'text-purple-700 dark:text-purple-300',
+                  'text-emerald-700 dark:text-emerald-300'
+                ];
+                
                 return (
                   <div
                     key={item.label}
                     className={cn(
-                      "rounded-3xl border border-border/60 p-4 text-sm shadow-inner transition hover:shadow-md",
-                      "bg-white/70 dark:bg-slate-950/70",
-                      item.backgroundClass,
+                      "relative overflow-hidden rounded-2xl border p-4 text-sm transition-all duration-300 hover:shadow-lg",
+                      "backdrop-blur-sm bg-white/80 dark:bg-slate-900/80",
+                      bgGradients[index % bgGradients.length],
+                      borderColors[index % borderColors.length],
+                      "hover:scale-[1.02]"
                     )}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</span>
-                      <Icon className={cn("h-4 w-4", item.iconClass)} />
+                    <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10 backdrop-blur-sm" />
+                    <div className="relative z-10">
+                      <div className="flex items-start justify-between gap-2">
+                        <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{item.label}</span>
+                        <div className={cn("rounded-lg p-1.5", bgGradients[index % bgGradients.length].replace('10', '20').replace('10', '20'))}>
+                          <Icon className={cn("h-4 w-4", textColors[index % textColors.length])} />
+                        </div>
+                      </div>
+                      <div className={cn("mt-2 text-3xl font-bold", textColors[index % textColors.length])}>
+                        {item.value.toLocaleString()}
+                      </div>
+                      <span className="mt-1 block text-xs text-muted-foreground">{item.helper}</span>
                     </div>
-                    <div className="mt-2 text-3xl font-semibold text-foreground">{item.value.toLocaleString()}</div>
-                    <span className="mt-1 block text-[11px] text-muted-foreground">{item.helper}</span>
                   </div>
                 );
               })}

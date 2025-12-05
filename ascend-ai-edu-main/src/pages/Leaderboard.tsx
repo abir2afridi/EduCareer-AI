@@ -440,47 +440,55 @@ export default function LeaderboardPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25 }}
-        className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] lg:items-start"
+        className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)] lg:items-start"
       >
         <div className="space-y-4">
-          <Card className="border-border/60 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent shadow-sm">
-            <CardHeader className="space-y-4">
+          <Card className="group relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-0 shadow-xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_70%)] opacity-80 transition-opacity duration-500 group-hover:opacity-100" aria-hidden="true" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(0,0,0,0.1),transparent_60%)]" aria-hidden="true" />
+            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-foreground/10 blur-2xl" />
+            <CardHeader className="relative z-10 space-y-4">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-1">
-                  <CardTitle className="flex items-center gap-2 text-2xl font-semibold">
-                    <Trophy className="h-6 w-6 text-primary" />
-                    EduCareer Leaderboard
-                  </CardTitle>
-                  <CardDescription>
-                    Ranked performance across the cohort. Scores refresh live as students complete quizzes.
-                  </CardDescription>
+                <div className="space-y-2">
+                  <div className="flex w-fit items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs font-medium uppercase tracking-wider text-white backdrop-blur-sm">
+                    <Trophy className="h-3.5 w-3.5" /> Live Leaderboard
+                  </div>
+                  <div className="space-y-1">
+                    <CardTitle className="flex items-center gap-2 text-2xl font-bold tracking-tight text-white lg:text-3xl">
+                      EduCareer Leaderboard
+                    </CardTitle>
+                    <CardDescription className="text-white/90">
+                      Ranked performance across the cohort. Scores refresh live as students complete quizzes.
+                    </CardDescription>
+                  </div>
                 </div>
                 <div className="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:gap-2">
                   <SortDropdown value={sortOption} onChange={setSortOption} />
-                  <Badge variant="outline" className="gap-1 text-xs">
+                  <Badge variant="secondary" className="gap-1 border-white/30 bg-white/20 text-white hover:bg-white/30">
                     <Zap className="h-3.5 w-3.5" /> Live updating
                   </Badge>
                 </div>
               </div>
 
               {currentUserStanding && (
-                <div className="flex flex-col gap-3 rounded-2xl border border-primary/25 bg-white/85 p-4 text-sm shadow-sm backdrop-blur-sm dark:border-primary/30 dark:bg-slate-950/55">
+                <div className="relative z-10 flex flex-col gap-3 rounded-2xl border border-white/20 bg-white/10 p-4 text-sm backdrop-blur-sm">
                   <div className="flex flex-wrap items-center gap-3">
-                    <Badge variant="secondary" className="rounded-lg bg-primary/90 text-primary-foreground">
+                    <Badge variant="secondary" className="rounded-lg bg-white/20 text-white hover:bg-white/30">
                       Your rank #{currentUserStanding.rank}
                     </Badge>
-                    <span className="text-sm font-semibold text-primary dark:text-primary/80">
+                    <span className="text-sm font-semibold text-white/90">
                       Performance {formatPerformance(currentUserStanding.performanceScore)} • Accuracy {formatPercentage(currentUserStanding.accuracy)}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
-                    <Badge variant="outline" className="gap-1 text-xs">
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    <Badge variant="outline" className="gap-1 border-white/30 bg-white/10 text-white/90 hover:bg-white/20">
                       <Timer className="h-3.5 w-3.5" /> {formatSecondsPerQuestion(currentUserStanding.avgTimePerQuestionSeconds)} / question
                     </Badge>
-                    <Badge variant="outline" className="gap-1 text-xs">
+                    <Badge variant="outline" className="gap-1 border-white/30 bg-white/10 text-white/90 hover:bg-white/20">
                       <Award className="h-3.5 w-3.5" /> IQ {currentUserStanding.totalIQ}
                     </Badge>
-                    <Badge variant="outline" className="gap-1 text-xs">
+                    <Badge variant="outline" className="gap-1 border-white/30 bg-white/10 text-white/90 hover:bg-white/20">
                       <Target className="h-3.5 w-3.5" /> {currentUserStanding.totalQuizzes} attempts
                     </Badge>
                   </div>

@@ -204,37 +204,46 @@ export default function Career() {
 
   return (
     <div className="space-y-8">
-      <Card className="border-border/60 bg-white/90 shadow-lg backdrop-blur-md dark:bg-slate-950/80">
-        <CardHeader className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 text-sm font-medium uppercase tracking-wide text-primary">
-              <Sparkles className="h-4 w-4" /> Career guidance assistant
+      <Card className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary/90 to-primary/70 p-0 shadow-xl transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,255,255,0.2),transparent_70%)] opacity-80 transition-opacity duration-500 group-hover:opacity-100" aria-hidden="true" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(0,0,0,0.1),transparent_60%)]" aria-hidden="true" />
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-primary-foreground/10 blur-2xl" />
+        <CardHeader className="relative z-10 flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-3 text-white">
+            <div className="flex w-fit items-center gap-1.5 rounded-full border border-white/40 bg-white/20 px-3 py-1 text-xs font-medium uppercase tracking-wider text-white backdrop-blur-sm">
+              <Sparkles className="h-3.5 w-3.5" /> Career Guidance Assistant
             </div>
-            <div className="space-y-1">
-              <CardTitle className="text-3xl">Map your best-fit career in four guided steps</CardTitle>
-              <CardDescription className="max-w-3xl">
+            <div className="space-y-2">
+              <CardTitle className="text-3xl font-bold tracking-tight text-white lg:text-4xl">Map your best-fit career in four guided steps</CardTitle>
+              <CardDescription className="max-w-3xl text-white/90">
                 Complete the survey, upload supporting documents, finish the AI-generated assessment, and unlock tailored
                 recommendations with study plans.
               </CardDescription>
             </div>
           </div>
-          <div className="w-full max-w-xs rounded-2xl border border-border/60 bg-background/80 p-4">
-            <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
-              Completion
-              <span>{completionPercent}%</span>
+          <div className="w-full max-w-xs rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm">
+            <div className="flex items-center justify-between text-xs font-medium uppercase tracking-wider text-white/90">
+              <span>Completion</span>
+              <span className="font-semibold text-white">{completionPercent}%</span>
             </div>
-            <Progress value={completionPercent} className="mt-2 h-2" />
-            <p className="mt-3 text-sm text-muted-foreground">
+            <Progress value={completionPercent} className="mt-2 h-2 bg-white/20 [&>div]:bg-white" />
+            <p className="mt-3 text-sm text-white/90">
               {surveyLoading || documentsLoading || resultsLoading
                 ? "Checking your latest progress…"
                 : (
                     <>
-                      Next up: <span className="font-medium text-foreground">{nextStep.title}</span>
+                      Next up: <span className="font-semibold text-white">{nextStep.title}</span>
                     </>
                   )}
             </p>
-            <Button asChild size="sm" className="mt-3 w-full" variant="default" disabled={surveyLoading || documentsLoading || resultsLoading}>
-              <Link to={nextStep.href} className="flex items-center justify-center gap-2">
+            <Button 
+              asChild 
+              size="sm" 
+              className="mt-3 w-full bg-white text-primary hover:bg-white/90" 
+              disabled={surveyLoading || documentsLoading || resultsLoading}
+            >
+              <Link to={nextStep.href} className="flex items-center justify-center gap-2 font-medium">
                 Continue <ArrowRight className="h-4 w-4" />
               </Link>
             </Button>
