@@ -25,7 +25,7 @@ import CareerResultsPage from "./pages/career-guidance/CareerResultsPage";
 import Reports from "./pages/Reports";
 import Research from "./pages/Research";
 import Assistant from "./pages/Assistant";
-import Chat from "./pages/FriendsAndMessages";
+import Chat from "./pages/Messages";
 import DiscoverFriends from "./pages/DiscoverFriends";
 import EmailInbox from "./pages/EmailInbox";
 import EmailDetails from "./pages/EmailDetails";
