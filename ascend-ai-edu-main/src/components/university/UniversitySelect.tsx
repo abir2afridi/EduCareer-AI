@@ -79,17 +79,27 @@ export function UniversitySelect({ value, onChange, placeholder = "Select univer
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          className={cn(
+            "w-full justify-between text-left font-normal h-auto min-h-10 py-2 px-3",
+            !value && "text-muted-foreground",
+            "hover:bg-background/80 transition-colors",
+            className
+          )}
           disabled={disabled}
-          className={cn("w-full justify-between rounded-xl", className)}
         >
-          <div className="flex flex-col items-start text-left">
-            <span className="text-sm font-medium text-foreground">{selected?.name ?? placeholder}</span>
-            {selected && <Badge variant="secondary" className="mt-1 text-[10px]">{selected.category === "public" ? "Public" : "Private"}</Badge>}
-          </div>
-          <ChevronsUpDown className="h-4 w-4 opacity-60" />
+          <span className="flex-1 overflow-hidden">
+            <span className="block truncate text-left">
+              {selected?.name ?? placeholder}
+            </span>
+          </span>
+          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[320px] rounded-2xl border border-border/60 bg-background/95 p-0 text-foreground shadow-2xl" align="start">
+      <PopoverContent 
+        className="w-[350px] max-w-[90vw] p-0 rounded-xl border border-border/60 bg-background/95 backdrop-blur-sm shadow-lg" 
+        align="start"
+        sideOffset={4}
+      >
         <div className="border-b border-border/60 p-2">
           <div className="grid grid-cols-3 gap-2">
             {(
@@ -127,9 +137,19 @@ export function UniversitySelect({ value, onChange, placeholder = "Select univer
             {filter !== "private" && publicOptions.length > 0 && (
               <CommandGroup heading="Public Universities">
                 {publicOptions.map((option) => (
-                  <CommandItem key={option.id} value={option.id} onSelect={() => handleSelect(option)}>
-                    <Check className={cn("mr-2 h-4 w-4", selected?.id === option.id ? "opacity-100" : "opacity-0")} />
-                    {option.name}
+                  <CommandItem 
+                    key={option.id} 
+                    value={option.id} 
+                    onSelect={() => handleSelect(option)}
+                    className="group px-3 py-2 text-sm"
+                  >
+                    <Check 
+                      className={cn(
+                        "mr-2 h-4 w-4 flex-shrink-0", 
+                        selected?.id === option.id ? "opacity-100" : "opacity-0 group-hover:opacity-40"
+                      )} 
+                    />
+                    <span className="truncate">{option.name}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>
@@ -137,9 +157,19 @@ export function UniversitySelect({ value, onChange, placeholder = "Select univer
             {filter !== "public" && privateOptionsList.length > 0 && (
               <CommandGroup heading="Private Universities">
                 {privateOptionsList.map((option) => (
-                  <CommandItem key={option.id} value={option.id} onSelect={() => handleSelect(option)}>
-                    <Check className={cn("mr-2 h-4 w-4", selected?.id === option.id ? "opacity-100" : "opacity-0")} />
-                    {option.name}
+                  <CommandItem 
+                    key={option.id} 
+                    value={option.id} 
+                    onSelect={() => handleSelect(option)}
+                    className="group px-3 py-2 text-sm"
+                  >
+                    <Check 
+                      className={cn(
+                        "mr-2 h-4 w-4 flex-shrink-0", 
+                        selected?.id === option.id ? "opacity-100" : "opacity-0 group-hover:opacity-40"
+                      )} 
+                    />
+                    <span className="truncate">{option.name}</span>
                   </CommandItem>
                 ))}
               </CommandGroup>
