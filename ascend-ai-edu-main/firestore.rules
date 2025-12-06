@@ -2,14 +2,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ======================
-    // STUDENTS PROFILE
-    // ======================
+    // ============================================================
+    // STUDENTS ROOT
+    // ============================================================
     match /students/{studentId} {
 
       allow read, write: if request.auth != null &&
         (request.auth.uid == studentId || request.auth.token.role == "admin");
 
+      // -------- Completed Courses (Tick system) --------
       match /completedCourses/{courseId} {
         allow read: if request.auth != null &&
           (request.auth.uid == studentId || request.auth.token.role == "admin");
@@ -18,14 +19,17 @@ service cloud.firestore {
           request.auth.uid == studentId;
       }
 
-      // HIRED TEACHERS
-      // Admin approves → this collection auto-updates
-      match /hiredTeachers/{teacherId} {
+      // -------- Student Custom Course Presets --------
+      match /coursePresets/{presetId} {
+        allow read, create, update, delete:
+          if request.auth != null && request.auth.uid == studentId;
+      }
 
+      // -------- Hired Teachers --------
+      match /hiredTeachers/{teacherId} {
         allow read: if request.auth != null &&
           request.auth.uid == studentId;
 
-        // Only admin can add/update hired teachers
         allow create, update: if request.auth != null &&
           request.auth.token.role == "admin";
 
@@ -33,50 +37,62 @@ service cloud.firestore {
       }
     }
 
-    // ======================
-    // UNIVERSITY COURSE BUILDER & PUBLISHED DATA
-    // ======================
-    match /courseBuilder/{universityId}/{documentPath=**} {
+    // ============================================================
+    // UNIVERSITY COURSE BUILDER (Admin only)
+    // ============================================================
+    match /courseBuilder/{universityId}/{path=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.role == "admin";
+      allow write: if request.auth != null &&
+        request.auth.token.role == "admin";
     }
 
-    match /universityCourses/{universityId}/{documentPath=**} {
+    // ============================================================
+    // PUBLISHED UNIVERSITY COURSES (Student reads)
+    // ============================================================
+    match /universityCourses/{universityId}/{path=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.role == "admin";
+      allow write: if request.auth != null &&
+        request.auth.token.role == "admin";
     }
 
-    // ======================
+    // ============================================================
     // HIRE REQUESTS
-    // ======================
+    // ============================================================
     match /hireRequests/{requestId} {
 
+      // Student creates request
       allow create: if request.auth != null &&
         request.auth.uid == request.resource.data.studentUid;
 
+      // Student reads own request OR admin reads all
       allow read: if request.auth != null &&
         (request.auth.uid == resource.data.studentUid ||
          request.auth.token.role == "admin");
 
+      // Student can cancel (update), admin can update everything
       allow update: if request.auth != null &&
-        request.auth.token.role == "admin";
+        (
+          // Student can update only own request (cancel)
+          request.auth.uid == resource.data.studentUid ||
 
+          // Admin full control
+          request.auth.token.role == "admin"
+        );
+
+      // Delete disabled — cancel handled via update
       allow delete: if false;
     }
 
-    // ======================
+    // ============================================================
     // TEACHERS
-    // ======================
+    // ============================================================
     match /teachers/{teacherId} {
       allow read: if request.auth != null;
-
       allow create, update, delete: if request.auth != null &&
         request.auth.token.role == "admin";
     }
 
-    // ======================
-    // TEACHER REVIEWS
-    // ======================
+    // -------- Teacher Reviews --------
     match /teachers/{teacherId}/reviews/{reviewId} {
 
       allow read: if request.auth != null;
@@ -88,15 +104,15 @@ service cloud.firestore {
         request.auth.uid == resource.data.studentUid;
 
       allow delete: if request.auth != null &&
-        (request.auth.uid == resource.data.studentUid || request.auth.token.role == "admin");
+        (request.auth.uid == resource.data.studentUid ||
+         request.auth.token.role == "admin");
     }
 
-    // ======================
+    // ============================================================
     // PAYMENTS
-    // ======================
+    // ============================================================
     match /payments/{paymentId} {
 
-      // Student submits payment
       allow create: if request.auth != null &&
         request.resource.data.studentUid == request.auth.uid;
 
@@ -110,12 +126,14 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ======================
+    // ============================================================
     // PROFILE CHANGE REQUESTS
-    // ======================
+    // ============================================================
     match /profileChangeRequests/{requestId} {
+
       allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.uid || request.auth.token.role == "admin");
+        (request.auth.uid == resource.data.uid ||
+         request.auth.token.role == "admin");
 
       allow create: if request.auth != null &&
         request.auth.uid == request.resource.data.uid;
@@ -126,9 +144,9 @@ service cloud.firestore {
       allow delete: if false;
     }
 
-    // ======================
+    // ============================================================
     // QUIZ ATTEMPTS
-    // ======================
+    // ============================================================
     match /quizAttempts/{studentId} {
 
       allow read: if request.auth != null &&
@@ -138,6 +156,7 @@ service cloud.firestore {
         request.auth.uid == studentId;
 
       match /attempts/{attemptId} {
+
         allow read: if request.auth != null &&
           (request.auth.uid == studentId || request.auth.token.role == "admin");
 
@@ -148,18 +167,19 @@ service cloud.firestore {
       }
     }
 
-    // ======================
+    // ============================================================
     // ADMIN NOTIFICATIONS
-    // ======================
+    // ============================================================
     match /adminNotifications/{docId} {
       allow read, write: if request.auth != null &&
         request.auth.token.role == "admin";
     }
 
-    // ======================
+    // ============================================================
     // STUDENT NOTIFICATIONS
-    // ======================
+    // ============================================================
     match /studentNotifications/{studentId}/messages/{messageId} {
+
       allow read, create: if request.auth != null &&
         (request.auth.uid == studentId || request.auth.token.role == "admin");
 
@@ -167,16 +187,52 @@ service cloud.firestore {
     }
 
     // ======================
-    // FRIENDS SYSTEM
+    // FRIEND REQUESTS
     // ======================
+    match /friendRequests/{requestId} {
+      // Allow creating a friend request if:
+      // - User is authenticated
+      // - User is the sender
+      // - Sender is not the same as receiver
+      allow create: if request.auth != null &&
+        request.auth.uid == request.resource.data.senderUid &&
+        request.auth.uid != request.resource.data.receiverUid;
+
+      // Allow reading a friend request if:
+      // - User is authenticated
+      // - User is either the sender or receiver
+      allow read: if request.auth != null &&
+        (request.auth.uid == resource.data.senderUid ||
+         request.auth.uid == resource.data.receiverUid);
+
+      // Allow updating a friend request if:
+      // - User is authenticated
+      // - User is the receiver (to accept/reject)
+      // - Only status and respondedAt fields are being updated
+      allow update: if request.auth != null &&
+        (request.auth.uid == resource.data.receiverUid) &&
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt']));
+
+      // Allow deleting a friend request if:
+      // - User is authenticated
+      // - User is the sender (to cancel)
+      // - Request is still pending (can't cancel accepted/rejected requests)
+      allow delete: if request.auth != null &&
+        request.auth.uid == resource.data.senderUid &&
+        resource.data.status == "pending";
+    }
+
+    // ============================================================
+    // FRIENDS LIST
+    // ============================================================
     match /users/{userId}/friends/{friendUid} {
       allow read, create, delete: if request.auth != null &&
         (request.auth.uid == userId || request.auth.token.role == "admin");
     }
 
-    // ======================
-    // CHAT
-    // ======================
+    // ============================================================
+    // CHAT SYSTEM
+    // ============================================================
     match /messages/{chatId}/chats/{messageId} {
 
       allow create: if request.auth != null &&
@@ -193,38 +249,39 @@ service cloud.firestore {
       allow update: if false;
     }
 
-    // ======================
+    // ============================================================
     // CAREER GUIDANCE
-    // ======================
+    // ============================================================
     match /careerGuidance/{userId} {
       allow read, write: if request.auth != null &&
         request.auth.uid == userId;
 
-      match /{subPath=**} {
+      match /{sub=**} {
         allow read, write: if request.auth != null &&
           request.auth.uid == userId;
       }
     }
 
-    // ======================
-    // USERS
-    // ======================
+    // ============================================================
+    // USERS ROOT
+    // ============================================================
     match /users/{userId} {
       allow read, write: if request.auth != null &&
         (request.auth.uid == userId || request.auth.token.role == "admin");
 
-      match /{subcollection=**} {
+      match /{sub=**} {
         allow read, write: if request.auth != null &&
           (request.auth.uid == userId || request.auth.token.role == "admin");
       }
     }
 
-    // ======================
-    // DEFAULT — SAFE WRITE BLOCK
-    // ======================
+    // ============================================================
+    // DEFAULT SAFE FALLBACK
+    // ============================================================
     match /{document=**} {
       allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.role == "admin";
+      allow write: if request.auth != null &&
+        request.auth.token.role == "admin";
     }
   }
 }

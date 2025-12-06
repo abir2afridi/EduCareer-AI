@@ -161,9 +161,7 @@ export function MessageList({
         style={{
           scrollBehavior: 'smooth',
           scrollbarWidth: 'thin',
-          scrollbarColor: '#cbd5e1 #f1f5f9',
-          WebkitScrollbarWidth: 'thin',
-          WebkitScrollbarColor: '#cbd5e1 #f1f5f9'
+          scrollbarColor: '#cbd5e1 #f1f5f9'
         }}
       >
         <div className="space-y-4">

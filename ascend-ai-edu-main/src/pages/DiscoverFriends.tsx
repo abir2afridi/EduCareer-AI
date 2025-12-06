@@ -581,7 +581,11 @@ const DiscoverFriends = () => {
                         <span className="text-xs text-muted-foreground">awaiting approval · sent {createdAtLabel}</span>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm" className="rounded-xl text-xs" onClick={() => handleCancelRequest(request.id)}>
+                    <Button variant="outline" size="sm" className="rounded-xl text-xs" onClick={() => {
+                      console.log("Cancel button clicked for request:", request.id);
+                      console.log("Request details:", request);
+                      handleCancelRequest(request.id);
+                    }}>
                       Cancel
                     </Button>
                   </div>
@@ -695,7 +699,11 @@ const DiscoverFriends = () => {
               variant="outline"
               size="sm"
               className="rounded-xl text-xs"
-              onClick={() => handleCancelRequest(selectedPendingOutgoing.id)}
+              onClick={() => {
+                console.log("Profile drawer cancel clicked for request:", selectedPendingOutgoing.id);
+                console.log("Request details:", selectedPendingOutgoing);
+                handleCancelRequest(selectedPendingOutgoing.id);
+              }}
             >
               Cancel request
             </Button>
@@ -842,6 +850,8 @@ const DiscoverFriends = () => {
               className="rounded-xl text-xs"
               onClick={(event) => {
                 event.stopPropagation();
+                console.log("Profile card cancel clicked for request:", pendingOutgoingRequest.id);
+                console.log("Request details:", pendingOutgoingRequest);
                 handleCancelRequest(pendingOutgoingRequest.id);
               }}
             >
