@@ -158,8 +158,7 @@ service cloud.firestore {
         (request.auth.uid == resource.data.receiverUid) &&
         (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','respondedAt']));
       allow delete: if request.auth != null &&
-        request.auth.uid == resource.data.senderUid &&
-        resource.data.status == "pending";
+        (request.auth.uid == resource.data.senderUid || request.auth.uid == resource.data.receiverUid);
     }
 
     // ============================================================
@@ -171,7 +170,7 @@ service cloud.firestore {
       allow create: if request.auth != null &&
         (request.auth.uid == userId || request.auth.uid == friendUid);
       allow delete: if request.auth != null &&
-        request.auth.uid == userId;
+        (request.auth.uid == userId || request.auth.uid == friendUid);
     }
 
     // ============================================================
@@ -205,22 +204,10 @@ service cloud.firestore {
     // USERS ROOT
     // ============================================================
     match /users/{userId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null &&
+      allow read, write: if request.auth != null &&
         (request.auth.uid == userId || request.auth.token.role == "admin");
 
-      // Friends subcollection
-      match /friends/{friendId} {
-        // Allow users to add/remove friends
-        allow read, create, delete: if request.auth != null && 
-          (request.auth.uid == userId || request.auth.token.role == "admin");
-        
-        // Prevent updates to friend documents (except by admin)
-        allow update: if request.auth != null && request.auth.token.role == "admin";
-      }
-
-      // Other subcollections
-      match /{subcollection} {
+      match /{sub=**} {
         allow read, write: if request.auth != null &&
           (request.auth.uid == userId || request.auth.token.role == "admin");
       }
