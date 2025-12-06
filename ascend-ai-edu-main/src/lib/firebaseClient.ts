@@ -2,6 +2,7 @@ import { initializeApp, getApps } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCPn35WcfiyvYLaTkEFpKZwTNhtNkORRZU",
@@ -28,6 +29,7 @@ if (typeof window !== "undefined") {
 
 const db = getFirestore(app);
 const storage = getStorage(app);
+const auth = getAuth(app);
 
 if (import.meta.env.MODE === "development" && typeof window !== "undefined" && import.meta.env.VITE_USE_FIREBASE_EMULATOR === "true") {
   try {
@@ -37,4 +39,4 @@ if (import.meta.env.MODE === "development" && typeof window !== "undefined" && i
   }
 }
 
-export { app, db, analytics, storage };
+export { app, db, analytics, storage, auth };

@@ -1,18 +1,17 @@
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
-import { 
-  addDoc, 
-  collection, 
-  deleteDoc, 
-  doc, 
-  getDoc, 
-  onSnapshot, 
-  orderBy, 
-  query, 
-  serverTimestamp, 
-  setDoc, 
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  onSnapshot,
+  orderBy,
+  query,
+  serverTimestamp,
+  setDoc,
   updateDoc,
   where,
-  writeBatch 
+  writeBatch,
 } from "firebase/firestore";
 
 import { useAuth } from "@/components/auth-provider";
@@ -34,7 +33,6 @@ export interface FriendStudentProfile {
 export interface FriendEntry {
   uid: string;
   since?: Date | null;
-  status?: string;
 }
 
 export interface FriendRequestEntry {
@@ -63,7 +61,7 @@ export interface UseFriendNetworkResult {
   handleAddFriend: (receiverUid: string) => Promise<void>;
   handleRespondToRequest: (request: FriendRequestEntry, action: "accepted" | "rejected") => Promise<void>;
   handleCancelRequest: (requestId: string) => Promise<void>;
-  handleUnfriend: (friendUid: string) => Promise<void>;
+  handleRemoveFriend: (friendUid: string) => Promise<void>;
   hasPendingIncoming: (uid: string) => boolean;
 }
 
@@ -77,6 +75,7 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
   const [incomingRequests, setIncomingRequests] = useState<FriendRequestEntry[]>([]);
   const [outgoingRequests, setOutgoingRequests] = useState<FriendRequestEntry[]>([]);
 
+  // Load all students
   useEffect(() => {
     if (!currentUid) return;
 
@@ -106,6 +105,29 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
   }, [currentUid]);
 
   useEffect(() => {
+    if (!currentUid) {
+      setFriendsMap({});
+      return;
+    }
+
+    const friendsRef = collection(db, "users", currentUid, "friends");
+    const friendsQuery = query(friendsRef, orderBy("since", "desc"));
+    const unsubscribe = onSnapshot(friendsQuery, (snapshot) => {
+      const map: Record<string, FriendEntry> = {};
+      snapshot.forEach((docSnapshot) => {
+        const data = docSnapshot.data();
+        map[docSnapshot.id] = {
+          uid: docSnapshot.id,
+          since: data.since?.toDate?.() ?? null,
+        } satisfies FriendEntry;
+      });
+      setFriendsMap(map);
+    });
+
+    return () => unsubscribe();
+  }, [currentUid]);
+
+  useEffect(() => {
     const unsubscribe = onSnapshot(collection(db, "onlineUsers"), (snapshot) => {
       const map: Record<string, OnlineUserEntry> = {};
       snapshot.forEach((docSnapshot) => {
@@ -121,48 +143,18 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
     return unsubscribe;
   }, []);
 
-  useEffect(() => {
-    if (!currentUid) return;
-
-    const friendsQuery = query(collection(db, "users", currentUid, "friends"), orderBy("since", "desc"));
-    const unsubscribe = onSnapshot(friendsQuery, (snapshot) => {
-      const map: Record<string, FriendEntry> = {};
-      snapshot.forEach((docSnapshot) => {
-        const data = docSnapshot.data();
-        map[docSnapshot.id] = {
-          uid: docSnapshot.id,
-          since: data.since?.toDate?.() ?? null,
-          status: data.status ?? "accepted",
-        } satisfies FriendEntry;
-      });
-      setFriendsMap(map);
-    });
-
-    return unsubscribe;
-  }, [currentUid]);
-
   const setupOutgoingListener = useCallback(() => {
     if (!currentUid) return;
-    
-    const outgoing = query(
-      collection(db, "friendRequests"), 
-      where("senderUid", "==", currentUid)
-    );
-    
-    return onSnapshot(outgoing, 
+
+    const outgoing = query(collection(db, "friendRequests"), where("senderUid", "==", currentUid));
+
+    return onSnapshot(
+      outgoing,
       (snapshot) => {
-        console.log("Outgoing requests updated:", snapshot.docs.length, "requests");
         const requests: FriendRequestEntry[] = [];
-        
+
         snapshot.docs.forEach((docSnapshot) => {
           const data = docSnapshot.data();
-          console.log("Outgoing request:", { 
-            id: docSnapshot.id, 
-            sender: data.senderUid, 
-            receiver: data.receiverUid, 
-            status: data.status 
-          });
-          
           requests.push({
             id: docSnapshot.id,
             senderUid: data.senderUid,
@@ -172,12 +164,12 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
             respondedAt: data.respondedAt?.toDate?.() ?? null,
           });
         });
-        
+
         setOutgoingRequests(requests);
       },
       (error) => {
         console.error("Error in outgoing requests listener:", error);
-      }
+      },
     );
   }, [currentUid]);
 
@@ -266,6 +258,10 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
   const handleAddFriend = useCallback(
     async (receiverUid: string): Promise<void> => {
       if (!currentUid || currentUid === receiverUid) return;
+      if (friendsMap[receiverUid]) {
+        console.warn("Attempted to add existing friend", receiverUid);
+        return;
+      }
 
       try {
         // Create a deterministic ID for the friend request (sorted to ensure consistency)
@@ -293,7 +289,7 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
         throw error;
       }
     },
-    [currentUid]
+    [currentUid, friendsMap]
   );
 
   const handleRespondToRequest = useCallback(
@@ -305,44 +301,37 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
 
       try {
         const requestRef = doc(db, "friendRequests", request.id);
-        const batch = writeBatch(db);
-        
+
         if (response === "accepted") {
-          // Create friendship in both directions
-          const currentUserFriendRef = doc(db, "users", currentUid, "friends", request.senderUid);
-          const otherUserFriendRef = doc(db, "users", request.senderUid, "friends", currentUid);
-          const now = serverTimestamp();
-          
+          const batch = writeBatch(db);
+          const sinceField = serverTimestamp();
+
           // Add friend to current user's friends list
-          batch.set(currentUserFriendRef, {
+          const userFriendRef = doc(db, "users", currentUid, "friends", request.senderUid);
+          batch.set(userFriendRef, {
             uid: request.senderUid,
-            since: now,
-            status: "accepted"
+            since: sinceField,
           });
-          
+
           // Add current user to the other user's friends list
+          const otherUserFriendRef = doc(db, "users", request.senderUid, "friends", currentUid);
           batch.set(otherUserFriendRef, {
             uid: currentUid,
-            since: now,
-            status: "accepted"
+            since: sinceField,
           });
-          
+
           // Update request status to accepted
-          batch.update(requestRef, { 
+          batch.update(requestRef, {
             status: "accepted",
-            respondedAt: now
+            respondedAt: serverTimestamp(),
           });
-          
           await batch.commit();
-          console.log("Friend request accepted and friendship created");
+
         } else {
-          // For rejection, update the status and set respondedAt
-          batch.update(requestRef, { 
+          await updateDoc(requestRef, {
             status: "rejected",
-            respondedAt: serverTimestamp()
+            respondedAt: serverTimestamp(),
           });
-          await batch.commit();
-          console.log("Friend request rejected");
         }
       } catch (error) {
         console.error(`Error ${response}ing friend request:`, error);
@@ -357,7 +346,6 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
       if (!currentUid) return;
 
       try {
-        console.log("Attempting to cancel request with ID:", requestId);
         const requestRef = doc(db, "friendRequests", requestId);
         const requestSnap = await getDoc(requestRef);
         
@@ -367,41 +355,17 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
         }
         
         const requestData = requestSnap.data();
-        
-        // Check if current user is either sender or receiver
-        if (requestData.senderUid !== currentUid && requestData.receiverUid !== currentUid) {
+        if (requestData.senderUid !== currentUid) {
           console.error("Not authorized to cancel this request");
           return;
         }
-        
-        // If the request was already accepted, we need to remove the friendship
-        if (requestData.status === "accepted") {
-          const batch = writeBatch(db);
-          
-          // Remove friend from current user's friends list if current user is the sender
-          const currentUserFriendRef = doc(db, "users", currentUid, "friends", 
-            currentUid === requestData.senderUid ? requestData.receiverUid : requestData.senderUid
-          );
-          batch.delete(currentUserFriendRef);
-          
-          // Remove current user from the other user's friends list
-          const otherUserFriendRef = doc(db, "users", 
-            currentUid === requestData.senderUid ? requestData.receiverUid : requestData.senderUid, 
-            "friends", 
-            currentUid
-          );
-          batch.delete(otherUserFriendRef);
-          
-          // Delete the request
-          batch.delete(requestRef);
-          
-          await batch.commit();
-          console.log("Friendship removed and request deleted:", requestId);
-        } else {
-          // For pending requests, just delete the request
-          await deleteDoc(requestRef);
-          console.log("Friend request cancelled:", requestId);
+
+        if (requestData.status !== "pending") {
+          console.error("Cannot cancel a request that is not pending");
+          return;
         }
+        
+        await deleteDoc(requestRef);
       } catch (error) {
         console.error("Error canceling friend request:", error);
         throw error;
@@ -410,39 +374,26 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
     [currentUid]
   );
 
-  const handleUnfriend = useCallback(
+  const handleRemoveFriend = useCallback(
     async (friendUid: string): Promise<void> => {
-      if (!currentUid) return;
+      if (!currentUid || currentUid === friendUid) return;
 
       try {
-        console.log("Attempting to unfriend user:", friendUid);
-        
-        // First, check if there's an existing friend request between these users
-        const [smallerUid, largerUid] = [currentUid, friendUid].sort();
-        const requestId = `${smallerUid}_${largerUid}`;
-        const requestRef = doc(db, "friendRequests", requestId);
-        const requestSnap = await getDoc(requestRef);
-        
-        // Use a batch to ensure atomic updates
         const batch = writeBatch(db);
-        
-        // If there's an existing request, delete it
-        if (requestSnap.exists()) {
-          batch.delete(requestRef);
-        }
-        
-        // Remove friend from current user's friends list
+
         const currentUserFriendRef = doc(db, "users", currentUid, "friends", friendUid);
         batch.delete(currentUserFriendRef);
-        
-        // Remove current user from the other user's friends list
+
         const otherUserFriendRef = doc(db, "users", friendUid, "friends", currentUid);
         batch.delete(otherUserFriendRef);
-        
+
+        const ids = [currentUid, friendUid].sort();
+        const requestId = `${ids[0]}_${ids[1]}`;
+        batch.delete(doc(db, "friendRequests", requestId));
+
         await batch.commit();
-        console.log("Successfully unfriended user and cleaned up requests:", friendUid);
       } catch (error) {
-        console.error("Error unfriending user:", error);
+        console.error("Error removing friend:", error);
         throw error;
       }
     },
@@ -466,7 +417,7 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
     handleAddFriend,
     handleRespondToRequest,
     handleCancelRequest,
-    handleUnfriend,
+    handleRemoveFriend,
     hasPendingIncoming,
   };
 };

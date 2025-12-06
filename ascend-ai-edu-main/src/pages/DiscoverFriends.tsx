@@ -191,17 +191,21 @@ const DiscoverFriends = () => {
     students,
     friendsMap,
     onlineUsers,
-    incomingRequests,
-    outgoingRequests,
     pendingIncoming,
     pendingOutgoing,
+    incomingRequests,
+    outgoingRequests,
     handleAddFriend,
     handleRespondToRequest,
     handleCancelRequest,
-    handleUnfriend,
+    handleRemoveFriend,
     hasPendingIncoming,
   } = useFriendNetwork();
   const navigate = useNavigate();
+
+  const acceptedFriendUids = useMemo(() => new Set<string>(Object.keys(friendsMap)), [friendsMap]);
+
+  const isFriendUid = useCallback((uid: string) => acceptedFriendUids.has(uid), [acceptedFriendUids]);
 
   const [search, setSearch] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("discover");
@@ -363,21 +367,21 @@ const DiscoverFriends = () => {
   }, [sortedStudents, lowerSearch, departmentFilter, batchFilter, onlineOnly, completedOnly, sortBy]);
 
   const friendsList = useMemo(() => {
-    const base = sortedStudents.filter((student) => Boolean(friendsMap[student.uid] && student.uid !== currentUid));
+    const base = sortedStudents.filter((student) => student.uid !== currentUid && isFriendUid(student.uid));
     return sortProfiles(applyFilters(base));
-  }, [sortedStudents, friendsMap, currentUid, departmentFilter, batchFilter, onlineOnly, completedOnly, sortBy]);
+  }, [sortedStudents, currentUid, isFriendUid, departmentFilter, batchFilter, onlineOnly, completedOnly, sortBy]);
 
   const discoverList = useMemo(() => {
     const base = sortedStudents.filter((student) => {
       if (student.uid === currentUid) return false;
-      if (friendsMap[student.uid]) return false;
+      if (isFriendUid(student.uid)) return false;
       const pendingOut = pendingOutgoing.some((request) => request.receiverUid === student.uid && request.status === "pending");
       const pendingIn = hasPendingIncoming(student.uid);
       return !(pendingOut || pendingIn);
     });
     const searched = !lowerSearch ? base : base.filter((student) => student.fullName.toLowerCase().includes(lowerSearch));
     return sortProfiles(applyFilters(searched));
-  }, [sortedStudents, currentUid, friendsMap, pendingOutgoing, hasPendingIncoming, lowerSearch, departmentFilter, batchFilter, onlineOnly, completedOnly, sortBy]);
+  }, [sortedStudents, currentUid, isFriendUid, pendingOutgoing, hasPendingIncoming, lowerSearch, departmentFilter, batchFilter, onlineOnly, completedOnly, sortBy]);
 
   const incomingPending = useMemo(() => pendingIncoming.filter((request) => request.status === "pending"), [pendingIncoming]);
   const outgoingPending = useMemo(() => pendingOutgoing.filter((request) => request.status === "pending"), [pendingOutgoing]);
@@ -449,7 +453,7 @@ const DiscoverFriends = () => {
     [sortedStudents, selectedProfileUid],
   );
 
-  const selectedIsFriend = selectedProfile ? Boolean(friendsMap[selectedProfile.uid]) : false;
+  const selectedIsFriend = selectedProfile ? isFriendUid(selectedProfile.uid) : false;
   const selectedPendingIncoming = selectedProfile ? incomingRequests.find((request) => request.senderUid === selectedProfile.uid && request.status === "pending") : undefined;
   const selectedPendingOutgoing = selectedProfile ? outgoingRequests.find((request) => request.receiverUid === selectedProfile.uid && request.status === "pending") : undefined;
 
@@ -692,17 +696,17 @@ const DiscoverFriends = () => {
               <Button size="sm" className="rounded-xl text-xs" onClick={handleMessage}>
                 Message
               </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="rounded-xl text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs"
                 onClick={() => {
-                  if (confirm(`Are you sure you want to unfriend ${selectedProfile.fullName}?`)) {
-                    handleUnfriend(selectedProfile.uid);
+                  if (window.confirm("Remove this friend?")) {
+                    void handleRemoveFriend(selectedProfile.uid);
                   }
                 }}
               >
-                Unfriend
+                <XCircle className="mr-2 h-3.5 w-3.5" /> Remove
               </Button>
             </div>
           ) : selectedPendingIncoming ? (
@@ -738,7 +742,7 @@ const DiscoverFriends = () => {
   const renderProfileCard = (profile: FriendStudentProfile) => {
     const onlineEntry = onlineUsers[profile.uid];
     const online = Boolean(onlineEntry?.isOnline);
-    const friend = Boolean(friendsMap[profile.uid]);
+    const friend = isFriendUid(profile.uid);
     const pendingIncomingRequest = incomingPending.find((request) => request.senderUid === profile.uid);
     const pendingOutgoingRequest = outgoingPending.find((request) => request.receiverUid === profile.uid);
     const activity = getActivityMeta(profile.uid);
@@ -842,16 +846,30 @@ const DiscoverFriends = () => {
             View profile
           </Button>
           {friend ? (
-            <Button
-              size="sm"
-              className="rounded-xl text-xs"
-              onClick={(event) => {
-                event.stopPropagation();
-                navigate(`/dashboard/chat?to=${profile.uid}`);
-              }}
-            >
-              Message
-            </Button>
+            <>
+              <Button
+                size="sm"
+                className="rounded-xl text-xs"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  navigate(`/dashboard/chat?to=${profile.uid}`);
+                }}
+              >
+                Message
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="rounded-xl text-xs"
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to remove this friend?")) {
+                    void handleRemoveFriend(profile.uid);
+                  }
+                }}
+              >
+                <XCircle className="mr-2 h-3.5 w-3.5" /> Remove
+              </Button>
+            </>
           ) : pendingIncomingRequest ? (
             <div className="flex gap-2">
               {renderRequestActions(pendingIncomingRequest)}

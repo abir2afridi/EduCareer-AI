@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useMemo } from "react"
 import { useFriendNetwork } from "@/hooks/useFriendNetwork"
 import { useAuth } from "@/components/auth-provider"
 import { 
@@ -46,7 +46,7 @@ interface ChatPreview {
 
 export function ChatPage() {
   const { user } = useAuth()
-  const { students, friendsMap } = useFriendNetwork()
+  const { students, friendsMap, incomingRequests, outgoingRequests } = useFriendNetwork()
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [chatPreviews, setChatPreviews] = useState<ChatPreview[]>([])
@@ -57,14 +57,41 @@ export function ChatPage() {
   const unsubscribeRef = useRef<Unsubscribe | null>(null)
 
   // Convert friendsMap to friends array
-  const friends = students
-    .filter(student => friendsMap[student.uid] && student.uid !== user?.uid)
-    .map(student => ({
-      uid: student.uid,
-      name: student.fullName,
-      email: student.email,
-      photoURL: student.photoUrl
-    }))
+  const acceptedFriendIds = useMemo(() => {
+    const set = new Set<string>(Object.keys(friendsMap))
+
+    incomingRequests.forEach((request) => {
+      if (request.status === "accepted") {
+        set.add(request.senderUid)
+      }
+    })
+
+    outgoingRequests.forEach((request) => {
+      if (request.status === "accepted") {
+        set.add(request.receiverUid)
+      }
+    })
+
+    return set
+  }, [friendsMap, incomingRequests, outgoingRequests])
+
+  const friends = useMemo(() => {
+    if (!user?.uid) return []
+
+    return Array.from(acceptedFriendIds)
+      .filter((uid) => uid !== user.uid)
+      .map((uid) => {
+        const student = students.find((s) => s.uid === uid)
+        return {
+          uid,
+          name: student?.fullName || "Unknown User",
+          email: student?.email,
+          photoURL: student?.photoUrl,
+          status: student?.status || "offline",
+          lastSeen: student?.lastSeen,
+        }
+      })
+  }, [acceptedFriendIds, students, user?.uid])
 
   useEffect(() => {
     setIsLoading(false)

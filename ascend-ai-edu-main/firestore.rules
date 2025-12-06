@@ -145,64 +145,32 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
-    // ======================
+    // ============================================================
     // FRIEND REQUESTS
-    // ======================
+    // ============================================================
     match /friendRequests/{requestId} {
-      // Allow creating a friend request if:
-      // - User is authenticated
-      // - User is the sender
-      // - Sender is not the same as receiver
       allow create: if request.auth != null &&
         request.auth.uid == request.resource.data.senderUid &&
         request.auth.uid != request.resource.data.receiverUid;
-
-      // Allow reading a friend request if:
-      // - User is authenticated
-      // - User is either the sender or receiver
       allow read: if request.auth != null &&
-        (request.auth.uid == resource.data.senderUid ||
-         request.auth.uid == resource.data.receiverUid);
-
-      // Allow updating a friend request if:
-      // - User is authenticated
-      // - User is the receiver (to accept/reject)
-      // - Only status and respondedAt fields are being updated
+        (request.auth.uid == resource.data.senderUid || request.auth.uid == resource.data.receiverUid);
       allow update: if request.auth != null &&
-        request.auth.uid == resource.data.receiverUid &&
-        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'respondedAt']));
-
-      // Allow deleting a friend request if:
-      // - User is authenticated
-      // - User is the sender (to cancel) or receiver (to reject)
-      // - Request is still pending (can't cancel accepted/rejected requests)
+        (request.auth.uid == resource.data.receiverUid) &&
+        (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','respondedAt']));
       allow delete: if request.auth != null &&
-        (request.auth.uid == resource.data.senderUid || 
-         request.auth.uid == resource.data.receiverUid) &&
+        request.auth.uid == resource.data.senderUid &&
         resource.data.status == "pending";
     }
 
-    // ======================
-    // FRIENDSHIPS
-    // ======================
-    match /users/{userId}/friends/{friendId} {
-      // Allow reading if user is authenticated
-      allow read: if request.auth != null;
-      
-      // Allow creating/updating if:
-      // - User is authenticated
-      // - User is the owner of the document (userId)
-      // - Only specific fields are being set/updated
-      allow create, update: if 
-        request.auth != null &&
-        request.auth.uid == userId &&
-        request.resource.data.diff(resource == null ? request.resource.data : resource.data).affectedKeys().hasOnly(['uid', 'since', 'status']);
-      
-      // Allow deleting if:
-      // - User is authenticated
-      // - User is the owner of the document (userId)
-      allow delete: if 
-        request.auth != null &&
+    // ============================================================
+    // FRIENDS LIST
+    // ============================================================
+    match /users/{userId}/friends/{friendUid} {
+      allow read: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.token.role == "admin");
+      allow create: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.uid == friendUid);
+      allow delete: if request.auth != null &&
         request.auth.uid == userId;
     }
 
@@ -237,10 +205,22 @@ service cloud.firestore {
     // USERS ROOT
     // ============================================================
     match /users/{userId} {
-      allow read, write: if request.auth != null &&
+      allow read: if request.auth != null;
+      allow write: if request.auth != null &&
         (request.auth.uid == userId || request.auth.token.role == "admin");
 
-      match /{sub=**} {
+      // Friends subcollection
+      match /friends/{friendId} {
+        // Allow users to add/remove friends
+        allow read, create, delete: if request.auth != null && 
+          (request.auth.uid == userId || request.auth.token.role == "admin");
+        
+        // Prevent updates to friend documents (except by admin)
+        allow update: if request.auth != null && request.auth.token.role == "admin";
+      }
+
+      // Other subcollections
+      match /{subcollection} {
         allow read, write: if request.auth != null &&
           (request.auth.uid == userId || request.auth.token.role == "admin");
       }
