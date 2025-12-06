@@ -63,6 +63,7 @@ export interface UseFriendNetworkResult {
   handleAddFriend: (receiverUid: string) => Promise<void>;
   handleRespondToRequest: (request: FriendRequestEntry, action: "accepted" | "rejected") => Promise<void>;
   handleCancelRequest: (requestId: string) => Promise<void>;
+  handleUnfriend: (friendUid: string) => Promise<void>;
   hasPendingIncoming: (uid: string) => boolean;
 }
 
@@ -304,43 +305,43 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
 
       try {
         const requestRef = doc(db, "friendRequests", request.id);
+        const batch = writeBatch(db);
         
         if (response === "accepted") {
           // Create friendship in both directions
-          const userFriendRef = doc(db, "users", currentUid, "friends", request.senderUid);
+          const currentUserFriendRef = doc(db, "users", currentUid, "friends", request.senderUid);
           const otherUserFriendRef = doc(db, "users", request.senderUid, "friends", currentUid);
-          
-          // Use batch to ensure atomic updates
-          const batch = writeBatch(db);
+          const now = serverTimestamp();
           
           // Add friend to current user's friends list
-          batch.set(userFriendRef, {
+          batch.set(currentUserFriendRef, {
             uid: request.senderUid,
-            since: serverTimestamp(),
+            since: now,
             status: "accepted"
           });
           
           // Add current user to the other user's friends list
           batch.set(otherUserFriendRef, {
             uid: currentUid,
-            since: serverTimestamp(),
+            since: now,
             status: "accepted"
           });
           
           // Update request status to accepted
           batch.update(requestRef, { 
             status: "accepted",
-            respondedAt: serverTimestamp()
+            respondedAt: now
           });
           
           await batch.commit();
           console.log("Friend request accepted and friendship created");
         } else {
-          // For rejection, just update the status
-          await updateDoc(requestRef, { 
+          // For rejection, update the status and set respondedAt
+          batch.update(requestRef, { 
             status: "rejected",
             respondedAt: serverTimestamp()
           });
+          await batch.commit();
           console.log("Friend request rejected");
         }
       } catch (error) {
@@ -366,15 +367,82 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
         }
         
         const requestData = requestSnap.data();
-        if (requestData.senderUid !== currentUid) {
+        
+        // Check if current user is either sender or receiver
+        if (requestData.senderUid !== currentUid && requestData.receiverUid !== currentUid) {
           console.error("Not authorized to cancel this request");
           return;
         }
         
-        await deleteDoc(requestRef);
-        console.log("Successfully deleted request:", requestId);
+        // If the request was already accepted, we need to remove the friendship
+        if (requestData.status === "accepted") {
+          const batch = writeBatch(db);
+          
+          // Remove friend from current user's friends list if current user is the sender
+          const currentUserFriendRef = doc(db, "users", currentUid, "friends", 
+            currentUid === requestData.senderUid ? requestData.receiverUid : requestData.senderUid
+          );
+          batch.delete(currentUserFriendRef);
+          
+          // Remove current user from the other user's friends list
+          const otherUserFriendRef = doc(db, "users", 
+            currentUid === requestData.senderUid ? requestData.receiverUid : requestData.senderUid, 
+            "friends", 
+            currentUid
+          );
+          batch.delete(otherUserFriendRef);
+          
+          // Delete the request
+          batch.delete(requestRef);
+          
+          await batch.commit();
+          console.log("Friendship removed and request deleted:", requestId);
+        } else {
+          // For pending requests, just delete the request
+          await deleteDoc(requestRef);
+          console.log("Friend request cancelled:", requestId);
+        }
       } catch (error) {
         console.error("Error canceling friend request:", error);
+        throw error;
+      }
+    },
+    [currentUid]
+  );
+
+  const handleUnfriend = useCallback(
+    async (friendUid: string): Promise<void> => {
+      if (!currentUid) return;
+
+      try {
+        console.log("Attempting to unfriend user:", friendUid);
+        
+        // First, check if there's an existing friend request between these users
+        const [smallerUid, largerUid] = [currentUid, friendUid].sort();
+        const requestId = `${smallerUid}_${largerUid}`;
+        const requestRef = doc(db, "friendRequests", requestId);
+        const requestSnap = await getDoc(requestRef);
+        
+        // Use a batch to ensure atomic updates
+        const batch = writeBatch(db);
+        
+        // If there's an existing request, delete it
+        if (requestSnap.exists()) {
+          batch.delete(requestRef);
+        }
+        
+        // Remove friend from current user's friends list
+        const currentUserFriendRef = doc(db, "users", currentUid, "friends", friendUid);
+        batch.delete(currentUserFriendRef);
+        
+        // Remove current user from the other user's friends list
+        const otherUserFriendRef = doc(db, "users", friendUid, "friends", currentUid);
+        batch.delete(otherUserFriendRef);
+        
+        await batch.commit();
+        console.log("Successfully unfriended user and cleaned up requests:", friendUid);
+      } catch (error) {
+        console.error("Error unfriending user:", error);
         throw error;
       }
     },
@@ -398,6 +466,7 @@ export const useFriendNetwork = (): UseFriendNetworkResult => {
     handleAddFriend,
     handleRespondToRequest,
     handleCancelRequest,
+    handleUnfriend,
     hasPendingIncoming,
   };
 };

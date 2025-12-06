@@ -191,13 +191,14 @@ const DiscoverFriends = () => {
     students,
     friendsMap,
     onlineUsers,
-    pendingIncoming,
-    pendingOutgoing,
     incomingRequests,
     outgoingRequests,
+    pendingIncoming,
+    pendingOutgoing,
     handleAddFriend,
     handleRespondToRequest,
     handleCancelRequest,
+    handleUnfriend,
     hasPendingIncoming,
   } = useFriendNetwork();
   const navigate = useNavigate();
@@ -690,6 +691,18 @@ const DiscoverFriends = () => {
               </Badge>
               <Button size="sm" className="rounded-xl text-xs" onClick={handleMessage}>
                 Message
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="rounded-xl text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                onClick={() => {
+                  if (confirm(`Are you sure you want to unfriend ${selectedProfile.fullName}?`)) {
+                    handleUnfriend(selectedProfile.uid);
+                  }
+                }}
+              >
+                Unfriend
               </Button>
             </div>
           ) : selectedPendingIncoming ? (
