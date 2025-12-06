@@ -46,7 +46,7 @@ interface ChatPreview {
 
 export function ChatPage() {
   const { user } = useAuth()
-  const { students, friendsMap, incomingRequests, outgoingRequests } = useFriendNetwork()
+  const { students, friendsMap } = useFriendNetwork()
   const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null)
   const [messages, setMessages] = useState<Message[]>([])
   const [chatPreviews, setChatPreviews] = useState<ChatPreview[]>([])
@@ -57,23 +57,7 @@ export function ChatPage() {
   const unsubscribeRef = useRef<Unsubscribe | null>(null)
 
   // Convert friendsMap to friends array
-  const acceptedFriendIds = useMemo(() => {
-    const set = new Set<string>(Object.keys(friendsMap))
-
-    incomingRequests.forEach((request) => {
-      if (request.status === "accepted") {
-        set.add(request.senderUid)
-      }
-    })
-
-    outgoingRequests.forEach((request) => {
-      if (request.status === "accepted") {
-        set.add(request.receiverUid)
-      }
-    })
-
-    return set
-  }, [friendsMap, incomingRequests, outgoingRequests])
+  const acceptedFriendIds = useMemo(() => new Set<string>(Object.keys(friendsMap)), [friendsMap])
 
   const friends = useMemo(() => {
     if (!user?.uid) return []
