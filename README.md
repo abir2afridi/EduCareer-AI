@@ -1,4 +1,3 @@
-# EduCareer-AI
 # Welcome to my project
 
 **Edit a file directly in GitHub**
