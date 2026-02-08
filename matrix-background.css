@@ -74,14 +74,14 @@
 /* Professional Geometric Elements */
 .geometric-elements { position: absolute; width: 100%; height: 100%; }
 .geo-element { position: absolute; opacity: 0.12; animation: geoFloat 25s ease-in-out infinite; }
-.geo-circle-1 { width: 300px; height: 300px; border: 2px solid var(--accent-primary); border-radius: 50%; top: 10%; left: 5%; animation-delay: 0s; }
-.geo-square-1 { width: 200px; height: 200px; border: 2px solid var(--accent-secondary); transform: rotate(45deg); top: 60%; right: 10%; animation-delay: 8s; }
-.geo-triangle-1 { width: 0; height: 0; border-left: 100px solid transparent; border-right: 100px solid transparent; border-bottom: 173px solid var(--success); top: 30%; right: 30%; animation-delay: 15s; }
-.geo-hexagon-1 { width: 150px; height: 86px; background: var(--warning); position: relative; bottom: 20%; left: 70%; animation-delay: 5s; }
+.geo-circle-1 { width: 300px; height: 300px; border: 2px solid hsl(217 91% 60%); border-radius: 50%; top: 10%; left: 5%; animation-delay: 0s; }
+.geo-square-1 { width: 200px; height: 200px; border: 2px solid hsl(270 60% 50%); transform: rotate(45deg); top: 60%; right: 10%; animation-delay: 8s; }
+.geo-triangle-1 { width: 0; height: 0; border-left: 100px solid transparent; border-right: 100px solid transparent; border-bottom: 173px solid hsl(142 76% 36%); top: 30%; right: 30%; animation-delay: 15s; }
+.geo-hexagon-1 { width: 150px; height: 86px; background: hsl(38 92% 50%); position: relative; bottom: 20%; left: 70%; animation-delay: 5s; }
 .geo-hexagon-1:before,
 .geo-hexagon-1:after { content: ""; position: absolute; width: 0; border-left: 75px solid transparent; border-right: 75px solid transparent; }
-.geo-hexagon-1:before { bottom: 100%; border-bottom: 43px solid var(--warning); }
-.geo-hexagon-1:after { top: 100%; border-top: 43px solid var(--warning); }
+.geo-hexagon-1:before { bottom: 100%; border-bottom: 43px solid hsl(38 92% 50%); }
+.geo-hexagon-1:after { top: 100%; border-top: 43px solid hsl(38 92% 50%); }
 
 @keyframes geoFloat {
   0%, 100% { transform: translateY(0) rotate(0deg) scale(1); opacity: 0.06; }
@@ -128,7 +128,7 @@
 
 /* Optional watermark hooks (HTML includes these elements) */
 .brand-watermark { position: absolute; inset: 0; pointer-events: none; }
-.watermark-element { position: absolute; font-weight: 800; letter-spacing: 0.3em; opacity: 0.04; color: var(--text-primary); }
+.watermark-element { position: absolute; font-weight: 800; letter-spacing: 0.3em; opacity: 0.04; color: hsl(224 40% 12%); }
 .watermark-1 { top: 12%; left: 8%; font-size: 56px; }
 .watermark-2 { bottom: 10%; right: 12%; font-size: 72px; }
 
