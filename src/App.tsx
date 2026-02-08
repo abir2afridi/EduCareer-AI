@@ -52,6 +52,7 @@ import NotificationsPage from "./pages/admin/Notifications";
 import ProfileChangeRequestsPage from "./pages/admin/ProfileChangeRequests";
 import SystemSettingsPage from "./pages/admin/SystemSettings";
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { AdminLayout } from "./layouts/AdminLayout";
 import { AdminProtectedRoute } from "./components/admin/AdminProtectedRoute";
@@ -66,7 +67,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<PublicRoute><Index /></PublicRoute>} />
           <Route
             path="/dashboard"
             element={
