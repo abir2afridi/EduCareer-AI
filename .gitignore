@@ -90,3 +90,4 @@ Desktop.ini
 
 # Turbo
 .turbo
+.env*.local
