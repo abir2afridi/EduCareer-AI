@@ -4,8 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Send, Bot, User, Image as ImageIcon, X } from "lucide-react";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
+function getSupabaseConfig(): { supabaseUrl: string; supabaseAnonKey: string } {
+  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ??
+    (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ??
+    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+    (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      "Supabase is not configured. Set VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY (or NEXT_PUBLIC_SUPABASE_URL + NEXT_PUBLIC_SUPABASE_ANON_KEY).",
+    );
+  }
+
+  return { supabaseUrl, supabaseAnonKey };
+}
 
 interface Message {
   role: "user" | "assistant";
@@ -57,20 +72,55 @@ export default function Assistant() {
     setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke("ai-chat", {
-        body: { 
-          message: userMessage || "Please analyze this image", 
-          conversationHistory: messages,
-          image: imageToSend
+      const { supabaseUrl, supabaseAnonKey } = getSupabaseConfig();
+      const isLocalhost =
+        typeof window !== "undefined" &&
+        (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+
+      const endpoint = isLocalhost
+        ? "/functions/v1/ai-chat"
+        : `${supabaseUrl.replace(/\/+$/, "")}/functions/v1/ai-chat`;
+      const resp = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: supabaseAnonKey,
+          Authorization: `Bearer ${supabaseAnonKey}`,
         },
+        body: JSON.stringify({ message: userMessage || "Please analyze this image" }),
       });
 
-      if (error) throw error;
+      const text = await resp.text();
+      let data: any = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        data = null;
+      }
 
-      setMessages(prev => [...prev, { role: "assistant", content: data.reply }]);
+      if (!resp.ok) {
+        const details = data?.error ?? text?.slice?.(0, 500) ?? "";
+        throw new Error(`AI request failed (${resp.status}). ${details}`);
+      }
+
+      const reply = typeof data?.reply === "string" ? data.reply : "";
+      if (!reply.trim()) {
+        throw new Error("AI returned an empty reply.");
+      }
+
+      setMessages(prev => [...prev, { role: "assistant", content: reply }]);
     } catch (error: any) {
       console.error("AI chat error:", error);
-      toast.error("Failed to get AI response. Please try again.");
+      const rawMessage = typeof error?.message === "string" ? error.message : "";
+      const isFetchTypeError = error instanceof TypeError || /failed to fetch/i.test(rawMessage);
+
+      if (isFetchTypeError) {
+        toast.error(
+          "Failed to fetch. Check: (1) VITE_SUPABASE_URL/ANON_KEY are set and dev server restarted, (2) you are online, (3) browser Network tab shows the request, (4) no adblock/VPN blocking supabase.co.",
+        );
+      } else {
+        toast.error(rawMessage || "Failed to get AI response. Please try again.");
+      }
       setMessages(prev => prev.slice(0, -1));
     } finally {
       setIsLoading(false);

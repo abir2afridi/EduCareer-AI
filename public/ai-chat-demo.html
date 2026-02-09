@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Chat Demo</title>
+</head>
+<body>
+  <div style="max-width: 800px; margin: 2rem auto; padding: 1rem;">
+    <h1>EduCareer AI Chat</h1>
+    <p>Simple vanilla JS demo. Set <code>window.env</code> below.</p>
+
+    <div id="chat-container"></div>
+
+    <script>
+      // Set your env vars here (replace with actual values)
+      window.env = {
+        SUPABASE_URL: 'https://your-project.supabase.co',
+        SUPABASE_ANON_KEY: 'your-anon-key-here'
+      };
+    </script>
+    <script src="ai-chat.js"></script>
+    <script>
+      // Initialize the chat
+      new AiChatBox('chat-container', {
+        title: 'EduCareer AI',
+        placeholder: 'Ask me anything about education...'
+      });
+    </script>
+  </div>
+</body>
+</html>

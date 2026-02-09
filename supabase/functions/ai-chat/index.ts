@@ -1,81 +1,141 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// @ts-ignore
+import { serve } from "https://deno.land/std/http/server.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+// Disable JWT verification for testing
+const corsHeaders: Record<string, string> = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+type AiChatRequestBody = {
+  message?: unknown;
+};
+
+function jsonResponse(body: unknown, init?: ResponseInit): Response {
+  return new Response(JSON.stringify(body), {
+    ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...corsHeaders,
+      ...(init?.headers ?? {}),
+    },
+  });
+}
+
+function getEnv(name: string): string | null {
+  // Loader-friendly: this file might be type-checked in Node where `Deno` doesn't exist.
+  try {
+    const denoLike = (globalThis as unknown as { Deno?: { env?: { get?: (k: string) => string | undefined } } }).Deno;
+    const value = denoLike?.env?.get?.(name);
+    return value ?? null;
+  } catch {
+    return null;
+  }
+}
+
+serve(async (req: Request) => {
+  // Handle CORS preflight
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed" }, { status: 405 });
   }
 
   try {
-    const { message, history } = await req.json();
+    // Receive user message from frontend
+    const contentType = req.headers.get("content-type") ?? "";
+    if (!contentType.toLowerCase().includes("application/json")) {
+      return jsonResponse({ error: "Content-Type must be application/json" }, { status: 415 });
+    }
 
-    console.log('Received message:', message);
-    console.log('History length:', history?.length || 0);
+    const body = (await req.json()) as AiChatRequestBody;
+    const message = typeof body?.message === "string" ? body.message.trim() : "";
+    if (!message) {
+      return jsonResponse({ error: "Missing 'message' in request body" }, { status: 400 });
+    }
 
-    // Build messages array for AI
-    const messages = [
-      {
-        role: "system",
-        content: "You are a helpful AI study assistant. Help students with their questions about various subjects, provide explanations, study tips, and educational guidance. Be encouraging and supportive."
-      },
-      ...(history || []).map((msg: { role: string; content: string }) => ({
-        role: msg.role,
-        content: msg.content
-      })),
-      {
-        role: "user",
-        content: message
-      }
-    ];
+    // Get API key from Supabase Secret (do not expose it to the frontend)
+    const apiKey = getEnv("EduCareerAi_API_KEY");
+    if (!apiKey) {
+      return jsonResponse(
+        {
+          error: "Server is missing EduCareerAi_API_KEY secret. Add it in Supabase and redeploy.",
+        },
+        { status: 500 },
+      );
+    }
 
-    // Call Lovable AI using gemini-2.5-flash
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    
-    console.log('Calling Lovable AI Gateway...');
-    
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Call Gemini API
+    const aiResponse = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: messages,
+        contents: [
+          {
+            parts: [
+              {
+                text: `You are EduCareer AI, a student-friendly educational assistant. You ONLY help with educational topics, studies, learning, and academic guidance.
+
+IMPORTANT RULES:
+- If anyone asks about adult content, inappropriate topics, or anything non-educational, politely refuse
+- Say: "I am designed to help only with educational topics. Please ask me about studies, homework, or learning-related questions."
+- Then suggest an educational alternative like: "How can I help you with your studies today?"
+- Give DETAILED and COMPREHENSIVE answers with explanations
+- For important information, use **bold text** to highlight key concepts, definitions, and critical points
+- Provide examples, context, and background information
+- Explain concepts thoroughly with step-by-step details
+- Be clear, kind, and practical
+- Use structured format with explanations when helpful
+- Ask 1-2 clarifying questions only if needed
+- Do NOT use emojis, asterisks (*), or special symbols for formatting
+
+User: ${message}
+
+Assistant:`
+              }
+            ]
+          }
+        ],
+        generationConfig: {
+          temperature: 0.4,
+          topK: 32,
+          topP: 1,
+          maxOutputTokens: 4096,
+        },
       }),
     });
 
     if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error('AI API error:', errorText);
-      throw new Error(`AI API error: ${aiResponse.status}`);
+      const raw = await aiResponse.text().catch(() => "");
+      
+      return jsonResponse(
+        {
+          error: "Gemini API request failed",
+          status: aiResponse.status,
+          details: raw ? raw.slice(0, 2000) : undefined,
+        },
+        { status: 502 },
+      );
     }
 
-    const aiData = await aiResponse.json();
-    const response = aiData.choices[0].message.content;
+    const data = (await aiResponse.json()) as {
+      candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+    };
 
-    console.log('AI response generated successfully');
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    if (!reply) {
+      return jsonResponse({ error: "Gemini API returned an empty response" }, { status: 502 });
+    }
 
-    return new Response(
-      JSON.stringify({ response }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200 
-      }
-    );
-  } catch (error) {
-    console.error('Error in chat-assistant:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(
-      JSON.stringify({ error: errorMessage }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
-      }
-    );
+    // Send AI reply back to frontend
+    return jsonResponse({ reply }, { status: 200 });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    return jsonResponse({ error: message }, { status: 500 });
   }
 });
