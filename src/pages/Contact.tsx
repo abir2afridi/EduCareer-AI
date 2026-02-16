@@ -31,6 +31,7 @@ const teamMembers: TeamMember[] = [
     email: "abir@educareer.ai",
     github: "https://github.com/abir2afridi",
   },
+  /*
   {
     name: "Jannatun Naim",
     role: "Principal Full-Stack Engineer",
@@ -76,6 +77,26 @@ const teamMembers: TeamMember[] = [
     email: "sojib@educareer.ai",
     github: "https://github.com/asrafulislamsojib",
   },
+  */
+  {
+    name: "Meherunnesa Pushpita",
+    role: "Content & Curriculum Specialist",
+    education: "MA in Educational Leadership, University of Dhaka",
+    experience: "8+ years developing curriculum and educational content",
+    specialties: ["Curriculum design", "Content strategy", "Educational research"],
+    email: "pushpita@educareer.ai",
+    github: "https://github.com/https://github.com/riya371",
+  },
+  {
+    name: "Riya Ghosh",
+    role: "Student Engagement Coordinator",
+    education: "BS in Psychology, University of Liberal Arts Bangladesh",
+    experience: "6+ years in student engagement and community building",
+    specialties: ["Student engagement", "Community management", "Event coordination"],
+    email: "riya@educareer.ai",
+    github: "https://github.com/",
+  },
+  /*
   {
     name: "Farhana Rahman",
     role: "Partnerships & Outreach Manager",
@@ -85,6 +106,7 @@ const teamMembers: TeamMember[] = [
     email: "farhana@educareer.ai",
     linkedin: "https://linkedin.com/in/farhanarahman",
   },
+  */
   {
     name: "AI Success Coach",
     role: "Virtual Academic & Career Assistant",
