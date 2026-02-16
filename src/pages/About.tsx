@@ -6,11 +6,13 @@ import { Users, Database, Activity, Target, BarChart3, Clock, Shield, TrendingUp
 
 const teamMembers = [
   { name: "Abir Hasan Siam", role: "Head of Learner Analytics", icon: Brain },
+  /*
   { name: "Jannatun Naim", role: "Principal Full-Stack Engineer", icon: Activity },
   { name: "Nur Muhammad", role: "Lead Career Strategist", icon: Target },
   { name: "Jannatul Mahia", role: "Student Success Manager", icon: Users },
   { name: "Sumaiya Hossain Onika", role: "Learning Experience Designer", icon: BarChart3 },
   { name: "Asraful Islam Sojib", role: "Business Intelligence Developer", icon: Database },
+   */
   { name: "Meherunnesa Pushpita", role: "Content & Curriculum Specialist", icon: TrendingUp },
   { name: "Riya Ghosh", role: "Student Engagement Coordinator", icon: CheckCircle },
   { name: "AI Success Coach", role: "Virtual Guidance Assistant", icon: Zap },
