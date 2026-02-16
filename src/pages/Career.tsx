@@ -220,6 +220,22 @@ export default function Career() {
                 Complete the survey, upload supporting documents, finish the AI-generated assessment, and unlock tailored
                 recommendations with study plans.
               </CardDescription>
+              <div className="mt-4">
+                <Button 
+                  asChild 
+                  size="sm" 
+                  className="bg-white/20 text-white border border-white/30 hover:bg-white/30 backdrop-blur-sm"
+                >
+                  <a 
+                    href="https://relocate.me/" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    Explore Career Opportunities <ArrowRight className="h-4 w-4" />
+                  </a>
+                </Button>
+              </div>
             </div>
           </div>
           <div className="w-full max-w-xs rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-sm">
