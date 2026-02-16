@@ -25,7 +25,7 @@ const teamMembers: TeamMember[] = [
   {
     name: "Abir Hasan Siam",
     role: "Head of Learner Analytics & Program Lead",
-    education: "MS in Data Science, University of Illinois Urbana-Champaign",
+    education: "B.Sc. in Computer Science & Engineering, Independent University, Bangladesh (IUB)",
     experience: "12+ years leading analytics teams across edtech platforms",
     specialties: ["Predictive learner success", "Curriculum intelligence", "AI governance"],
     email: "abir@educareer.ai",
@@ -81,7 +81,7 @@ const teamMembers: TeamMember[] = [
   {
     name: "Meherunnesa Pushpita",
     role: "Content & Curriculum Specialist",
-    education: "MA in Educational Leadership, University of Dhaka",
+    education: "B.Sc. in Computer Science & Engineering. Independent University, Bangladesh (IUB)",
     experience: "8+ years developing curriculum and educational content",
     specialties: ["Curriculum design", "Content strategy", "Educational research"],
     email: "pushpita@educareer.ai",
@@ -90,7 +90,7 @@ const teamMembers: TeamMember[] = [
   {
     name: "Riya Ghosh",
     role: "Student Engagement Coordinator",
-    education: "BS in Psychology, University of Liberal Arts Bangladesh",
+    education: "B.Sc. in Computer Science & Engineering. Independent University, Bangladesh (IUB)",
     experience: "6+ years in student engagement and community building",
     specialties: ["Student engagement", "Community management", "Event coordination"],
     email: "riya@educareer.ai",
