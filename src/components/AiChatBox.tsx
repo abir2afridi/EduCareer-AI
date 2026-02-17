@@ -65,6 +65,7 @@ export default function AiChatBox({
   const [input, setInput] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
 
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -97,7 +98,9 @@ export default function AiChatBox({
 
     setError(null);
     setIsLoading(true);
+    setIsTyping(true);
 
+    // Add user message immediately
     const userMessage: ChatMessage = { id: makeId(), role: "user", content };
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
@@ -126,6 +129,12 @@ export default function AiChatBox({
         const msg =
           data?.error ||
           `Request failed (${resp.status}). ${typeof text === "string" ? text.slice(0, 500) : ""}`;
+        
+        // Handle quota exceeded specifically
+        if (resp.status === 429 || (typeof text === 'string' && text.includes('quota exceeded'))) {
+          throw new Error("AI quota exceeded. Please try again in a few minutes or upgrade your Gemini API plan for unlimited usage.");
+        }
+        
         throw new Error(msg);
       }
 
@@ -134,18 +143,46 @@ export default function AiChatBox({
         throw new Error("AI returned an empty reply.");
       }
 
-      const assistantMessage: ChatMessage = {
-        id: makeId(),
-        role: "assistant",
-        content: reply,
-      };
-
-      setMessages((prev) => [...prev, assistantMessage]);
+      // Simulate streaming effect
+      setIsTyping(false);
+      
+      // Simulate typing delay and streaming
+      const words = reply.split(' ');
+      let currentText = '';
+      
+      for (let i = 0; i < words.length; i++) {
+        currentText += (i > 0 ? ' ' : '') + words[i];
+        
+        const assistantMessage: ChatMessage = {
+          id: makeId(),
+          role: "assistant",
+          content: currentText,
+        };
+        
+        setMessages((prev) => {
+          const newMessages = [...prev];
+          // Remove any temporary message and add the streaming one
+          if (newMessages[newMessages.length - 1]?.role === 'assistant' && 
+              newMessages[newMessages.length - 1]?.content.startsWith('Typing')) {
+            newMessages[newMessages.length - 1] = assistantMessage;
+          } else {
+            newMessages.push(assistantMessage);
+          }
+          return newMessages;
+        });
+        
+        // Delay between words for streaming effect
+        if (i < words.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 100));
+        }
+      }
+      
+      setIsLoading(false);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Failed to contact AI.";
       setError(msg);
-    } finally {
       setIsLoading(false);
+      setIsTyping(false);
     }
   };
 
@@ -160,11 +197,14 @@ export default function AiChatBox({
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold text-gray-900 dark:text-gray-100">{title}</div>
           <div className="truncate text-xs text-gray-500 dark:text-gray-400">
-            Powered by Google Gemini AI
+            Advanced AI with comprehensive responses • Powered by Google Gemini AI
           </div>
         </div>
         {isLoading ? (
           <div className="text-xs text-gray-500 dark:text-gray-400">Thinking…</div>
+        ) : null}
+        {isTyping && !isLoading ? (
+          <div className="text-xs text-blue-500 dark:text-blue-400">AI is typing…</div>
         ) : null}
       </div>
 
@@ -190,12 +230,14 @@ export default function AiChatBox({
             <div
               className={
                 m.role === "user"
-                  ? "max-w-[85%] rounded-2xl bg-blue-600 px-3 py-2 text-sm text-white"
-                  : "max-w-[85%] rounded-2xl bg-gray-100 px-3 py-2 text-sm text-gray-900 dark:bg-gray-800 dark:text-gray-100"
+                  ? "max-w-[85%] rounded-2xl bg-blue-600 px-4 py-3 text-sm text-white"
+                  : "max-w-[85%] rounded-2xl bg-gray-100 px-4 py-3 text-sm text-gray-900 dark:bg-gray-800 dark:text-gray-100"
               }
               style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}
             >
-              {m.content}
+              <div className="prose prose-sm max-w-none">
+                {m.content}
+              </div>
             </div>
           </div>
         ))}
@@ -242,7 +284,7 @@ export default function AiChatBox({
         </form>
 
         <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-          Your Gemini API key stays on the server (Supabase secret). The frontend only calls your Edge Function.
+          Enhanced AI with comprehensive, detailed responses and streaming typing. Your Gemini API key stays on server (Supabase secret).
         </div>
       </div>
     </div>
