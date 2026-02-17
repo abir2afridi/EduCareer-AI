@@ -10,7 +10,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "build:cache-bust": "echo \"Cache bust: $(date)\" && tsc && vite build"
+    "build:cache-bust": "echo \"Cache bust: $(date)\" && tsc && node_modules/.bin/vite build"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
