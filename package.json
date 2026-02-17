@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:vercel": "chmod +x node_modules/.bin/vite && node_modules/.bin/vite build",
+    "build": "tsc && vite build",
+    "build:vercel": "tsc && node_modules/.bin/vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:cache-bust": "echo \"Cache bust: $(date)\" && tsc && vite build"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.19",
