@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "build:vercel": "vite build",
+    "build:vercel": "node node_modules/vite/bin/vite.js build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
