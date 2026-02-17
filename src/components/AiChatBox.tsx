@@ -20,13 +20,24 @@ function getSupabaseConfig(): {
   supabaseUrl: string;
   supabaseAnonKey: string;
 } {
-  const supabaseUrl = (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL ??
-    (import.meta as any).env?.VITE_SUPABASE_URL ??
-    (globalThis as any)?.process?.env?.NEXT_PUBLIC_SUPABASE_URL;
+  // Debug: Log what we're trying to read
+  console.log('Environment variables check:', {
+    importMetaEnv: (import.meta as any).env,
+    globalProcessEnv: (globalThis as any)?.process?.env
+  });
 
-  const supabaseAnonKey = (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-    (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ??
-    (globalThis as any)?.process?.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Try multiple ways to access environment variables
+  const supabaseUrl = (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL ||
+    (import.meta as any).env?.VITE_SUPABASE_URL ||
+    (globalThis as any)?.process?.env?.NEXT_PUBLIC_SUPABASE_URL ||
+    (globalThis as any)?.process?.env?.VITE_SUPABASE_URL;
+
+  const supabaseAnonKey = (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ||
+    (globalThis as any)?.process?.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    (globalThis as any)?.process?.env?.VITE_SUPABASE_ANON_KEY;
+
+  console.log('Final config:', { supabaseUrl: supabaseUrl ? 'SET' : 'MISSING', supabaseAnonKey: supabaseAnonKey ? 'SET' : 'MISSING' });
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
