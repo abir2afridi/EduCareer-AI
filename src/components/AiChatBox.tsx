@@ -20,6 +20,7 @@ function getSupabaseConfig(): {
   supabaseUrl: string;
   supabaseAnonKey: string;
 } {
+  // Updated: 2025-02-18 fix for Vercel deployment
   // Try multiple ways to access environment variables
   const supabaseUrl = (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL ||
     (import.meta as any).env?.VITE_SUPABASE_URL ||
