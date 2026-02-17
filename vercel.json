@@ -3,6 +3,7 @@
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist",
   "installCommand": "npm install",
+  "devCommand": "npm run dev",
   "routes": [
     {
       "handle": "filesystem"
