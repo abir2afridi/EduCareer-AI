@@ -20,12 +20,6 @@ function getSupabaseConfig(): {
   supabaseUrl: string;
   supabaseAnonKey: string;
 } {
-  // Debug: Log what we're trying to read
-  console.log('Environment variables check:', {
-    importMetaEnv: (import.meta as any).env,
-    globalProcessEnv: (globalThis as any)?.process?.env
-  });
-
   // Try multiple ways to access environment variables
   const supabaseUrl = (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL ||
     (import.meta as any).env?.VITE_SUPABASE_URL ||
@@ -36,8 +30,6 @@ function getSupabaseConfig(): {
     (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ||
     (globalThis as any)?.process?.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
     (globalThis as any)?.process?.env?.VITE_SUPABASE_ANON_KEY;
-
-  console.log('Final config:', { supabaseUrl: supabaseUrl ? 'SET' : 'MISSING', supabaseAnonKey: supabaseAnonKey ? 'SET' : 'MISSING' });
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
