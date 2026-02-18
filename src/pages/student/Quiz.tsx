@@ -63,39 +63,137 @@ type QuizAttempt = {
 const QUESTION_COUNTS = [20, 30, 40];
 
 const extractJson = (response: string): string | null => {
+  const cleanResponse = response.trim();
+
+  // 1. Try parsing directly
   try {
-    JSON.parse(response);
-    return response;
-  } catch (error) {
-    const match = response.match(/```json([\s\S]*?)```/i) || response.match(/```([\s\S]*?)```/i);
-    if (match?.[1]) {
-      return match[1].trim();
-    }
-    const bracketStart = response.indexOf("[");
-    const bracketEnd = response.lastIndexOf("]");
-    if (bracketStart >= 0 && bracketEnd > bracketStart) {
-      return response.slice(bracketStart, bracketEnd + 1);
+    JSON.parse(cleanResponse);
+    return cleanResponse;
+  } catch (e) {
+    // Continue
+  }
+
+  // 2. Try to extract JSON from code blocks
+  const codeBlockMatch = cleanResponse.match(/```json([\s\S]*?)```/i) || cleanResponse.match(/```([\s\S]*?)```/i);
+  if (codeBlockMatch?.[1]) {
+    const content = codeBlockMatch[1].trim();
+    try {
+      JSON.parse(content);
+      return content;
+    } catch (e) {
+      // Continue to try repairing this content
     }
   }
+
+  // 3. Try to find the start of an array or object
+  const arrayStart = cleanResponse.indexOf("[");
+  const objectStart = cleanResponse.indexOf("{");
+
+  let jsonStart = -1;
+  if (arrayStart !== -1 && (objectStart === -1 || arrayStart < objectStart)) {
+    jsonStart = arrayStart;
+  } else if (objectStart !== -1) {
+    jsonStart = objectStart;
+  }
+
+  if (jsonStart !== -1) {
+    let jsonContent = cleanResponse.slice(jsonStart);
+
+    // Try to find the last closing bracket
+    const arrayEnd = jsonContent.lastIndexOf("]");
+    const objectEnd = jsonContent.lastIndexOf("}");
+    const jsonEnd = Math.max(arrayEnd, objectEnd);
+
+    if (jsonEnd !== -1) {
+      const truncated = jsonContent.slice(0, jsonEnd + 1);
+      try {
+        JSON.parse(truncated);
+        return truncated;
+      } catch (e) {
+        // If it's an array that's truncated, try to salvage the last valid object
+        if (jsonStart === arrayStart) {
+          let salvaged = truncated;
+          if (!salvaged.endsWith("]")) salvaged += "]";
+
+          // Iteratively remove from the end to find a valid JSON
+          try {
+            JSON.parse(salvaged);
+            return salvaged;
+          } catch (e2) {
+            // Attempt to find the last complete object in the array
+            const lastClosingBrace = salvaged.lastIndexOf("}");
+            if (lastClosingBrace !== -1) {
+              const cleaned = salvaged.slice(0, lastClosingBrace + 1) + "]";
+              try {
+                JSON.parse(cleaned);
+                return cleaned;
+              } catch (e3) {
+                // One more try: remove any trailing commas before the closing bracket
+                const finalTry = cleaned.replace(/,\s*\]$/, "]");
+                try {
+                  JSON.parse(finalTry);
+                  return finalTry;
+                } catch (e4) {
+                  // Fall through
+                }
+              }
+            }
+          }
+        }
+      }
+    } else {
+      // No closing bracket found at all, but we have a start. 
+      // This is very truncated. Try to add one and see if it helps.
+      if (jsonStart === arrayStart) {
+        const lastBrace = jsonContent.lastIndexOf("}");
+        if (lastBrace !== -1) {
+          const salvaged = jsonContent.slice(0, lastBrace + 1) + "]";
+          try {
+            JSON.parse(salvaged);
+            return salvaged;
+          } catch (e) { /* ignore */ }
+        }
+      }
+    }
+  }
+
   return null;
 };
 
 const parseQuestions = (raw: string): QuizQuestion[] => {
+  console.log("Raw AI response:", raw);
+
   const jsonString = extractJson(raw) ?? "[]";
+  console.log("Extracted JSON string:", jsonString);
+
   try {
     const parsed = JSON.parse(jsonString);
-    if (!Array.isArray(parsed)) return [];
+    if (!Array.isArray(parsed)) {
+      console.error("Parsed response is not an array:", parsed);
+      return [];
+    }
 
-    return parsed
-      .map((item) => {
-        if (!item || typeof item !== "object") return null;
+    const validQuestions = parsed
+      .map((item, index) => {
+        if (!item || typeof item !== "object") {
+          console.warn(`Invalid question at index ${index}:`, item);
+          return null;
+        }
+
         const options: string[] = Array.isArray(item.options) ? item.options.slice(0, 4).map(String) : [];
-        if (options.length < 4) return null;
+        if (options.length < 4) {
+          console.warn(`Question at index ${index} has insufficient options:`, options);
+          return null;
+        }
 
         const questionText = typeof item.question === "string" ? item.question.trim() : "";
         const correctAnswer = typeof item.correctAnswer === "string" ? item.correctAnswer.trim() : "";
 
-        if (!questionText || !correctAnswer) return null;
+        if (!questionText || !correctAnswer) {
+          console.warn(`Question at index ${index} missing text or answer:`, { questionText, correctAnswer });
+          return null;
+        }
+
         const normalizedOptions = options.map((option) => option.trim());
         const hasCorrect = normalizedOptions.some((option) => option.toLowerCase() === correctAnswer.toLowerCase());
         const finalCorrect = hasCorrect
@@ -109,8 +207,12 @@ const parseQuestions = (raw: string): QuizQuestion[] => {
         } satisfies QuizQuestion;
       })
       .filter((item): item is QuizQuestion => Boolean(item));
+
+    console.log(`Successfully parsed ${validQuestions.length} questions out of ${parsed.length} total`);
+    return validQuestions;
   } catch (error) {
     console.error("Failed to parse AI quiz payload", error);
+    console.error("Problematic JSON string:", jsonString);
     return [];
   }
 };
@@ -248,16 +350,16 @@ export default function QuizPage() {
             submittedAt: data.submittedAt?.toDate?.() ?? null,
             questions: Array.isArray(data.questions)
               ? data.questions.map((question) => ({
-                  question: String(question?.question ?? ""),
-                  options: Array.isArray(question?.options)
-                    ? question.options.map((option: unknown) => String(option))
-                    : [],
-                  correctAnswer: String(question?.correctAnswer ?? ""),
-                  selectedAnswer:
-                    question?.selectedAnswer === null || question?.selectedAnswer === undefined
-                      ? null
-                      : String(question.selectedAnswer),
-                }))
+                question: String(question?.question ?? ""),
+                options: Array.isArray(question?.options)
+                  ? question.options.map((option: unknown) => String(option))
+                  : [],
+                correctAnswer: String(question?.correctAnswer ?? ""),
+                selectedAnswer:
+                  question?.selectedAnswer === null || question?.selectedAnswer === undefined
+                    ? null
+                    : String(question.selectedAnswer),
+              }))
               : [],
             email: typeof data.email === "string" ? data.email : null,
             displayName: typeof data.displayName === "string" ? data.displayName : null,
@@ -315,9 +417,28 @@ export default function QuizPage() {
     resetTimer();
 
     try {
-      const prompt = `Generate ${questionCount} multiple-choice questions about "${topic}" for undergraduate students. ` +
-        `Return ONLY valid JSON array with objects each having: "question" (string), "options" (array of 4 distinct strings), ` +
-        `and "correctAnswer" (exact string that matches one of the options). Do not include explanations or additional text.`;
+      const prompt = `Generate ${questionCount} multiple-choice questions about "${topic}" for undergraduate students. 
+
+CRITICAL: Return ONLY a valid JSON array. No markdown, no explanations, no code blocks, no additional text.
+
+Format exactly like this:
+[
+  {
+    "question": "Your question text here",
+    "options": ["Option A", "Option B", "Option C", "Option D"],
+    "correctAnswer": "Option A"
+  }
+]
+
+Requirements:
+- All property names must be in double quotes
+- All string values must be in double quotes
+- No trailing commas
+- No single quotes
+- No comments or explanations
+- Exactly ${questionCount} questions
+- Each question must have exactly 4 distinct options
+- correctAnswer must exactly match one of the options`;
 
       const { data, error } = await supabase.functions.invoke("ai-chat", {
         body: {
@@ -691,73 +812,72 @@ export default function QuizPage() {
               <div className="space-y-6">
                 <div className="space-y-5">
                   {questions.map((question, index) => {
-                  const selectedAnswer = answers[index] ?? null;
-                  const isCorrect = showResults && selectedAnswer?.toLowerCase() === question.correctAnswer.toLowerCase();
-                  const isWrong = showResults && !isCorrect;
+                    const selectedAnswer = answers[index] ?? null;
+                    const isCorrect = showResults && selectedAnswer?.toLowerCase() === question.correctAnswer.toLowerCase();
+                    const isWrong = showResults && !isCorrect;
 
-                  return (
-                    <motion.div
-                      key={question.question}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.18, delay: index * 0.02 }}
-                    >
-                      <Card
-                        className={`border-2 transition-colors ${
-                          isCorrect
-                            ? "border-emerald-400/70 bg-emerald-50/40 dark:bg-emerald-950/30"
-                            : isWrong
-                            ? "border-rose-400/70 bg-rose-50/40 dark:bg-rose-950/30"
-                            : "border-border/60"
-                        }`}
+                    return (
+                      <motion.div
+                        key={question.question}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.18, delay: index * 0.02 }}
                       >
-                        <CardHeader>
-                          <CardTitle className="text-base font-semibold">
-                            Question {index + 1}
-                          </CardTitle>
-                          <CardDescription className="text-sm leading-relaxed text-foreground/90">
-                            {question.question}
-                          </CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                          {question.options.map((option, optionIndex) => {
-                            const isSelected = selectedAnswer === option;
-                            const isCorrectOption = showResults && option.toLowerCase() === question.correctAnswer.toLowerCase();
-
-                            const baseStyles = "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-all";
-                            const stateStyles = showResults
-                              ? isCorrectOption
-                                ? "border-emerald-500/70 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
-                                : isSelected
-                                ? "border-rose-500/70 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                        <Card
+                          className={`border-2 transition-colors ${isCorrect
+                              ? "border-emerald-400/70 bg-emerald-50/40 dark:bg-emerald-950/30"
+                              : isWrong
+                                ? "border-rose-400/70 bg-rose-50/40 dark:bg-rose-950/30"
                                 : "border-border/60"
-                              : isSelected
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-border/40 hover:border-primary/40";
+                            }`}
+                        >
+                          <CardHeader>
+                            <CardTitle className="text-base font-semibold">
+                              Question {index + 1}
+                            </CardTitle>
+                            <CardDescription className="text-sm leading-relaxed text-foreground/90">
+                              {question.question}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {question.options.map((option, optionIndex) => {
+                              const isSelected = selectedAnswer === option;
+                              const isCorrectOption = showResults && option.toLowerCase() === question.correctAnswer.toLowerCase();
 
-                            return (
-                              <button
-                                key={option}
-                                type="button"
-                                className={`${baseStyles} ${stateStyles}`}
-                                onClick={() => handleSelectAnswer(index, option)}
-                                disabled={showResults || autoSubmitted}
-                              >
-                                <span className="flex items-center gap-3">
-                                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/60 font-semibold">
-                                    {String.fromCharCode(65 + optionIndex)}
+                              const baseStyles = "flex w-full items-center justify-between rounded-xl border px-4 py-3 text-left transition-all";
+                              const stateStyles = showResults
+                                ? isCorrectOption
+                                  ? "border-emerald-500/70 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
+                                  : isSelected
+                                    ? "border-rose-500/70 bg-rose-500/10 text-rose-700 dark:text-rose-300"
+                                    : "border-border/60"
+                                : isSelected
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border/40 hover:border-primary/40";
+
+                              return (
+                                <button
+                                  key={option}
+                                  type="button"
+                                  className={`${baseStyles} ${stateStyles}`}
+                                  onClick={() => handleSelectAnswer(index, option)}
+                                  disabled={showResults || autoSubmitted}
+                                >
+                                  <span className="flex items-center gap-3">
+                                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted/60 font-semibold">
+                                      {String.fromCharCode(65 + optionIndex)}
+                                    </span>
+                                    <span className="text-sm font-medium leading-snug">{option}</span>
                                   </span>
-                                  <span className="text-sm font-medium leading-snug">{option}</span>
-                                </span>
-                                {showResults && isCorrectOption && <Badge variant="secondary">Correct</Badge>}
-                                {showResults && isWrong && isSelected && <Badge variant="destructive">Your answer</Badge>}
-                              </button>
-                            );
-                          })}
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  );
+                                  {showResults && isCorrectOption && <Badge variant="secondary">Correct</Badge>}
+                                  {showResults && isWrong && isSelected && <Badge variant="destructive">Your answer</Badge>}
+                                </button>
+                              );
+                            })}
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
                   })}
                 </div>
 
@@ -868,7 +988,7 @@ export default function QuizPage() {
                           Perf {formatMultiplier(
                             timingSummary.completionSpeed && computeBaselineSpeed(questions.length, timingSummary.totalTimeMinutes)
                               ? timingSummary.completionSpeed /
-                                (computeBaselineSpeed(questions.length, timingSummary.totalTimeMinutes) ?? Number.POSITIVE_INFINITY)
+                              (computeBaselineSpeed(questions.length, timingSummary.totalTimeMinutes) ?? Number.POSITIVE_INFINITY)
                               : null,
                           )}
                         </span>
@@ -940,7 +1060,7 @@ export default function QuizPage() {
                           {formatMultiplier(
                             attempt.completionSpeed && computeBaselineSpeed(attempt.total, attempt.totalTimeMinutes)
                               ? attempt.completionSpeed /
-                                (computeBaselineSpeed(attempt.total, attempt.totalTimeMinutes) ?? 1)
+                              (computeBaselineSpeed(attempt.total, attempt.totalTimeMinutes) ?? 1)
                               : null,
                           )} pace
                         </Badge>
@@ -975,11 +1095,10 @@ export default function QuizPage() {
                         return (
                           <div
                             key={`${attempt.id}-${index}`}
-                            className={`rounded-xl border px-4 py-3 text-sm transition-colors ${
-                              isCorrect
+                            className={`rounded-xl border px-4 py-3 text-sm transition-colors ${isCorrect
                                 ? "border-emerald-500/60 bg-emerald-500/5"
                                 : "border-rose-500/60 bg-rose-500/5"
-                            }`}
+                              }`}
                           >
                             <div className="font-semibold">Q{index + 1}. {question.question}</div>
                             <div className="mt-1 text-muted-foreground">
