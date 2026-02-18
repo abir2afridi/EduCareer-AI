@@ -397,9 +397,9 @@ export default function StudentManagementPage() {
               <p className="text-xs">Students will appear here once they complete their profile.</p>
             </div>
           ) : (
-            <ScrollArea className="max-h-[520px]">
+            <div className="max-h-[520px] overflow-auto">
               <Table>
-                <TableHeader className="sticky top-0 z-10 backdrop-blur-xl">
+                <TableHeader className="sticky top-0 z-10 bg-background backdrop-blur-xl">
                   <TableRow className="border-border/60">
                     <TableHead className="text-muted-foreground">Name</TableHead>
                     <TableHead className="text-muted-foreground">Email</TableHead>
@@ -471,7 +471,7 @@ export default function StudentManagementPage() {
                   ))}
                 </TableBody>
               </Table>
-            </ScrollArea>
+            </div>
           )}
         </CardContent>
       </Card>
