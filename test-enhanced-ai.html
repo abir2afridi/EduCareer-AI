@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced AI Training Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .success {
+            background: rgba(40, 167, 69, 0.2);
+            border-color: rgba(40, 167, 69, 0.5);
+        }
+        .error {
+            background: rgba(220, 53, 69, 0.2);
+            border-color: rgba(220, 53, 69, 0.5);
+        }
+        button {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .category-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎓 Enhanced EduCareer AI Training Test</h1>
+        <p>Testing the comprehensively trained AI assistant for Bangladeshi students</p>
+
+        <div class="test-grid">
+            <div class="test-section">
+                <div class="category-title">📚 Educational Subjects</div>
+                <button onclick="testMath()">Mathematics Help</button>
+                <button onclick="testScience()">Science Question</button>
+                <button onclick="testProgramming()">Programming Support</button>
+                <div id="edu-result" class="response"></div>
+            </div>
+
+            <div class="test-section">
+                <div class="category-title">🎯 Career Guidance</div>
+                <button onclick="testBUET()">BUET Admission</button>
+                <button onclick="testCareer()">Career Planning</button>
+                <button onclick="testScholarship()">Scholarship Info</button>
+                <div id="career-result" class="response"></div>
+            </div>
+
+            <div class="test-section">
+                <div class="category-title">📖 Study Strategies</div>
+                <button onclick="testStudyMethods()">Study Methods</button>
+                <button onclick="testExamPrep()">Exam Preparation</button>
+                <button onclick="testTimeManagement()">Time Management</button>
+                <div id="study-result" class="response"></div>
+            </div>
+
+            <div class="test-section">
+                <div class="category-title">🔧 Special Features</div>
+                <button onclick="testDeveloper()">Developer Info</button>
+                <button onclick="testBanglaContext()">Bangladeshi Context</button>
+                <button onclick="testImageFallback()">Image Upload</button>
+                <div id="special-result" class="response"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <div class="category-title">🧪 Comprehensive Test</div>
+            <button onclick="runAllTests()">Run All Tests</button>
+            <div id="comprehensive-result" class="response"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://zofkiodjguseuronzhkt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvZmtpb2RqZ3VzZXJvbnpoa3QiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc3MjEyNzU2NCwiZXhwIjoyMDg3NzAzNTY0fQ.qKxTJZk_xBZjZLGCpJpYfF3qJ3Y7xJjJkZL6pQqQqQ';
+
+        async function makeRequest(question, resultDiv) {
+            resultDiv.textContent = 'Testing...';
+            resultDiv.className = 'response';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-chat-simple`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify({ message: question })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'response success';
+                    resultDiv.textContent = `✅ Success!\n\n${data.choices[0].message.content}`;
+                } else {
+                    throw new Error(data.error || 'API call failed');
+                }
+            } catch (error) {
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        // Educational Subjects Tests
+        async function testMath() {
+            await makeRequest("How do I solve quadratic equations step by step?", document.getElementById('edu-result'));
+        }
+
+        async function testScience() {
+            await makeRequest("Explain Newton's laws of motion with examples", document.getElementById('edu-result'));
+        }
+
+        async function testProgramming() {
+            await makeRequest("How do I start learning Python programming?", document.getElementById('edu-result'));
+        }
+
+        // Career Guidance Tests
+        async function testBUET() {
+            await makeRequest("What are the requirements for BUET admission?", document.getElementById('career-result'));
+        }
+
+        async function testCareer() {
+            await makeRequest("What are the best career options for computer science graduates in Bangladesh?", document.getElementById('career-result'));
+        }
+
+        async function testScholarship() {
+            await makeRequest("How can I get scholarships for higher education?", document.getElementById('career-result'));
+        }
+
+        // Study Strategies Tests
+        async function testStudyMethods() {
+            await makeRequest("What are the most effective study techniques for memorization?", document.getElementById('study-result'));
+        }
+
+        async function testExamPrep() {
+            await makeRequest("How should I prepare for HSC examinations?", document.getElementById('study-result'));
+        }
+
+        async function testTimeManagement() {
+            await makeRequest("How can I balance study and extracurricular activities?", document.getElementById('study-result'));
+        }
+
+        // Special Features Tests
+        async function testDeveloper() {
+            await makeRequest("Who is your developer?", document.getElementById('special-result'));
+        }
+
+        async function testBanglaContext() {
+            await makeRequest("Tell me about the education system in Bangladesh", document.getElementById('special-result'));
+        }
+
+        async function testImageFallback() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/ai-chat-simple`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify({ 
+                        message: "Please analyze this image",
+                        image: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
+                    })
+                });
+
+                const data = await response.json();
+                const resultDiv = document.getElementById('special-result');
+                
+                if (response.ok) {
+                    resultDiv.className = 'response success';
+                    resultDiv.textContent = `✅ Image Fallback Working!\n\n${data.choices[0].message.content}`;
+                } else {
+                    throw new Error(data.error || 'API call failed');
+                }
+            } catch (error) {
+                const resultDiv = document.getElementById('special-result');
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        // Comprehensive Test
+        async function runAllTests() {
+            const resultDiv = document.getElementById('comprehensive-result');
+            resultDiv.textContent = 'Running comprehensive tests...';
+            resultDiv.className = 'response';
+
+            const tests = [
+                { name: "Mathematics", func: testMath },
+                { name: "BUET Admission", func: testBUET },
+                { name: "Study Methods", func: testStudyMethods },
+                { name: "Developer Info", func: testDeveloper },
+                { name: "Image Fallback", func: testImageFallback }
+            ];
+
+            let results = [];
+            for (let i = 0; i < tests.length; i++) {
+                const test = tests[i];
+                try {
+                    await test.func();
+                    results.push(`✅ ${test.name}: PASSED`);
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                } catch (error) {
+                    results.push(`❌ ${test.name}: FAILED - ${error.message}`);
+                }
+            }
+
+            resultDiv.className = results.includes('❌') ? 'response error' : 'response success';
+            resultDiv.textContent = results.join('\n');
+        }
+    </script>
+</body>
+</html>

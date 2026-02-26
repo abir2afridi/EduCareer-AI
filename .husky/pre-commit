@@ -1,0 +1,24 @@
+#!/bin/sh
+# Pre-commit hook to prevent API key exposure
+# Save this as .husky/pre-commit and make it executable
+
+echo "🔒 Checking for exposed API keys..."
+
+# Check for common API key patterns in staged files
+if git diff --cached --name-only | xargs grep -l "AIzaSy\|sk-or-\|eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\|ghp_\|gho_\|ghu_\|ghs_\|ghr_\|github_pat_" 2>/dev/null; then
+  echo "❌ SECURITY ALERT: API keys detected in staged files!"
+  echo "Please remove all hardcoded API keys before committing."
+  echo "Use environment variables instead."
+  exit 1
+fi
+
+# Check for environment files that shouldn't be committed
+if git diff --cached --name-only | grep -E "\.env(\.local|\.backup|\.development|\.production)?$" 2>/dev/null; then
+  echo "❌ SECURITY ALERT: Environment file detected in staged files!"
+  echo "Environment files should not be committed."
+  echo "Remove them from staging and ensure they're in .gitignore"
+  exit 1
+fi
+
+echo "✅ Security check passed"
+exit 0

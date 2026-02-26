@@ -78,8 +78,8 @@ export default function Assistant() {
         (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
 
       const endpoint = isLocalhost
-        ? "/functions/v1/ai-chat"
-        : `${supabaseUrl.replace(/\/+$/, "")}/functions/v1/ai-chat`;
+        ? "/functions/v1/ai-chat-simple"
+        : `${supabaseUrl.replace(/\/+$/, "")}/functions/v1/ai-chat-simple`;
       const resp = await fetch(endpoint, {
         method: "POST",
         headers: {
@@ -87,7 +87,10 @@ export default function Assistant() {
           apikey: supabaseAnonKey,
           Authorization: `Bearer ${supabaseAnonKey}`,
         },
-        body: JSON.stringify({ message: userMessage || "Please analyze this image" }),
+        body: JSON.stringify({ 
+          message: userMessage || "Please analyze this image",
+          image: imageToSend || undefined
+        }),
       });
 
       const text = await resp.text();
@@ -103,7 +106,7 @@ export default function Assistant() {
         throw new Error(`AI request failed (${resp.status}). ${details}`);
       }
 
-      const reply = typeof data?.reply === "string" ? data.reply : "";
+      const reply = typeof data?.choices?.[0]?.message?.content === "string" ? data.choices[0].message.content : "";
       if (!reply.trim()) {
         throw new Error("AI returned an empty reply.");
       }

@@ -104,13 +104,21 @@ serve(async (req: Request) => {
           }),
         });
         providerUsed = "Gemini 3 Flash";
+        
+        // Check if response is ok before proceeding
+        if (!aiResponse.ok) {
+          const errorText = await aiResponse.text();
+          console.warn("Gemini API error:", errorText);
+          throw new Error(`Gemini API error: ${aiResponse.status} - ${errorText}`);
+        }
+        
       } catch (error) {
         console.warn("Gemini failed, trying OpenRouter:", error);
         // Fall back to OpenRouter if Gemini fails
       }
     }
 
-    // Fallback to OpenRouter Aurora Alpha with reasoning if Gemini fails
+    // Fallback to OpenRouter Trinity with reasoning if Gemini fails
     if (!aiResponse || !aiResponse.ok && openRouterKey) {
       try {
         aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -119,9 +127,10 @@ serve(async (req: Request) => {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${openRouterKey}`,
             "HTTP-Referer": "https://educareer-ai.vercel.app",
+            "X-Title": "EduCareer AI",
           },
           body: JSON.stringify({
-            model: "openrouter/aurora-alpha",
+            model: "arcee-ai/trinity-large-preview:free",
             messages: [
               {
                 role: "system",
@@ -137,29 +146,23 @@ serve(async (req: Request) => {
             max_tokens: 4000,
           }),
         });
-        providerUsed = "OpenRouter Aurora Alpha with Reasoning";
+        providerUsed = "OpenRouter Trinity with Reasoning";
       } catch (error) {
-        console.warn("OpenRouter Aurora Alpha also failed:", error);
+        console.warn("OpenRouter Trinity also failed:", error);
       }
     }
 
-    if (!aiResponse.ok) {
-      const raw = await aiResponse.text().catch(() => "");
-      
-      return jsonResponse(
-        {
-          error: `${providerUsed} API request failed`,
-          provider: providerUsed,
-          status: aiResponse.status,
-          details: raw ? raw.slice(0, 2000) : undefined,
-        },
-        { status: 502 },
-      );
+    // If both APIs failed, return a helpful message
+    if (!aiResponse || !aiResponse.ok) {
+      return jsonResponse({
+        reply: "I'm currently experiencing technical difficulties with my AI services. Please try again in a few minutes. If the issue persists, please contact support. In the meantime, I can help you with basic educational resources and study tips once the service is restored.",
+        provider: "Fallback Response"
+      });
     }
 
     let reply: string;
     
-    if (providerUsed === "OpenRouter Aurora Alpha with Reasoning") {
+    if (providerUsed === "OpenRouter Trinity with Reasoning") {
       const data = (await aiResponse.json()) as {
         choices?: Array<{ message?: { content?: string; reasoning_details?: any } }>;
       };
@@ -167,7 +170,7 @@ serve(async (req: Request) => {
       
       // Include reasoning details in response for debugging
       if (data?.choices?.[0]?.message?.reasoning_details) {
-        console.log("Aurora Alpha Reasoning:", data.choices[0].message.reasoning_details);
+        console.log("Trinity Reasoning:", data.choices[0].message.reasoning_details);
       }
     } else if (providerUsed === "OpenRouter Claude 3.5 Sonnet") {
       const data = (await aiResponse.json()) as {

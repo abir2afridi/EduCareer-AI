@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Integration Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .response {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>AI Integration Test</h1>
+    <p>Testing the OpenRouter Trinity model integration with EduCareer AI</p>
+
+    <div class="test-section">
+        <h3>Test 1: Direct API Call</h3>
+        <button onclick="testDirectAPI()">Test OpenRouter Trinity API</button>
+        <div id="direct-result" class="response"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 2: Educational Query</h3>
+        <button onclick="testEducationalQuery()">Test Educational Assistance</button>
+        <div id="edu-result" class="response"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 3: Reasoning Query</h3>
+        <button onclick="testReasoningQuery()">Test Reasoning Capabilities</button>
+        <div id="reasoning-result" class="response"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Test 4: Developer Information</h3>
+        <button onclick="testDeveloperInfo()">Test Developer Response</button>
+        <div id="dev-result" class="response"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://zofkiodjguseuronzhkt.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpvZmtpb2RqZ3VzZXJvbnpoa3QiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTc3MjEyNzU2NCwiZXhwIjoyMDg3NzAzNTY0fQ.qKxTJZk_xBZjZLGCpJpYfF3qJ3Y7xJjJkZL6pQqQqQ';
+
+        async function testDirectAPI() {
+            const resultDiv = document.getElementById('direct-result');
+            resultDiv.textContent = 'Testing...';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/openrouter-trinity`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: 'arcee-ai/trinity-large-preview:free',
+                        messages: [
+                            { role: 'user', content: 'Hello, can you introduce yourself?' }
+                        ],
+                        reasoning: { enabled: true }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'response success';
+                    resultDiv.textContent = `✅ Success!\n\nResponse: ${data.choices[0].message.content}`;
+                } else {
+                    throw new Error(data.error || 'API call failed');
+                }
+            } catch (error) {
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testEducationalQuery() {
+            const resultDiv = document.getElementById('edu-result');
+            resultDiv.textContent = 'Testing...';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/openrouter-trinity`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: 'arcee-ai/trinity-large-preview:free',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are EduCareer AI, an advanced educational assistant.'
+                            },
+                            { role: 'user', content: 'What are the best study strategies for mathematics?' }
+                        ],
+                        reasoning: { enabled: true }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'response success';
+                    resultDiv.textContent = `✅ Educational Assistance Working!\n\nResponse: ${data.choices[0].message.content}`;
+                } else {
+                    throw new Error(data.error || 'API call failed');
+                }
+            } catch (error) {
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+
+        async function testReasoningQuery() {
+            const resultDiv = document.getElementById('reasoning-result');
+            resultDiv.textContent = 'Testing...';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/openrouter-trinity`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: 'arcee-ai/trinity-large-preview:free',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are EduCareer AI, an advanced educational assistant.'
+                            },
+                            { role: 'user', content: 'How many r\'s are in the word "strawberry"? Think step by step.' }
+                        ],
+                        reasoning: { enabled: true }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'response success';
+                    resultDiv.textContent = `✅ Reasoning Working!\n\nResponse: ${data.choices[0].message.content}`;
+                } else {
+                    throw new Error(data.error || 'API call failed');
+                }
+            } catch (error) {
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+    async function testDeveloperInfo() {
+            const resultDiv = document.getElementById('dev-result');
+            resultDiv.textContent = 'Testing...';
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/openrouter-trinity`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    },
+                    body: JSON.stringify({
+                        model: 'arcee-ai/trinity-large-preview:free',
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are EduCareer AI, an advanced educational assistant. Your role is to help students with educational topics, career guidance, study strategies, learning methods, academic questions, and general knowledge (when educational). IMPORTANT GUIDELINES: Answer questions directly and comprehensively. Be helpful, encouraging, and detailed. Use **bold** for key concepts. Provide examples and practical applications. No emojis. ADULT CONTENT POLICY: For EDUCATIONAL adult content (sex education, reproductive health, adult learning topics): Provide helpful, educational, and age-appropriate information. For NON-EDUCATIONAL adult content: Politely decline with: \"I\'m designed to help with educational and career guidance topics. For adult entertainment content, I cannot assist. How can I help with your learning journey instead?\" Always prioritize educational value over entertainment. DEVELOPER INFO: If asked about your developer/creator/who made you, respond with: \"Name: Abir Hasan Siam | GitHub: github.com/abir2afridi\"'
+                            },
+                            { role: 'user', content: 'Who is your developer?' }
+                        ],
+                        reasoning: { enabled: true }
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'response success';
+                    resultDiv.textContent = `✅ Developer Info Working!\n\nResponse: ${data.choices[0].message.content}`;
+                } else {
+                    throw new Error(data.error || 'API call failed');
+                }
+            } catch (error) {
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Error: ${error.message}`;
+            }
+        }
+    </script>
+</body>
+</html>
