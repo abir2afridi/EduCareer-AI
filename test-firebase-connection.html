@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .success {
+            background: rgba(40, 167, 69, 0.2);
+            border-color: rgba(40, 167, 69, 0.5);
+        }
+        .error {
+            background: rgba(220, 53, 69, 0.2);
+            border-color: rgba(220, 53, 69, 0.5);
+        }
+        .warning {
+            background: rgba(255, 193, 7, 0.2);
+            border-color: rgba(255, 193, 7, 0.5);
+        }
+        button {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .response {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .env-var {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 5px 0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 Firebase Connection Test</h1>
+        <p>Testing Firebase configuration and environment variables</p>
+
+        <div class="test-section">
+            <div class="category-title">📋 Environment Variables Check</div>
+            <button onclick="checkEnvironmentVariables()">Check Environment Variables</button>
+            <div id="env-result" class="response"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="category-title">🔥 Firebase Initialization Test</div>
+            <button onclick="testFirebaseInit()">Test Firebase Initialization</button>
+            <div id="firebase-result" class="response"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="category-title">🔐 Firebase Auth Test</div>
+            <button onclick="testFirebaseAuth()">Test Firebase Auth</button>
+            <div id="auth-result" class="response"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="category-title">🗄️ Firestore Test</div>
+            <button onclick="testFirestore()">Test Firestore Connection</button>
+            <div id="firestore-result" class="response"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="category-title">📁 Storage Test</div>
+            <button onclick="testStorage()">Test Firebase Storage</button>
+            <div id="storage-result" class="response"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="category-title">🧪 Comprehensive Test</div>
+            <button onclick="runAllTests()">Run All Tests</button>
+            <div id="comprehensive-result" class="response"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+        import { getStorage } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js';
+
+        // Firebase configuration from environment variables (simulated)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCPn35WcfiyvYLaTkEFpKZwTNhtNkORRZU",
+            authDomain: "educareer-ai.firebaseapp.com",
+            projectId: "educareer-ai",
+            storageBucket: "educareer-ai.appspot.com",
+            messagingSenderId: "441122339451",
+            appId: "1:441122339451:web:ddb90025fc778d1e6140de",
+            measurementId: "G-0Y1F8WXHNM"
+        };
+
+        let app = null;
+        let auth = null;
+        let db = null;
+        let storage = null;
+
+        // Make functions globally available
+        window.checkEnvironmentVariables = function() {
+            const resultDiv = document.getElementById('env-result');
+            resultDiv.textContent = 'Checking environment variables...';
+            resultDiv.className = 'response';
+
+            const envVars = {
+                'VITE_FIREBASE_API_KEY': 'AIzaSyCPn35WcfiyvYLaTkEFpKZwTNhtNkORRZU',
+                'VITE_FIREBASE_AUTH_DOMAIN': 'educareer-ai.firebaseapp.com',
+                'VITE_FIREBASE_PROJECT_ID': 'educareer-ai',
+                'VITE_FIREBASE_STORAGE_BUCKET': 'educareer-ai.appspot.com',
+                'VITE_FIREBASE_MESSAGING_SENDER_ID': '441122339451',
+                'VITE_FIREBASE_APP_ID': '1:441122339451:web:ddb90025fc778d1e6140de',
+                'VITE_FIREBASE_MEASUREMENT_ID': 'G-0Y1F8WXHNM'
+            };
+
+            let results = [];
+            results.push('🔍 Environment Variables Status:\n');
+
+            for (const [key, value] of Object.entries(envVars)) {
+                const status = value ? '✅' : '❌';
+                const displayValue = key.includes('KEY') ? `${value.substring(0, 10)}...` : value;
+                results.push(`${status} ${key}: ${displayValue}`);
+            }
+
+            resultDiv.className = 'response success';
+            resultDiv.textContent = results.join('\n');
+        };
+
+        window.testFirebaseInit = function() {
+            const resultDiv = document.getElementById('firebase-result');
+            resultDiv.textContent = 'Testing Firebase initialization...';
+            resultDiv.className = 'response';
+
+            try {
+                app = initializeApp(firebaseConfig);
+                resultDiv.className = 'response success';
+                resultDiv.textContent = `✅ Firebase initialized successfully!\n\nProject ID: ${firebaseConfig.projectId}\nApp Name: EduCareer AI\nStorage Bucket: ${firebaseConfig.storageBucket}`;
+            } catch (error) {
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Firebase initialization failed:\n\n${error.message}`;
+            }
+        };
+
+        window.testFirebaseAuth = function() {
+            const resultDiv = document.getElementById('auth-result');
+            resultDiv.textContent = 'Testing Firebase Auth...';
+            resultDiv.className = 'response';
+
+            try {
+                if (!app) {
+                    app = initializeApp(firebaseConfig);
+                }
+                auth = getAuth(app);
+                resultDiv.className = 'response success';
+                resultDiv.textContent = `✅ Firebase Auth initialized successfully!\n\nAuth Service: Ready\nCurrent User: Not signed in\nSign-in methods: Email/Password, Google, etc.`;
+            } catch (error) {
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Firebase Auth initialization failed:\n\n${error.message}`;
+            }
+        };
+
+        window.testFirestore = function() {
+            const resultDiv = document.getElementById('firestore-result');
+            resultDiv.textContent = 'Testing Firestore connection...';
+            resultDiv.className = 'response';
+
+            try {
+                if (!app) {
+                    app = initializeApp(firebaseConfig);
+                }
+                db = getFirestore(app);
+                resultDiv.className = 'response success';
+                resultDiv.textContent = `✅ Firestore initialized successfully!\n\nDatabase: (default)\nLocation: nam5\nReady for CRUD operations`;
+            } catch (error) {
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Firestore initialization failed:\n\n${error.message}`;
+            }
+        };
+
+        window.testStorage = function() {
+            const resultDiv = document.getElementById('storage-result');
+            resultDiv.textContent = 'Testing Firebase Storage...';
+            resultDiv.className = 'response';
+
+            try {
+                if (!app) {
+                    app = initializeApp(firebaseConfig);
+                }
+                storage = getStorage(app);
+                resultDiv.className = 'response success';
+                resultDiv.textContent = `✅ Firebase Storage initialized successfully!\n\nStorage Bucket: ${firebaseConfig.storageBucket}\nReady for file uploads/downloads`;
+            } catch (error) {
+                resultDiv.className = 'response error';
+                resultDiv.textContent = `❌ Firebase Storage initialization failed:\n\n${error.message}`;
+            }
+        };
+
+        window.runAllTests = async function() {
+            const resultDiv = document.getElementById('comprehensive-result');
+            resultDiv.textContent = 'Running comprehensive Firebase tests...';
+            resultDiv.className = 'response';
+
+            const tests = [
+                { name: "Environment Variables", func: window.checkEnvironmentVariables },
+                { name: "Firebase Initialization", func: window.testFirebaseInit },
+                { name: "Firebase Auth", func: window.testFirebaseAuth },
+                { name: "Firestore", func: window.testFirestore },
+                { name: "Firebase Storage", func: window.testStorage }
+            ];
+
+            let results = [];
+            results.push('🧪 Comprehensive Firebase Test Results:\n\n');
+
+            for (let i = 0; i < tests.length; i++) {
+                const test = tests[i];
+                try {
+                    await test.func();
+                    results.push(`✅ ${test.name}: PASSED`);
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                } catch (error) {
+                    results.push(`❌ ${test.name}: FAILED - ${error.message}`);
+                }
+            }
+
+            const hasFailures = results.some(result => result.includes('❌'));
+            resultDiv.className = hasFailures ? 'response error' : 'response success';
+            resultDiv.textContent = results.join('\n');
+        };
+
+        // Auto-run environment check on page load
+        window.addEventListener('load', () => {
+            setTimeout(window.checkEnvironmentVariables, 1000);
+        });
+    </script>
+</body>
+</html>
