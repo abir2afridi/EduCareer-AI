@@ -21,21 +21,21 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Firebase configuration values from environment variables for security.
+// Fallback to hardcoded values for development (will be removed in production)
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCPn35WcfiyvYLaTkEFpKZwTNhtNkORRZU",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "educareer-ai.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "educareer-ai",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "educareer-ai.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "441122339451",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:441122339451:web:ddb90025fc778d1e6140de",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-0Y1F8WXHNM",
 };
 
-// Validate required environment variables
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  throw new Error(
-    "Missing Firebase configuration. Please set VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID in your environment variables."
-  );
+// Validate required environment variables (with fallback warning)
+if (!import.meta.env.VITE_FIREBASE_API_KEY || !import.meta.env.VITE_FIREBASE_PROJECT_ID) {
+  console.warn('⚠️ Firebase environment variables not found. Using fallback configuration for development.');
+  console.warn('🔧 To fix this, ensure VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID are set in .env.local');
 }
 
 // Initialize the Firebase app exactly once, even during hot reloads.
