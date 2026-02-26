@@ -8,8 +8,9 @@ A comprehensive educational platform that combines learning management, career g
 - **Dashboard**: Personalized learning hub with progress tracking
 - **Courses**: Interactive course management with completion tracking
 - **Career Guidance**: AI-powered career assessment and guidance
-- **AI Assistant**: Gemini-powered educational assistant (via Supabase Edge Functions)
-- **Assessments**: Quizzes and evaluations with instant feedback
+- **AI Assistant**: Trinity AI-powered educational assistant (via OpenRouter API & Supabase Edge Functions)
+- **AI Quiz**: Dynamic quiz generation with comprehensive subject coverage
+- **Image Analysis**: Educational guidance for uploaded images with smart fallback
 - **Leaderboard**: Gamified learning with peer competition
 - **Messaging**: Real-time chat with friends and teachers
 - **Email System**: Integrated communication platform
@@ -37,7 +38,7 @@ A comprehensive educational platform that combines learning management, career g
 ### Backend & Services
 - **Firebase** (Authentication, Firestore Database, Storage)
 - **Supabase** (Edge Functions for AI integration)
-- **Google Gemini AI** for educational assistance
+- **OpenRouter Trinity AI** for educational assistance
 - **Firebase Admin SDK** for server-side operations
 
 ### Development Tools
@@ -52,12 +53,13 @@ A comprehensive educational platform that combines learning management, career g
 - npm or yarn
 - Firebase project setup
 - Supabase project setup (for AI features)
+- OpenRouter API key (for AI features)
 
 ### Installation
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/your-username/EduCareer-AI.git
+   git clone https://github.com/abir2afridi/EduCareer-AI.git
    cd EduCareer-AI
    ```
 
@@ -70,6 +72,7 @@ A comprehensive educational platform that combines learning management, career g
    - Copy `.env.example` to `.env.local`
    - Configure Firebase credentials
    - Set up Supabase for AI features
+   - Configure OpenRouter API key
 
 4. **Start development server**
    ```bash
@@ -87,15 +90,29 @@ A comprehensive educational platform that combines learning management, career g
 1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
 2. Enable Authentication, Firestore, and Storage
 3. Download service account key
-4. Configure `firebase.js` with your project credentials
+4. Configure environment variables in `.env.local`:
+   ```env
+   VITE_FIREBASE_API_KEY=your_firebase_api_key
+   VITE_FIREBASE_PROJECT_ID=your_project_id
+   VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+   ```
 
 ### Supabase AI Setup
 1. Create a Supabase project
-2. Follow the [GEMINI_SETUP.md](./GEMINI_SETUP.md) guide
-3. Deploy the AI chat Edge Function:
+2. Set OpenRouter API key as Supabase secret:
+   ```bash
+   supabase secrets set OPENROUTER_API_KEY=your_openrouter_key
+   ```
+3. Deploy the AI Edge Functions:
    ```bash
    supabase functions deploy ai-chat
+   supabase functions deploy ai-chat-simple
    ```
+
+### OpenRouter Setup
+1. Create an account at [OpenRouter](https://openrouter.ai/)
+2. Get your API key
+3. Set it as a Supabase secret for edge functions
 
 ## 📁 Project Structure
 
@@ -113,6 +130,11 @@ src/
 ├── context/           # React context providers
 ├── constants/         # App constants and configurations
 └── layouts/           # Layout components
+
+supabase/
+└── functions/         # Supabase Edge Functions
+    ├── ai-chat/       # Main AI chat function
+    └── ai-chat-simple/ # Simplified AI with image fallback
 ```
 
 ## 🎨 UI/UX Features
@@ -126,22 +148,44 @@ src/
 
 ## 🔐 Security Features
 
-- **Firebase Authentication** with email/password
+- **Firebase Authentication** with email/password and Google Sign-In
 - **Role-based access control** (Student/Admin)
 - **Protected routes** and API endpoints
 - **Secure file uploads** with Firebase Storage
-- **Environment variable** protection
+- **Environment variable** protection with CORS configuration
+- **API key security** with proper secret management
 
 ## 📊 Key Integrations
 
-- **Google Gemini AI**: Educational assistance and tutoring
+- **OpenRouter Trinity AI**: Advanced educational assistance and tutoring
 - **Firebase**: Real-time database and authentication
 - **Supabase**: Edge functions for AI processing
 - **Firebase Storage**: File and media management
 
+## 🤖 AI Features
+
+### AI Assistant
+- **Bangladeshi Context**: Trained specifically for Bangladeshi education system
+- **Subject Expertise**: Mathematics, Science, Computer Science, Business, Humanities
+- **Career Guidance**: University admissions, job market insights, scholarships
+- **Study Strategies**: Exam preparation, time management, research methods
+- **Developer Info**: Responds with "Name: Abir Hasan Siam | GitHub: github.com/abir2afridi"
+
+### AI Quiz
+- **Dynamic Generation**: Creates comprehensive quizzes on any subject
+- **Multi-Subject Support**: Mathematics, Science, Computer Science, etc.
+- **Complete Answers**: All questions include detailed solutions
+- **Educational Structure**: Organized by difficulty and topic
+
+### Image Analysis
+- **Smart Fallback**: Provides educational guidance when image processing isn't available
+- **Helpful Responses**: Asks users to describe images for manual analysis
+- **Educational Focus**: Tailored for diagrams, formulas, and study materials
+
 ## 🌟 Highlights
 
-- **AI-Powered Learning**: Gemini integration for personalized education
+- **AI-Powered Learning**: Trinity AI integration for personalized education
+- **Bangladeshi Context**: Localized for SSC, HSC, and university systems
 - **Comprehensive Dashboard**: 360° view of student progress
 - **Career Assessment**: Advanced career guidance algorithms
 - **Real-time Communication**: Chat and email systems
@@ -154,6 +198,21 @@ src/
 - **Lazy loading** for better performance
 - **Efficient state management** with TanStack Query
 - **Code splitting** for faster initial loads
+- **Edge Functions**: Fast AI responses via Supabase
+
+## 🚀 Deployment
+
+### Development
+```bash
+npm run dev
+# Runs on http://localhost:8081
+```
+
+### Production
+- **Vercel**: https://educareer-ai.vercel.app
+- **Environment Variables**: Configured for production
+- **Edge Functions**: Deployed and ready
+- **CORS**: Properly configured for cross-origin requests
 
 ## 🤝 Contributing
 
@@ -172,8 +231,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 For support and questions:
 - Create an issue in the GitHub repository
 - Check the [documentation](./docs/)
-- Review the [AI setup guide](./GEMINI_SETUP.md)
+- Review the security and deployment guides
 
 ---
 
 **EduCareer AI** - Empowering education through technology and AI
+
+*Developed by Abir Hasan Siam | [GitHub](https://github.com/abir2afridi)*
