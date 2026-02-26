@@ -7,11 +7,18 @@ import { DotLottieReact } from "@lottiefiles/dotlottie-react";
 import { toast } from "sonner";
 
 function getSupabaseConfig(): { supabaseUrl: string; supabaseAnonKey: string } {
-  const supabaseUrl = import.meta.env.VITE_SUPABASE_URL ??
-    (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY ??
-    import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-    (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  // Updated: 2025-02-27 fix for Vercel deployment
+  // Try multiple ways to access environment variables
+  const supabaseUrl = (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_URL ||
+    (import.meta as any).env?.VITE_SUPABASE_URL ||
+    (globalThis as any)?.process?.env?.NEXT_PUBLIC_SUPABASE_URL ||
+    (globalThis as any)?.process?.env?.VITE_SUPABASE_URL;
+
+  const supabaseAnonKey = (import.meta as any).env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    (import.meta as any).env?.VITE_SUPABASE_ANON_KEY ||
+    (import.meta as any).env?.VITE_SUPABASE_PUBLISHABLE_KEY ||
+    (globalThis as any)?.process?.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+    (globalThis as any)?.process?.env?.VITE_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(

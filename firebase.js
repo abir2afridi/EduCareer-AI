@@ -21,21 +21,28 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAnalytics, isSupported } from "firebase/analytics";
 
 // Firebase configuration values from environment variables for security.
-// Fallback to hardcoded values for development (will be removed in production)
+// Support both Vite development (VITE_) and Vercel production (no prefix) formats.
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCPn35WcfiyvYLaTkEFpKZwTNhtNkORRZU",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "educareer-ai.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "educareer-ai",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "educareer-ai.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "441122339451",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:441122339451:web:ddb90025fc778d1e6140de",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-0Y1F8WXHNM",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || import.meta.env.FIREBASE_API_KEY || "AIzaSyCPn35WcfiyvYLaTkEFpKZwTNhtNkORRZU",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || import.meta.env.FIREBASE_AUTH_DOMAIN || "educareer-ai.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || import.meta.env.FIREBASE_PROJECT_ID || "educareer-ai",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || import.meta.env.FIREBASE_STORAGE_BUCKET || "educareer-ai.appspot.com",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || import.meta.env.FIREBASE_MESSAGING_SENDER_ID || "441122339451",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || import.meta.env.FIREBASE_APP_ID || "1:441122339451:web:ddb90025fc778d1e6140de",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || import.meta.env.FIREBASE_MEASUREMENT_ID || "G-0Y1F8WXHNM",
 };
 
 // Validate required environment variables (with fallback warning)
-if (!import.meta.env.VITE_FIREBASE_API_KEY || !import.meta.env.VITE_FIREBASE_PROJECT_ID) {
+const hasViteVars = import.meta.env.VITE_FIREBASE_API_KEY && import.meta.env.VITE_FIREBASE_PROJECT_ID;
+const hasVercelVars = import.meta.env.FIREBASE_API_KEY && import.meta.env.FIREBASE_PROJECT_ID;
+
+if (!hasViteVars && !hasVercelVars) {
   console.warn('⚠️ Firebase environment variables not found. Using fallback configuration for development.');
-  console.warn('🔧 To fix this, ensure VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID are set in .env.local');
+  console.warn('🔧 To fix this, ensure FIREBASE_API_KEY and FIREBASE_PROJECT_ID are set in your deployment platform.');
+} else if (hasVercelVars) {
+  console.log('✅ Using Vercel environment variables for Firebase configuration');
+} else if (hasViteVars) {
+  console.log('✅ Using Vite environment variables for Firebase configuration');
 }
 
 // Initialize the Firebase app exactly once, even during hot reloads.
