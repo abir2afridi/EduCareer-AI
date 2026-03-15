@@ -646,7 +646,7 @@ function DashboardHeader({
           </div>
         </div>
 
-        <div className={cn("flex items-center gap-2 sm:gap-3", isMobileOpen ? "hidden lg:flex" : "")}> 
+        <div className={cn("flex items-center gap-2 sm:gap-3", isMobileOpen ? "hidden lg:flex" : "")}>
           <div className="hidden items-center gap-3 md:flex">
             <div className="flex items-center gap-3">
               <span className={cn("flex h-12 w-12 items-center justify-center rounded-full border border-border/50 p-1", toneBadgeClasses)}>
@@ -808,6 +808,7 @@ function ShellContent({ children }: PropsWithChildren) {
           { label: "AI Assistant", path: "/assistant" },
         ],
       },
+      { label: "Tools", path: "/dashboard/tools", icon: PlugInIcon },
       { label: "Leaderboard", path: "/leaderboard", icon: Trophy },
       { label: "AI Learning Insights", path: "/insights", icon: BarChart3 },
       { label: "Upcoming Tasks", path: "/tasks", icon: CalenderIcon },

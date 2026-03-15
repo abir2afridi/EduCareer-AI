@@ -23,6 +23,7 @@ import {
   Users,
   X,
   ClipboardCheck,
+  Wrench,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -109,6 +110,13 @@ export function AdminLayout() {
         icon: Home,
         description: "Executive analytics",
         gradient: "from-emerald-100 via-emerald-50 to-white dark:from-emerald-900/40 dark:via-emerald-950/40 dark:to-transparent",
+      },
+      {
+        title: "Tools",
+        url: "/admin/tools",
+        icon: Wrench,
+        description: "Publish useful websites",
+        gradient: "from-cyan-100 via-sky-50 to-white dark:from-cyan-900/40 dark:via-sky-950/40 dark:to-transparent",
       },
       {
         title: "Payment Management",

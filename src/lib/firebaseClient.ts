@@ -5,14 +5,20 @@ import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCPn35WcfiyvYLaTkEFpKZwTNhtNkORRZU",
-  authDomain: "educareer-ai.firebaseapp.com",
-  projectId: "educareer-ai",
-  storageBucket: "educareer-ai.firebasestorage.app",
-  messagingSenderId: "441122339451",
-  appId: "1:441122339451:web:ddb90025fc778d1e6140de",
-  measurementId: "G-0Y1F8WXHNM",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || (import.meta as any).env?.FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || (import.meta as any).env?.FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || (import.meta as any).env?.FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || (import.meta as any).env?.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || (import.meta as any).env?.FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || (import.meta as any).env?.FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || (import.meta as any).env?.FIREBASE_MEASUREMENT_ID,
 };
+
+if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+  throw new Error(
+    "Missing Firebase configuration. Please set VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID in your environment variables.",
+  );
+}
 
 const app = getApps().length > 0 ? getApps()[0] : initializeApp(firebaseConfig);
 

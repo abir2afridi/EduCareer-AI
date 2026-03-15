@@ -12,6 +12,7 @@ import {
   query,
   orderBy,
   arrayUnion,
+  increment,
   Timestamp,
   type DocumentData,
   type QuerySnapshot,
@@ -33,6 +34,7 @@ import type {
   TeacherReviewPayload,
   TeacherReviewRecord,
 } from "@/data/teachers";
+import type { ToolPayload, ToolRecord } from "@/data/tools";
 import type { NewUserEventInput, UserEventRecord } from "@/data/events";
 import { normalizeTeacherRecord, sanitizeTeacherWritePayload } from "@/lib/teacherNormalizer";
 
@@ -54,6 +56,7 @@ const careerGuidancePreferencesDoc = (uid: string) => doc(db, "users", uid, "car
 const studentHiresCollection = (uid: string) => collection(db, "students", uid, "hiredTeachers");
 const userEventsCollection = (uid: string) => collection(db, "users", uid, "events");
 const userEventDoc = (uid: string, eventId: string) => doc(userEventsCollection(uid), eventId);
+const toolsCollection = collection(db, "tools");
 
 export const PROFILE_CHANGE_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -189,6 +192,132 @@ const assertAdminRole = async () => {
   if (role !== "admin") {
     throw new Error("Operation requires admin privileges.");
   }
+};
+
+const normalizeToolRecord = (toolId: string, data: Partial<ToolRecord> & DocumentData): ToolRecord => {
+  const orderValue = Number(data.order);
+  const order = Number.isFinite(orderValue) ? orderValue : 0;
+  const clicksValue = Number(data.clicksCount);
+  const clicksCount = Number.isFinite(clicksValue) ? clicksValue : 0;
+
+  return {
+    id: toolId,
+    name: typeof data.name === "string" ? data.name : "",
+    url: typeof data.url === "string" ? data.url : "",
+    description: typeof data.description === "string" ? data.description : "",
+    category: typeof data.category === "string" ? data.category : undefined,
+    logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : undefined,
+    bannerUrl: typeof data.bannerUrl === "string" ? data.bannerUrl : undefined,
+    published: Boolean(data.published),
+    order,
+    clicksCount,
+    lastClickedAt: data.lastClickedAt,
+    createdAt: data.createdAt,
+    updatedAt: data.updatedAt,
+  } satisfies ToolRecord;
+};
+
+const sanitizeToolPayload = (payload: ToolPayload | Partial<ToolPayload>) => {
+  const output: Record<string, unknown> = {};
+
+  if (typeof payload.name === "string") output.name = payload.name.trim();
+  if (typeof payload.url === "string") output.url = payload.url.trim();
+  if (typeof payload.description === "string") output.description = payload.description.trim();
+
+  if ("category" in payload) {
+    const value = typeof payload.category === "string" ? payload.category.trim() : "";
+    output.category = value ? value : null;
+  }
+
+  if ("logoUrl" in payload) {
+    const value = typeof payload.logoUrl === "string" ? payload.logoUrl.trim() : "";
+    output.logoUrl = value ? value : null;
+  }
+
+  if ("bannerUrl" in payload) {
+    const value = typeof payload.bannerUrl === "string" ? payload.bannerUrl.trim() : "";
+    output.bannerUrl = value ? value : null;
+  }
+
+  if (typeof payload.published === "boolean") output.published = payload.published;
+  if (typeof payload.order === "number" && Number.isFinite(payload.order)) output.order = payload.order;
+
+  return output;
+};
+
+export const listenToToolsAdmin = (
+  onNext: (tools: ToolRecord[]) => void,
+  onError?: (error: FirestoreError) => void,
+): Unsubscribe => {
+  const toolsQuery = query(toolsCollection, orderBy("order", "asc"));
+  return onSnapshot(
+    toolsQuery,
+    (snapshot) => {
+      const records = snapshot.docs.map((docSnapshot) =>
+        normalizeToolRecord(docSnapshot.id, docSnapshot.data() as Partial<ToolRecord> & DocumentData),
+      );
+      onNext(records);
+    },
+    (error) => {
+      console.error("Error listening to tools:", error);
+      onError?.(error);
+    },
+  );
+};
+
+export const listenToPublishedTools = (
+  onNext: (tools: ToolRecord[]) => void,
+  onError?: (error: FirestoreError) => void,
+): Unsubscribe => {
+  const toolsQuery = query(toolsCollection, orderBy("order", "asc"));
+  return onSnapshot(
+    toolsQuery,
+    (snapshot) => {
+      const records = snapshot.docs
+        .map((docSnapshot) => normalizeToolRecord(docSnapshot.id, docSnapshot.data() as Partial<ToolRecord> & DocumentData))
+        .filter((tool) => tool.published);
+      onNext(records);
+    },
+    (error) => {
+      console.error("Error listening to published tools:", error);
+      onError?.(error);
+    },
+  );
+};
+
+export const createToolDoc = async (payload: ToolPayload): Promise<string> => {
+  await assertAdminRole();
+  const timestamp = serverTimestamp();
+  const sanitized = sanitizeToolPayload(payload);
+  const docRef = await addDoc(toolsCollection, {
+    ...sanitized,
+    createdAt: timestamp,
+    updatedAt: timestamp,
+  });
+  return docRef.id;
+};
+
+export const updateToolDoc = async (toolId: string, updates: Partial<ToolPayload>): Promise<void> => {
+  await assertAdminRole();
+  const toolRef = doc(toolsCollection, toolId);
+  const sanitized = sanitizeToolPayload(updates);
+  await updateDoc(toolRef, {
+    ...sanitized,
+    updatedAt: serverTimestamp(),
+  });
+};
+
+export const deleteToolDoc = async (toolId: string): Promise<void> => {
+  await assertAdminRole();
+  await deleteDoc(doc(toolsCollection, toolId));
+};
+
+export const incrementToolClick = async (toolId: string): Promise<void> => {
+  const toolRef = doc(toolsCollection, toolId);
+  await updateDoc(toolRef, {
+    clicksCount: increment(1),
+    lastClickedAt: serverTimestamp(),
+  });
 };
 
 const normalizePaymentRecord = (paymentId: string, data: Partial<TeacherPaymentRecord> & DocumentData): TeacherPaymentRecord => {

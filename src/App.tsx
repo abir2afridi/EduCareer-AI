@@ -33,6 +33,7 @@ import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Profile from "./pages/Profile";
+import Tools from "./pages/Tools";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import CompleteProfile from "./pages/student/CompleteProfile";
@@ -51,6 +52,7 @@ import ReportsExportsPage from "./pages/admin/ReportsExports";
 import NotificationsPage from "./pages/admin/Notifications";
 import ProfileChangeRequestsPage from "./pages/admin/ProfileChangeRequests";
 import SystemSettingsPage from "./pages/admin/SystemSettings";
+import ToolsManagementPage from "./pages/admin/ToolsManagement";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 import { DashboardLayout } from "./components/DashboardLayout";
@@ -94,6 +96,16 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <DiscoverFriends />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/tools"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Tools />
                 </DashboardLayout>
               </ProtectedRoute>
             }
@@ -370,6 +382,7 @@ const App = () => (
           >
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="tools" element={<ToolsManagementPage />} />
             <Route path="students" element={<StudentManagementPage />} />
             <Route path="teachers" element={<TeacherManagementPage />} />
             <Route path="payments" element={<PaymentsManagementPage />} />

@@ -34,6 +34,27 @@ service cloud.firestore {
     }
 
     // ============================================================
+    // TOOLS (Published websites)
+    // ============================================================
+    match /tools/{toolId} {
+      allow read: if request.auth != null &&
+        (request.auth.token.role == "admin" || resource.data.published == true);
+
+      // Admins can fully manage tools.
+      allow create, delete: if request.auth != null &&
+        request.auth.token.role == "admin";
+
+      // Students can only increment analytics fields on already-published tools.
+      allow update: if request.auth != null && (
+        request.auth.token.role == "admin" || (
+          resource.data.published == true &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicksCount','lastClickedAt']) &&
+          request.resource.data.clicksCount == resource.data.clicksCount + 1
+        )
+      );
+    }
+
+    // ============================================================
     // UNIVERSITY COURSE BUILDER (Admin only)
     // ============================================================
     match /courseBuilder/{universityId}/{path=**} {
