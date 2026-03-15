@@ -7,8 +7,10 @@ import {
   signInWithPopup,
   signOut as firebaseSignOut,
   updateProfile,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
-import { auth, signInWithEmail, signUpWithEmail } from "../../firebase";
+import { auth } from "@/lib/firebaseClient";
 
 type AuthContextValue = {
   user: User | null;
@@ -39,7 +41,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signup = useCallback(async (email: string, password: string, name?: string) => {
     setIsAuthLoading(true);
     try {
-      const createdUser = await signUpWithEmail(email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const createdUser = userCredential.user;
 
       if (createdUser && name) {
         await updateProfile(createdUser, { displayName: name });
@@ -55,7 +58,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const signin = useCallback(async (email: string, password: string) => {
     setIsAuthLoading(true);
     try {
-      const signedInUser = await signInWithEmail(email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const signedInUser = userCredential.user;
       setUser(signedInUser);
       return signedInUser;
     } finally {
