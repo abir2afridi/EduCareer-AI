@@ -25,7 +25,7 @@ const firebaseConfig = {
 };
 
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  console.error(
+  throw new Error(
     "Missing Firebase configuration. Please set VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID in your environment variables.",
   );
 }
