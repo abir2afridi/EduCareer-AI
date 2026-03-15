@@ -4,18 +4,28 @@ import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth } from "firebase/auth";
 
+const readEnv = (key: string): string | undefined => {
+  const viteValue = (import.meta as any)?.env?.[key];
+  if (typeof viteValue === "string" && viteValue.length) return viteValue;
+
+  const nodeValue = (globalThis as any)?.process?.env?.[key];
+  if (typeof nodeValue === "string" && nodeValue.length) return nodeValue;
+
+  return undefined;
+};
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || (import.meta as any).env?.FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || (import.meta as any).env?.FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || (import.meta as any).env?.FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || (import.meta as any).env?.FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || (import.meta as any).env?.FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || (import.meta as any).env?.FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || (import.meta as any).env?.FIREBASE_MEASUREMENT_ID,
+  apiKey: readEnv("VITE_FIREBASE_API_KEY") ?? readEnv("FIREBASE_API_KEY"),
+  authDomain: readEnv("VITE_FIREBASE_AUTH_DOMAIN") ?? readEnv("FIREBASE_AUTH_DOMAIN"),
+  projectId: readEnv("VITE_FIREBASE_PROJECT_ID") ?? readEnv("FIREBASE_PROJECT_ID"),
+  storageBucket: readEnv("VITE_FIREBASE_STORAGE_BUCKET") ?? readEnv("FIREBASE_STORAGE_BUCKET"),
+  messagingSenderId: readEnv("VITE_FIREBASE_MESSAGING_SENDER_ID") ?? readEnv("FIREBASE_MESSAGING_SENDER_ID"),
+  appId: readEnv("VITE_FIREBASE_APP_ID") ?? readEnv("FIREBASE_APP_ID"),
+  measurementId: readEnv("VITE_FIREBASE_MEASUREMENT_ID") ?? readEnv("FIREBASE_MEASUREMENT_ID"),
 };
 
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
-  throw new Error(
+  console.error(
     "Missing Firebase configuration. Please set VITE_FIREBASE_API_KEY and VITE_FIREBASE_PROJECT_ID in your environment variables.",
   );
 }
