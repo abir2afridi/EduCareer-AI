@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Pencil, Plus, Trash2, ExternalLink, Eye, EyeOff, ArrowUp, ArrowDown } from "lucide-react";
 import { emptyToolPayload, type ToolPayload, type ToolRecord } from "@/data/tools";
@@ -32,6 +33,10 @@ export default function ToolsManagementPage() {
   const [tools, setTools] = useState<ToolRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+
+  const [search, setSearch] = useState("");
+  const [publishedFilter, setPublishedFilter] = useState<"all" | "published" | "draft">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -59,6 +64,26 @@ export default function ToolsManagementPage() {
   const sortedTools = useMemo(() => {
     return [...tools].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [tools]);
+
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    tools.forEach((tool) => {
+      if (tool.category) set.add(tool.category);
+    });
+    return ["all", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  }, [tools]);
+
+  const filteredTools = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return sortedTools.filter((tool) => {
+      if (publishedFilter === "published" && !tool.published) return false;
+      if (publishedFilter === "draft" && tool.published) return false;
+      if (categoryFilter !== "all" && (tool.category ?? "") !== categoryFilter) return false;
+      if (!q) return true;
+      const haystack = `${tool.name} ${tool.description} ${tool.url} ${tool.category ?? ""}`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [categoryFilter, publishedFilter, search, sortedTools]);
 
   const openAddDialog = () => {
     setActiveTool(null);
@@ -172,137 +197,194 @@ export default function ToolsManagementPage() {
   return (
     <div className="space-y-6">
       <Card className="glass">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Tools</CardTitle>
-            <CardDescription>Publish useful websites so students can access them from their dashboard.</CardDescription>
-          </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="rounded-xl px-4" onClick={openAddDialog}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Tool
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border/60 bg-background/95 text-foreground backdrop-blur-xl dark:bg-slate-950/90">
-              <DialogHeader>
-                <DialogTitle>{activeTool ? "Edit tool" : "Add new tool"}</DialogTitle>
-                <DialogDescription className="text-muted-foreground">
-                  Provide website details. Students can view only published tools.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="grid gap-2">
-                    <Label htmlFor="tool-name">Website name</Label>
-                    <Input
-                      id="tool-name"
-                      value={formState.name}
-                      onChange={(event) => handleInputChange("name", event.target.value)}
-                      placeholder="Khan Academy"
-                      className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="tool-url">Website link</Label>
-                    <Input
-                      id="tool-url"
-                      value={formState.url}
-                      onChange={(event) => handleInputChange("url", event.target.value)}
-                      placeholder="https://"
-                      className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="tool-category">Category (optional)</Label>
-                  <Input
-                    id="tool-category"
-                    value={formState.category ?? ""}
-                    onChange={(event) => handleInputChange("category", event.target.value)}
-                    placeholder="Admissions, Math, Programming"
-                    className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
-                  />
-                </div>
-
-                <div className="grid gap-2">
-                  <Label htmlFor="tool-description">Information</Label>
-                  <Textarea
-                    id="tool-description"
-                    value={formState.description}
-                    onChange={(event) => handleInputChange("description", event.target.value)}
-                    placeholder="Why this tool is useful for students"
-                    className="min-h-[100px] rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
-                  />
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="grid gap-2">
-                    <Label htmlFor="tool-logo">Logo URL (optional)</Label>
-                    <Input
-                      id="tool-logo"
-                      value={formState.logoUrl ?? ""}
-                      onChange={(event) => handleInputChange("logoUrl", event.target.value)}
-                      placeholder="https://"
-                      className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="tool-banner">Banner URL (optional)</Label>
-                    <Input
-                      id="tool-banner"
-                      value={formState.bannerUrl ?? ""}
-                      onChange={(event) => handleInputChange("bannerUrl", event.target.value)}
-                      placeholder="https://"
-                      className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="grid gap-2">
-                    <Label htmlFor="tool-order">Sort order</Label>
-                    <Input
-                      id="tool-order"
-                      type="number"
-                      min={0}
-                      step={1}
-                      value={formState.order}
-                      onChange={(event) => handleInputChange("order", Number(event.target.value))}
-                      className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
-                    />
-                  </div>
-                  <div className="flex items-end gap-3">
-                    <Button
-                      type="button"
-                      variant={formState.published ? "default" : "outline"}
-                      className="rounded-xl"
-                      onClick={() => handleInputChange("published", !formState.published)}
-                    >
-                      {formState.published ? (
-                        <>
-                          <Eye className="mr-2 h-4 w-4" /> Published
-                        </>
-                      ) : (
-                        <>
-                          <EyeOff className="mr-2 h-4 w-4" /> Draft
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button type="button" className="rounded-xl" onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {activeTool ? "Update" : "Save"}
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle>Tools</CardTitle>
+              <CardDescription>Publish useful websites so students can access them from their dashboard.</CardDescription>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-xl px-4" onClick={openAddDialog}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Tool
                 </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border/60 bg-background/95 text-foreground backdrop-blur-xl dark:bg-slate-950/90">
+                <DialogHeader>
+                  <DialogTitle>{activeTool ? "Edit tool" : "Add new tool"}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    Provide website details. Students can view only published tools.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="tool-name">Website name</Label>
+                      <Input
+                        id="tool-name"
+                        value={formState.name}
+                        onChange={(event) => handleInputChange("name", event.target.value)}
+                        placeholder="Khan Academy"
+                        className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="tool-url">Website link</Label>
+                      <Input
+                        id="tool-url"
+                        value={formState.url}
+                        onChange={(event) => handleInputChange("url", event.target.value)}
+                        placeholder="https://"
+                        className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="tool-category">Category (optional)</Label>
+                    <Input
+                      id="tool-category"
+                      value={formState.category ?? ""}
+                      onChange={(event) => handleInputChange("category", event.target.value)}
+                      placeholder="Admissions, Math, Programming"
+                      className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
+                    />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="tool-description">Information</Label>
+                    <Textarea
+                      id="tool-description"
+                      value={formState.description}
+                      onChange={(event) => handleInputChange("description", event.target.value)}
+                      placeholder="Why this tool is useful for students"
+                      className="min-h-[100px] rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
+                    />
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="tool-logo">Logo URL (optional)</Label>
+                      <Input
+                        id="tool-logo"
+                        value={formState.logoUrl ?? ""}
+                        onChange={(event) => handleInputChange("logoUrl", event.target.value)}
+                        placeholder="https://"
+                        className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="tool-banner">Banner URL (optional)</Label>
+                      <Input
+                        id="tool-banner"
+                        value={formState.bannerUrl ?? ""}
+                        onChange={(event) => handleInputChange("bannerUrl", event.target.value)}
+                        placeholder="https://"
+                        className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-2">
+                      <Label htmlFor="tool-order">Sort order</Label>
+                      <Input
+                        id="tool-order"
+                        type="number"
+                        min={0}
+                        step={1}
+                        value={formState.order}
+                        onChange={(event) => handleInputChange("order", Number(event.target.value))}
+                        className="rounded-xl border border-border/60 bg-background/80 dark:bg-slate-900/60"
+                      />
+                    </div>
+                    <div className="flex items-end gap-3">
+                      <Button
+                        type="button"
+                        variant={formState.published ? "default" : "outline"}
+                        className="rounded-xl"
+                        onClick={() => handleInputChange("published", !formState.published)}
+                      >
+                        {formState.published ? (
+                          <>
+                            <Eye className="mr-2 h-4 w-4" /> Published
+                          </>
+                        ) : (
+                          <>
+                            <EyeOff className="mr-2 h-4 w-4" /> Draft
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button type="button" className="rounded-xl" onClick={handleSubmit} disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {activeTool ? "Update" : "Save"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="md:col-span-2">
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search tools (name, info, link...)"
+                className="rounded-xl"
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-start gap-2 md:justify-end">
+              <Button
+                type="button"
+                size="sm"
+                variant={publishedFilter === "all" ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() => setPublishedFilter("all")}
+              >
+                All
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={publishedFilter === "published" ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() => setPublishedFilter("published")}
+              >
+                Published
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={publishedFilter === "draft" ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() => setPublishedFilter("draft")}
+              >
+                Draft
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {categories.map((cat) => (
+              <Button
+                key={cat}
+                type="button"
+                size="sm"
+                variant={categoryFilter === cat ? "default" : "outline"}
+                className="rounded-full whitespace-nowrap"
+                onClick={() => setCategoryFilter(cat)}
+              >
+                {cat === "all" ? "All Categories" : cat}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
       </Card>
 
@@ -312,89 +394,149 @@ export default function ToolsManagementPage() {
           <CardDescription className="text-muted-foreground">Manage the list that appears on the student dashboard.</CardDescription>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="max-h-[560px]">
-            <div className="divide-y divide-border/60">
-              {isLoading && (
+          <ScrollArea className="h-[calc(100vh-360px)] min-h-[420px]">
+            <div className="p-4">
+              {isLoading ? (
                 <div className="py-10 text-center text-muted-foreground">
                   <Loader2 className="mx-auto h-6 w-6 animate-spin" />
                 </div>
-              )}
+              ) : null}
 
-              {!isLoading && loadError && (
+              {!isLoading && loadError ? (
                 <div className="py-10 text-center text-destructive">Unable to load tools. {loadError}</div>
-              )}
+              ) : null}
 
-              {!isLoading && !loadError && sortedTools.length === 0 && (
+              {!isLoading && !loadError && filteredTools.length === 0 ? (
                 <div className="py-12 text-center text-sm text-muted-foreground">
-                  No tools added yet. Use "Add Tool" to publish your first useful website.
+                  No tools match your search/filters.
                 </div>
-              )}
+              ) : null}
 
-              {sortedTools.map((tool, index) => (
-                <div key={tool.id} className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="min-w-0 space-y-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="truncate text-base font-semibold text-foreground">{tool.name}</h3>
-                      <Badge variant={tool.published ? "default" : "secondary"} className="rounded-full px-3">
-                        {tool.published ? "Published" : "Draft"}
-                      </Badge>
-                      <Badge variant="outline" className="rounded-full px-3">Order {tool.order}</Badge>
-                      <Badge variant="outline" className="rounded-full px-3">Clicks {tool.clicksCount ?? 0}</Badge>
-                      {tool.category ? (
-                        <Badge variant="secondary" className="rounded-full px-3">{tool.category}</Badge>
-                      ) : null}
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{tool.description || "—"}</p>
-                    <a
-                      href={tool.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
-                    >
-                      Visit website <ExternalLink className="h-3 w-3" />
-                    </a>
-                  </div>
+              {!isLoading && !loadError && filteredTools.length > 0 ? (
+                <div className="rounded-2xl border border-border/60 bg-background/70">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[320px]">Tool</TableHead>
+                        <TableHead className="hidden lg:table-cell">Category</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Order</TableHead>
+                        <TableHead className="text-right">Clicks</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTools.map((tool, index) => {
+                        const disableReorder =
+                          search.trim().length > 0 || publishedFilter !== "all" || categoryFilter !== "all";
 
-                  <div className="flex flex-wrap items-center justify-end gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl"
-                      onClick={() => swapOrder(tool, "up")}
-                      disabled={index === 0}
-                      title="Move up"
-                    >
-                      <ArrowUp className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl"
-                      onClick={() => swapOrder(tool, "down")}
-                      disabled={index === sortedTools.length - 1}
-                      title="Move down"
-                    >
-                      <ArrowDown className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-xl"
-                      onClick={() => togglePublished(tool)}
-                    >
-                      {tool.published ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
-                      {tool.published ? "Unpublish" : "Publish"}
-                    </Button>
-                    <Button size="sm" variant="outline" className="rounded-xl" onClick={() => openEditDialog(tool)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </Button>
-                    <Button size="sm" variant="destructive" className="rounded-xl" onClick={() => confirmDelete(tool)}>
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
+                        return (
+                          <TableRow key={tool.id}>
+                            <TableCell>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <div className="min-w-0">
+                                    <div className="truncate font-semibold text-foreground">{tool.name}</div>
+                                    <a
+                                      href={tool.url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="inline-flex items-center gap-1 truncate text-xs font-medium text-primary hover:underline"
+                                    >
+                                      {tool.url}
+                                      <ExternalLink className="h-3 w-3" />
+                                    </a>
+                                  </div>
+                                </div>
+                                <div className="mt-1 line-clamp-2 text-xs text-muted-foreground">{tool.description || "—"}</div>
+                                {tool.category ? (
+                                  <div className="mt-2 lg:hidden">
+                                    <Badge variant="secondary" className="rounded-full px-3">{tool.category}</Badge>
+                                  </div>
+                                ) : null}
+                              </div>
+                            </TableCell>
+
+                            <TableCell className="hidden lg:table-cell">
+                              {tool.category ? (
+                                <Badge variant="secondary" className="rounded-full px-3">{tool.category}</Badge>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+
+                            <TableCell>
+                              <Badge variant={tool.published ? "default" : "secondary"} className="rounded-full px-3">
+                                {tool.published ? "Published" : "Draft"}
+                              </Badge>
+                            </TableCell>
+
+                            <TableCell className="text-right">
+                              <span className="text-sm font-medium text-foreground">{tool.order}</span>
+                            </TableCell>
+
+                            <TableCell className="text-right">
+                              <span className="text-sm font-medium text-foreground">{tool.clicksCount ?? 0}</span>
+                            </TableCell>
+
+                            <TableCell className="text-right">
+                              <div className="flex flex-wrap justify-end gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="rounded-xl"
+                                  onClick={() => swapOrder(tool, "up")}
+                                  disabled={disableReorder || index === 0}
+                                  title={disableReorder ? "Clear filters to reorder" : "Move up"}
+                                >
+                                  <ArrowUp className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="rounded-xl"
+                                  onClick={() => swapOrder(tool, "down")}
+                                  disabled={disableReorder || index === filteredTools.length - 1}
+                                  title={disableReorder ? "Clear filters to reorder" : "Move down"}
+                                >
+                                  <ArrowDown className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="rounded-xl"
+                                  onClick={() => togglePublished(tool)}
+                                >
+                                  {tool.published ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                                  {tool.published ? "Unpublish" : "Publish"}
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="rounded-xl"
+                                  onClick={() => openEditDialog(tool)}
+                                >
+                                  <Pencil className="mr-2 h-4 w-4" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  className="rounded-xl"
+                                  onClick={() => confirmDelete(tool)}
+                                  title="Delete"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
                 </div>
-              ))}
+              ) : null}
             </div>
           </ScrollArea>
         </CardContent>

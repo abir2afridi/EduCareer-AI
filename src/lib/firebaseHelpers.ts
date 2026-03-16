@@ -320,6 +320,16 @@ export const incrementToolClick = async (toolId: string): Promise<void> => {
   });
 };
 
+export const getPublishedToolDoc = async (toolId: string): Promise<ToolRecord | null> => {
+  if (!toolId) return null;
+  const toolRef = doc(toolsCollection, toolId);
+  const snapshot = await getDoc(toolRef);
+  if (!snapshot.exists()) return null;
+  const record = normalizeToolRecord(toolId, snapshot.data() as Partial<ToolRecord> & DocumentData);
+  if (!record.published) return null;
+  return record;
+};
+
 const normalizePaymentRecord = (paymentId: string, data: Partial<TeacherPaymentRecord> & DocumentData): TeacherPaymentRecord => {
   const months = Number.isFinite(data.months) ? Math.max(1, Number(data.months)) : 1;
   const monthlyFee = Number.isFinite(data.monthlyFee) ? Number(data.monthlyFee) : 0;

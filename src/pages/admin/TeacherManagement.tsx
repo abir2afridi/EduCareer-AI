@@ -47,6 +47,10 @@ export default function TeacherManagementPage() {
   const { toast } = useToast();
   const [payments, setPayments] = useState<TeacherPaymentRecord[]>([]);
 
+  const [search, setSearch] = useState("");
+  const [subjectFilter, setSubjectFilter] = useState<string>("all");
+  const [hiredFilter, setHiredFilter] = useState<"all" | "hired" | "not_hired">("all");
+
   useEffect(() => {
     const unsubscribe = listenToTeacherPayments(
       (payments) => setPayments(payments),
@@ -76,6 +80,29 @@ export default function TeacherManagementPage() {
   const sortedTeachers = useMemo(() => {
     return [...teachers].sort((a, b) => a.teacherName.localeCompare(b.teacherName));
   }, [teachers]);
+
+  const subjects = useMemo(() => {
+    const set = new Set<string>();
+    teachers.forEach((teacher) => {
+      if (teacher.subject) set.add(teacher.subject);
+    });
+    return ["all", ...Array.from(set).sort((a, b) => a.localeCompare(b))];
+  }, [teachers]);
+
+  const filteredTeachers = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return sortedTeachers.filter((teacher) => {
+      if (subjectFilter !== "all" && (teacher.subject ?? "") !== subjectFilter) return false;
+      const hiredCount = teacher.hiredStudents?.length ?? 0;
+      if (hiredFilter === "hired" && hiredCount === 0) return false;
+      if (hiredFilter === "not_hired" && hiredCount > 0) return false;
+      if (!q) return true;
+
+      const haystack = `${teacher.teacherName} ${teacher.subject} ${teacher.email ?? ""} ${teacher.qualification ?? ""} ${teacher.experience}`
+        .toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [hiredFilter, search, sortedTeachers, subjectFilter]);
 
   const openAddDialog = () => {
     setActiveTeacher(null);
@@ -358,26 +385,27 @@ export default function TeacherManagementPage() {
   return (
     <div className="space-y-6">
       <Card className="glass">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Teacher Management</CardTitle>
-            <p className="text-sm text-muted-foreground">Keep the mentor roster fresh and synced with Firestore.</p>
-          </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="rounded-xl px-4" onClick={openAddDialog}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Teacher
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border/60 bg-background/95 text-foreground backdrop-blur-xl dark:bg-slate-950/90">
-              <DialogHeader>
-                <DialogTitle>{activeTeacher ? "Edit teacher" : "Add new teacher"}</DialogTitle>
-                <DialogDescription className="text-muted-foreground">
-                  Provide faculty details. Changes persist to the /teachers collection.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
+        <CardHeader className="space-y-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <CardTitle>Teacher Management</CardTitle>
+              <p className="text-sm text-muted-foreground">Keep the mentor roster fresh and synced with Firestore.</p>
+            </div>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button className="rounded-xl px-4" onClick={openAddDialog}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Teacher
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="w-full max-w-3xl max-h-[90vh] overflow-y-auto rounded-3xl border border-border/60 bg-background/95 text-foreground backdrop-blur-xl dark:bg-slate-950/90">
+                <DialogHeader>
+                  <DialogTitle>{activeTeacher ? "Edit teacher" : "Add new teacher"}</DialogTitle>
+                  <DialogDescription className="text-muted-foreground">
+                    Provide faculty details. Changes persist to the /teachers collection.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="grid gap-2">
                     <Label htmlFor="teacher-name">Full name</Label>
@@ -514,15 +542,71 @@ export default function TeacherManagementPage() {
                     ))}
                   </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" className="rounded-xl" onClick={handleSubmit} disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {activeTeacher ? "Update" : "Save"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                </div>
+                <DialogFooter>
+                  <Button type="button" className="rounded-xl" onClick={handleSubmit} disabled={isSubmitting}>
+                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {activeTeacher ? "Update" : "Save"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="md:col-span-2">
+              <Input
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search teachers (name, subject, email...)"
+                className="rounded-xl"
+              />
+            </div>
+            <div className="flex flex-wrap items-center justify-start gap-2 md:justify-end">
+              <Button
+                type="button"
+                size="sm"
+                variant={hiredFilter === "all" ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() => setHiredFilter("all")}
+              >
+                All
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={hiredFilter === "hired" ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() => setHiredFilter("hired")}
+              >
+                Hired
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={hiredFilter === "not_hired" ? "default" : "outline"}
+                className="rounded-full"
+                onClick={() => setHiredFilter("not_hired")}
+              >
+                Not Hired
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {subjects.map((subject) => (
+              <Button
+                key={subject}
+                type="button"
+                size="sm"
+                variant={subjectFilter === subject ? "default" : "outline"}
+                className="rounded-full whitespace-nowrap"
+                onClick={() => setSubjectFilter(subject)}
+              >
+                {subject === "all" ? "All Subjects" : subject}
+              </Button>
+            ))}
+          </div>
         </CardHeader>
       </Card>
 
@@ -531,7 +615,7 @@ export default function TeacherManagementPage() {
           <CardTitle>Faculty overview</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
-          <ScrollArea className="max-h-[520px]">
+          <ScrollArea className="h-[calc(100vh-360px)] min-h-[420px]">
             <Table>
               <TableHeader className="sticky top-0 backdrop-blur-xl">
                 <TableRow className="border-border/60">
@@ -559,14 +643,14 @@ export default function TeacherManagementPage() {
                     </TableCell>
                   </TableRow>
                 )}
-                {!isLoading && !error && sortedTeachers.length === 0 && (
+                {!isLoading && !error && filteredTeachers.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} className="py-8 text-center text-muted-foreground">
-                      No teachers found. Add your first mentor using the button above.
+                      No teachers match your search/filters.
                     </TableCell>
                   </TableRow>
                 )}
-                {sortedTeachers.map((teacher) => (
+                {filteredTeachers.map((teacher) => (
                   <TableRow key={teacher.id} className="border-border/60 text-muted-foreground hover:bg-muted/40">
                     <TableCell className="font-semibold text-foreground">{teacher.teacherName || "—"}</TableCell>
                     <TableCell>{teacher.subject || "—"}</TableCell>

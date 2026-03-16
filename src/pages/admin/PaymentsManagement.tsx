@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Loader2 } from "lucide-react";
 import { TeacherPaymentRecord } from "@/data/teachers";
 import { listenToTeacherPayments } from "@/lib/firebaseHelpers";
@@ -89,7 +90,7 @@ export default function PaymentsManagement() {
           onValueChange={(value) => setActiveTab(value as any)}
         >
           <div className="flex flex-col space-y-4 p-6 pb-0 md:flex-row md:items-center md:justify-between md:space-y-0">
-            <TabsList className="grid w-full grid-cols-3 md:w-fit">
+            <TabsList className="grid w-full grid-cols-4 md:w-fit">
               <TabsTrigger value="all">All</TabsTrigger>
               <TabsTrigger value="pending">Pending</TabsTrigger>
               <TabsTrigger value="approved">Approved</TabsTrigger>
@@ -100,36 +101,52 @@ export default function PaymentsManagement() {
             </div>
           </div>
           
-          <CardContent className="p-6">
+          <CardContent className="p-0">
             <TabsContent value="all">
-              {isLoading ? (
-                <div className="flex justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              <ScrollArea className="h-[calc(100vh-360px)] min-h-[420px]">
+                <div className="p-6">
+                  {isLoading ? (
+                    <div className="flex justify-center py-10 text-muted-foreground">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : filteredPayments.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-border/60 bg-muted/10 p-10 text-center text-sm text-muted-foreground">
+                      No payments match your search/filter.
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-border/60 bg-background/80">
+                      <PaymentsTable payments={filteredPayments} onViewPayment={handleViewPayment} />
+                    </div>
+                  )}
                 </div>
-              ) : (
-                <PaymentsTable 
-                  payments={filteredPayments} 
-                  onViewPayment={handleViewPayment} 
-                />
-              )}
+              </ScrollArea>
             </TabsContent>
             <TabsContent value="pending">
-              <PaymentsTable 
-                payments={filteredPayments.filter(p => p.status === "pending")} 
-                onViewPayment={handleViewPayment} 
-              />
+              <ScrollArea className="h-[calc(100vh-360px)] min-h-[420px]">
+                <div className="p-6">
+                  <div className="rounded-2xl border border-border/60 bg-background/80">
+                    <PaymentsTable payments={filteredPayments.filter(p => p.status === "pending")} onViewPayment={handleViewPayment} />
+                  </div>
+                </div>
+              </ScrollArea>
             </TabsContent>
             <TabsContent value="approved">
-              <PaymentsTable 
-                payments={filteredPayments.filter(p => p.status === "approved")} 
-                onViewPayment={handleViewPayment} 
-              />
+              <ScrollArea className="h-[calc(100vh-360px)] min-h-[420px]">
+                <div className="p-6">
+                  <div className="rounded-2xl border border-border/60 bg-background/80">
+                    <PaymentsTable payments={filteredPayments.filter(p => p.status === "approved")} onViewPayment={handleViewPayment} />
+                  </div>
+                </div>
+              </ScrollArea>
             </TabsContent>
             <TabsContent value="rejected">
-              <PaymentsTable 
-                payments={filteredPayments.filter(p => p.status === "rejected")} 
-                onViewPayment={handleViewPayment} 
-              />
+              <ScrollArea className="h-[calc(100vh-360px)] min-h-[420px]">
+                <div className="p-6">
+                  <div className="rounded-2xl border border-border/60 bg-background/80">
+                    <PaymentsTable payments={filteredPayments.filter(p => p.status === "rejected")} onViewPayment={handleViewPayment} />
+                  </div>
+                </div>
+              </ScrollArea>
             </TabsContent>
           </CardContent>
         </Tabs>

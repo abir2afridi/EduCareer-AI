@@ -34,6 +34,7 @@ import Contact from "./pages/Contact";
 import About from "./pages/About";
 import Profile from "./pages/Profile";
 import Tools from "./pages/Tools";
+import ToolDetailsPage from "./pages/ToolDetails";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
 import CompleteProfile from "./pages/student/CompleteProfile";
@@ -106,6 +107,16 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Tools />
+                </DashboardLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/tools/:toolId"
+            element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <ToolDetailsPage />
                 </DashboardLayout>
               </ProtectedRoute>
             }
