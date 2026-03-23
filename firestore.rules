@@ -209,21 +209,9 @@ service cloud.firestore {
     }
 
     // ============================================================
-    // CAREER GUIDANCE
+    // CAREER GUIDANCE & USER DATA
     // ============================================================
-    match /careerGuidance/{userId} {
-      allow read, write: if request.auth != null &&
-        request.auth.uid == userId;
-
-      match /{sub=**} {
-        allow read, write: if request.auth != null &&
-          request.auth.uid == userId;
-      }
-    }
-
-    // ============================================================
-    // USERS ROOT
-    // ============================================================
+    
     match /users/{userId} {
       allow read, write: if request.auth != null &&
         (request.auth.uid == userId || request.auth.token.role == "admin");
@@ -232,6 +220,65 @@ service cloud.firestore {
         allow read, write: if request.auth != null &&
           (request.auth.uid == userId || request.auth.token.role == "admin");
       }
+    }
+
+    match /careerDocsMeta/{userId} {
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.token.role == "admin");
+      
+      match /documents/{docId} {
+        allow read, write: if request.auth != null &&
+          (request.auth.uid == userId || request.auth.token.role == "admin");
+      }
+    }
+
+    match /careerAssessments/{userId} {
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.token.role == "admin");
+
+      match /assessments/{assessmentId} {
+        allow read, write: if request.auth != null &&
+          (request.auth.uid == userId || request.auth.token.role == "admin");
+      }
+    }
+
+    match /careerRecommendations/{userId} {
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.token.role == "admin");
+
+      match /items/{itemId} {
+        allow read, write: if request.auth != null &&
+          (request.auth.uid == userId || request.auth.token.role == "admin");
+      }
+    }
+
+    match /quizAttempts/{userId} {
+      allow read, write: if request.auth != null &&
+        (request.auth.uid == userId || request.auth.token.role == "admin");
+
+      match /attempts/{attemptId} {
+        allow read, write: if request.auth != null &&
+          (request.auth.uid == userId || request.auth.token.role == "admin");
+      }
+    }
+
+    // ============================================================
+    // COLLECTION GROUP RULES (For Admin Dashboard)
+    // ============================================================
+    match /{path=**}/careerGuidance/{id} {
+      allow read: if request.auth != null && request.auth.token.role == "admin";
+    }
+    match /{path=**}/documents/{id} {
+      allow read: if request.auth != null && request.auth.token.role == "admin";
+    }
+    match /{path=**}/assessments/{id} {
+      allow read: if request.auth != null && request.auth.token.role == "admin";
+    }
+    match /{path=**}/attempts/{id} {
+      allow read: if request.auth != null && request.auth.token.role == "admin";
+    }
+    match /{path=**}/items/{id} {
+      allow read: if request.auth != null && request.auth.token.role == "admin";
     }
 
     // ============================================================

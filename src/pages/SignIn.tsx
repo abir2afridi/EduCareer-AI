@@ -255,6 +255,7 @@ const SignIn = () => {
                     <Input
                       id="email"
                       type="email"
+                      autoComplete="email"
                       placeholder="Enter your email"
                       value={formData.email}
                       onChange={(event) => handleInputChange("email", event.target.value)}
@@ -276,6 +277,7 @@ const SignIn = () => {
                     <Input
                       id="password"
                       type={passwordType}
+                      autoComplete="current-password"
                       placeholder="Enter your password"
                       value={formData.password}
                       onChange={(event) => handleInputChange("password", event.target.value)}

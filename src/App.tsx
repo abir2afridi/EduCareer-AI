@@ -41,6 +41,7 @@ import CompleteProfile from "./pages/student/CompleteProfile";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import StudentQuizResultsPage from "./pages/admin/StudentQuizResults";
+import AdminStudentCareerGuidancePage from "./pages/admin/AdminStudentCareerGuidance";
 import StudentManagementPage from "./pages/admin/StudentManagement";
 import TeacherManagementPage from "./pages/admin/TeacherManagement";
 import PaymentsManagementPage from "./pages/admin/PaymentsManagement";
@@ -406,6 +407,7 @@ const App = () => (
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="profile-requests" element={<ProfileChangeRequestsPage />} />
             <Route path="quiz-results" element={<StudentQuizResultsPage />} />
+            <Route path="career-guidance" element={<AdminStudentCareerGuidancePage />} />
             <Route path="settings" element={<SystemSettingsPage />} />
           </Route>
           <Route path="/auth/signin" element={<SignIn />} />

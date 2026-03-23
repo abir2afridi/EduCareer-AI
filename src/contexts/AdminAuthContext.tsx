@@ -65,7 +65,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
             role: roleClaim,
           });
         } else {
-          console.warn("AdminAuthContext: user missing admin claim", { uid: firebaseUser.uid, role: roleClaim });
+          console.info("AdminAuthContext: user is not an admin", { uid: firebaseUser.uid, role: roleClaim });
           setUser(null);
         }
       } catch (error) {

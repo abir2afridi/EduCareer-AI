@@ -873,6 +873,49 @@ export type AdminCareerAssessmentRecord = CareerAssessmentRecord & { userId: str
 export type AdminCareerQuizAttemptRecord = CareerQuizAttemptRecord & { userId: string };
 export type AdminCareerRecommendationRecord = CareerRecommendationRecord & { userId: string };
 
+export type AdminCareerSurveyRecord = {
+  userId: string;
+  careerGoals: string[];
+  studyTracks: string[];
+  createdAt?: Timestamp;
+  updatedAt?: Timestamp;
+};
+
+export const listenToAllCareerSurveys = (
+  onNext: (records: AdminCareerSurveyRecord[]) => void,
+  onError?: (error: FirestoreError) => void,
+): Unsubscribe => {
+  const prefsGroup = collectionGroup(db, "careerGuidance");
+  return onSnapshot(
+    prefsGroup,
+    (snapshot) => {
+      const records: AdminCareerSurveyRecord[] = snapshot.docs
+        .map((docSnapshot) => {
+          if (docSnapshot.id !== "preferences") return null;
+          const userId = docSnapshot.ref.parent.parent?.id;
+          if (!userId) return null;
+          const data = docSnapshot.data();
+          const careerGoals = Array.isArray(data.careerGoals)
+            ? data.careerGoals
+            : Array.isArray(data.choices)
+              ? (data.choices as string[])
+              : [];
+          const studyTracks = Array.isArray(data.studyTracks) ? data.studyTracks : [];
+          return {
+            userId,
+            careerGoals,
+            studyTracks,
+            createdAt: data.createdAt as Timestamp | undefined,
+            updatedAt: data.updatedAt as Timestamp | undefined,
+          } as AdminCareerSurveyRecord;
+        })
+        .filter((record): record is AdminCareerSurveyRecord => record !== null);
+      onNext(records);
+    },
+    onError,
+  );
+};
+
 export const getStudentsSnapshot = (
   onNext: (snapshot: QuerySnapshot<DocumentData>) => void,
   onError?: (error: FirestoreError) => void,
@@ -1256,18 +1299,14 @@ export const listenToCareerRecommendations = (
 
 export const uploadCareerDoc = async (uid: string, file: File): Promise<CareerDocumentRecord> => {
   if (!uid) throw new Error("Missing user id for document upload");
-  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-");
-  const storagePath = `careerDocs/${uid}/${Date.now()}-${safeName}`;
-  const storageRef = ref(storage, storagePath);
-  const snapshot = await uploadBytes(storageRef, file, { contentType: file.type });
-  const downloadUrl = await getDownloadURL(snapshot.ref);
 
+  // Skip Storage upload to Firebase as per user request to keep only extracted text
   const metadata: CareerDocumentMetadata = {
     filename: file.name,
-    storagePath,
+    storagePath: "", // No storage path since we aren't uploading the file
     size: file.size,
     contentType: file.type || "application/octet-stream",
-    downloadUrl,
+    downloadUrl: "", // No download URL
     ocrStatus: "pending",
     warnings: [],
   };
@@ -1281,13 +1320,16 @@ export const uploadCareerDoc = async (uid: string, file: File): Promise<CareerDo
 
 export const removeCareerDoc = async (uid: string, docId: string, storagePath: string) => {
   if (!uid) throw new Error("Missing user id for document removal");
-  if (!storagePath) throw new Error("Missing storage path for document removal");
-  const storageRef = ref(storage, storagePath);
-  await deleteObject(storageRef).catch((error) => {
-    if (import.meta.env.DEV) {
-      console.warn("Failed to delete storage object", error);
-    }
-  });
+
+  if (storagePath) {
+    const storageRef = ref(storage, storagePath);
+    await deleteObject(storageRef).catch((error) => {
+      if (import.meta.env.DEV) {
+        console.warn("Failed to delete storage object", error);
+      }
+    });
+  }
+
   await deleteCareerDocMetadata(uid, docId);
 };
 

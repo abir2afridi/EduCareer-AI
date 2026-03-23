@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  Compass,
   DollarSign,
   FileText,
   GraduationCap,
@@ -159,6 +160,14 @@ export function AdminLayout() {
         icon: Sparkles,
         description: "Review AI quiz attempts",
         gradient: "from-purple-100 via-pink-50 to-white dark:from-purple-900/40 dark:via-pink-950/40 dark:to-transparent",
+      },
+      {
+        title: "Student Career Guidance",
+        url: "/admin/career-guidance",
+        icon: Compass,
+        description: "Survey, docs & AI paths",
+        gradient: "from-teal-100 via-cyan-50 to-white dark:from-teal-900/40 dark:via-cyan-950/40 dark:to-transparent",
+        badge: "New",
       },
       {
         title: "Career & Employability",
