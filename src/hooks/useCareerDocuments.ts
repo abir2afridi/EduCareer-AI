@@ -179,12 +179,10 @@ export function useCareerDocuments(uid?: string | null): UseCareerDocumentsResul
       if (!uid) return;
       try {
         const dataUrl = await readFileAsDataUrl(file);
-        const [, base64Payload = ""] = dataUrl.split(",");
-        const truncatedBase64 = base64Payload.length > 35000 ? `${base64Payload.slice(0, 35000)}...` : base64Payload;
 
         const prompt = [
           "You are an OCR triage assistant helping a career guidance system validate academic documents.",
-          "You will receive metadata and a base64 payload (may be truncated).",
+          "Identify the student's academic path and extract key information from the provided document image.",
           "Respond with STRICT JSON including keys: extractedTextSnippet (<=240 chars), docConfidence (0-100 number), classification (string), warnings (array of strings).",
           "If the content does not look like an academic certificate / transcript, set docConfidence <= 35 and add a warning advising reupload.",
           "If you cannot read the text, set extractedTextSnippet to 'No readable text detected.' and docConfidence <= 20.",
@@ -192,13 +190,12 @@ export function useCareerDocuments(uid?: string | null): UseCareerDocumentsResul
           `Filename: ${sanitizeFileName(file.name)}`,
           `Content-Type: ${determineMimeByExtension(file)}`,
           `SizeBytes: ${file.size}`,
-          "Base64Payload:",
-          truncatedBase64,
         ].join("\n");
 
         const { data, error } = await supabase.functions.invoke("ai-chat", {
           body: {
             message: prompt,
+            image: dataUrl,
             conversationHistory: [],
           },
         });
